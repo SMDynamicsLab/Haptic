@@ -7,6 +7,7 @@
 * c tiene que aceptar los parametros y manejar un trial 
 * comparar CHAI y el SDK respecto a su performance 
 
+
 # Para mas adelante 
 * caracterizar el sistema, la frecuencia 
 * revisar SDK de Force dimension para fuerza arbitraria  (intentar compilar ejemplos, al makefile le sale un error en el include) https://www.forcedimension.com/software
