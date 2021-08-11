@@ -1,46 +1,6 @@
-//==============================================================================
-/*
-    Software License Agreement (BSD License)
-    Copyright (c) 2003-2016, CHAI3D.
-    (www.chai3d.org)
-
-    All rights reserved.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions
-    are met:
-
-    * Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above
-    copyright notice, this list of conditions and the following
-    disclaimer in the documentation and/or other materials provided
-    with the distribution.
-
-    * Neither the name of CHAI3D nor the names of its contributors may
-    be used to endorse or promote products derived from this software
-    without specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-    FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-    COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-    INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-    BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-    ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-    POSSIBILITY OF SUCH DAMAGE. 
-
-    \author    <http://www.chai3d.org>
-    \author    Francois Conti
-    \version   3.2.0 $Rev: 2051 $
-*/
-//==============================================================================
-
+#include<iostream>
+#include<string>
+#include<fstream>
 //------------------------------------------------------------------------------
 #include "chai3d.h"
 //------------------------------------------------------------------------------
@@ -48,6 +8,7 @@
 //------------------------------------------------------------------------------
 using namespace chai3d;
 using namespace std;
+
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -93,10 +54,10 @@ cGenericHapticDevicePtr hapticDevice;
 cToolCursor* tool;
 
 // a few shape primitives that compose our scene
-cShapeSphere* sphere0;
-cShapeSphere* sphere1;
+cShapeBox* box0;
+cShapeBox* box1;
 cShapeLine* line;
-cShapeCylinder* cylinder;
+// cShapeCylinder* cylinder;
 
 // a font for rendering text
 cFontPtr font;
@@ -105,7 +66,7 @@ cFontPtr font;
 cLabel* labelRates;
 
 // a level to display the position of the cylinder along the line
-cLevel* level;
+//cLevel* level;
 
 // a small scope to display the interaction force signal
 cScope* scope; 
@@ -285,9 +246,11 @@ int main(int argc, char* argv[])
     world->addChild(camera);
 
     // position and orient the camera
-    camera->set( cVector3d(3.0, 0.0, 0.0),    // camera position (eye)
+    camera->set( cVector3d(3.0, 0.0, 1.0),    // camera position (eye)
                  cVector3d(0.0, 0.0, 0.0),    // lookat position (target)
                  cVector3d(0.0, 0.0, 1.0));   // direction of the (up) vector
+
+    camera->setUseMultipassTransparency(true);
 
     // set the near and far clipping planes of the camera
     camera->setClippingPlanes(0.01, 10.0);
@@ -376,43 +339,47 @@ int main(int argc, char* argv[])
 
 
     ////////////////////////////////////////////////////////////////////////////
-    // SHAPE - SPHERE 0
+    // SHAPE - BOX 0
     ////////////////////////////////////////////////////////////////////////////
 
     // create a sphere
-    sphere0 = new cShapeSphere(0.1);
-    world->addChild(sphere0);
+    box0 = new cShapeBox(0.1,1.0,1.0);
+    world->addChild(box0);
 
     // set position
-    sphere0->setLocalPos(0.0,-0.7, 0.0);
+    box0->setLocalPos(-0.7,0.0, 0.0);
     
     // set material color
-    sphere0->m_material->setRedFireBrick();
+    box0->m_material->setBlueCornflower();
+    box0-> setUseTransparency(true);
+    box0-> setTransparencyLevel(0.2);
 
     // create haptic effect and set properties
-    sphere0->createEffectSurface();
+    box0->createEffectSurface();
     
     // set stiffness property
-    sphere0->m_material->setStiffness(0.4 * maxStiffness);
+    box0->m_material->setStiffness(0.4 * maxStiffness);
 
 
     ////////////////////////////////////////////////////////////////////////////
-    // SHAPE - SPHERE 1
+    // SHAPE - BOX 1
     ////////////////////////////////////////////////////////////////////////////
 
     // create a sphere
-    sphere1 = new cShapeSphere(0.1);
-    world->addChild(sphere1);
+    box1 = new cShapeBox(0.1,1.0,1.0);
+    world->addChild(box1);
 
     // set position
-    sphere1->setLocalPos(0.0, 0.7, 0.0);
+    box1->setLocalPos(0.7, 0.0, 0.0);
 
     // set material color
-    sphere1->m_material->setRedFireBrick();
+    box1->m_material-> setBlueCornflower();
+    box1-> setUseTransparency(true);
+    box1-> setTransparencyLevel(0.2);
 
     // create haptic effect and set properties
-    sphere1->createEffectSurface();
-    sphere1->m_material->setStiffness(0.4 * maxStiffness);
+    box1->createEffectSurface();
+    box1->m_material->setStiffness(0.4 * maxStiffness);
 
 
     ////////////////////////////////////////////////////////////////////////////
@@ -420,7 +387,7 @@ int main(int argc, char* argv[])
     ////////////////////////////////////////////////////////////////////////////
 
     // create a line
-    line = new cShapeLine(sphere0, sphere1);
+    line = new cShapeLine(box0, box1);
     world->addChild(line);
 
     // set color at each point
@@ -439,19 +406,19 @@ int main(int argc, char* argv[])
     ////////////////////////////////////////////////////////////////////////////
 
     // create a cylinder
-    cylinder = new cShapeCylinder(0.25, 0.25, 0.2);
-    world->addChild(cylinder);
+    // cylinder = new cShapeCylinder(0.25, 0.25, 0.2);
+    // world->addChild(cylinder);
 
-    // set position and orientation
-    cylinder->setLocalPos(0.0, 0.0, 0.0);
-    cylinder->rotateAboutGlobalAxisDeg(cVector3d(1.0, 0.0, 0.0), 90);
+    // // set position and orientation
+    // cylinder->setLocalPos(0.0, 0.0, 0.0);
+    // cylinder->rotateAboutGlobalAxisDeg(cVector3d(1.0, 0.0, 0.0), 90);
 
-    // set material color
-    cylinder->m_material->setBlueCornflower();
+    // // set material color
+    // cylinder->m_material->setBlueCornflower();
 
-    // create haptic effect and set properties
-    cylinder->createEffectSurface();
-    cylinder->m_material->setStiffness(0.8 * maxStiffness);
+    // // create haptic effect and set properties
+    // cylinder->createEffectSurface();
+    // cylinder->m_material->setStiffness(0.8 * maxStiffness);
 
 
     //--------------------------------------------------------------------------
@@ -466,14 +433,14 @@ int main(int argc, char* argv[])
     camera->m_frontLayer->addChild(labelRates);
 
     // create a level to display the relative position of the cylinder
-    level = new cLevel();
-    camera->m_frontLayer->addChild(level);
-    level->rotateWidgetDeg(-90);
-    level->setRange(-0.5, 0.6);
-    level->setWidth(40);
-    level->setNumIncrements(100);
-    level->setSingleIncrementDisplay(true);
-    level->setTransparencyLevel(0.5);
+    // level = new cLevel();
+    // camera->m_frontLayer->addChild(level);
+    // level->rotateWidgetDeg(-90);
+    // level->setRange(-0.5, 0.6);
+    // level->setWidth(40);
+    // level->setNumIncrements(100);
+    // level->setSingleIncrementDisplay(true);
+    // level->setTransparencyLevel(0.5);
 
     // create a scope to plot haptic device position data
     scope = new cScope();
@@ -482,7 +449,7 @@ int main(int argc, char* argv[])
     scope->setRange(0.0, 5.0);
     scope->setSignalEnabled(true, false, false, false);
     scope->setShowPanel(false);
-    scope->m_colorSignal0.setRedCrimson();
+    scope->m_colorSignal0.setWhite();
 
 
     //--------------------------------------------------------------------------
@@ -542,7 +509,7 @@ void windowSizeCallback(GLFWwindow* a_window, int a_width, int a_height)
     height = a_height;
 
     // update position of level
-    level->setLocalPos((0.5 * (width - level->getHeight())), 90);
+    // level->setLocalPos((0.5 * (width - level->getHeight())), 90);
 
     // update position of scope
     scope->setLocalPos((0.5 * (width - scope->getWidth())), 120);
@@ -643,7 +610,7 @@ void updateGraphics(void)
     labelRates->setLocalPos((int)(0.5 * (width - labelRates->getWidth())), 15);
 
     // update value of level
-    level->setValue( cylinder->getLocalPos().y() );
+    // level->setValue( cylinder->getLocalPos().y() );
 
     // update value of scope
     scope->setSignalValues( tool->getDeviceGlobalForce().length() );
@@ -723,17 +690,54 @@ void updateHaptics(void)
         /////////////////////////////////////////////////////////////////////
         
         // check if contact occurred with cylinder
-        if(tool->isInContact(cylinder))
+        // if(tool->isInContact(cylinder))
+        // {
+        //     // get force applied on the y axis
+        //     double force = tool->getDeviceGlobalForce().y();
+
+        //     // move cylinder along the line according to force
+        //     const double K = 0.5;
+        //     double pos = cylinder->getLocalPos().y();
+        //     pos = cClamp(pos - K * timeInterval * force,-0.5, 0.6);
+        //     cylinder->setLocalPos(0.0, pos, 0.0);
+        // }
+
+/* 
+        string outputPath = "/home/Carolina/Downloads/app/a.txt";
+        // check if contact occurred with box1
+        if(tool->isInContact(box1))
         {
             // get force applied on the y axis
-            double force = tool->getDeviceGlobalForce().y();
-
-            // move cylinder along the line according to force
-            const double K = 0.5;
-            double pos = cylinder->getLocalPos().y();
-            pos = cClamp(pos - K * timeInterval * force,-0.5, 0.6);
-            cylinder->setLocalPos(0.0, pos, 0.0);
+            double time_contact = clock.getCurrentTimeSeconds();
+            ofstream fout;  // Create Object of Ofstream
+            ifstream fin;
+            fin.open(outputPath);
+            fout.open (outputPath,ios::app); // Append mode
+            if(fin.is_open())
+                fout<< time_contact;
+                fout<< "\tbox1\n";
+            // cout<<"\n Data has been appended to file";
+            fin.close();
+            fout.close(); // Closing the file
         }
+
+        // check if contact occurred with box0
+        if(tool->isInContact(box0))
+        {
+            // get force applied on the y axis
+            double time_contact = clock.getCurrentTimeSeconds();
+            ofstream fout;  // Create Object of Ofstream
+            ifstream fin;
+            fin.open(outputPath);
+            fout.open (outputPath,ios::app); // Append mode
+            if(fin.is_open())
+                fout<< time_contact;
+                fout<< "\tbox0\n";
+            fin.close();
+            fout.close(); // Closing the file
+        }
+ */
+
     }
     
     // exit haptics thread
