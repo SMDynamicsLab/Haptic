@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
     cout << "[m]    - Enable/Disable vertical mirroring" << endl;
     cout << "[q     - Exit application" << endl;
     cout << "[b/l]  - Enable/Disable base or line" << endl;
-    cout << "[a]    - Disable attractor" << endl;
+    cout << "El sujeto debe clickear antes de comenzar el test. Verde es finalizado, rojo esperando el click del sujeto y gris es trial en proceso" << endl;
 
 
 
@@ -684,17 +684,23 @@ void updateHaptics(void)
         // send forces to haptic device
         tool->applyToDevice();
 
+        // read user switch
+        bool userSwitch = tool->getUserSwitch(0);
+
         /////////////////////////////////////////////////////////////////////
         // TRIAL ONGOING/FINISHED
         /////////////////////////////////////////////////////////////////////    
         
+        if (userSwitch && tool->isInContact(start_box) && !trialOngoing){
+            trialOngoing = true;
+            trialCounter += 1;
+            end_box->m_material->setGrayDim();
+        }
         
         if(tool->isInContact(start_box))
         {
-            trialOngoing = true;
-            trialCounter += 1;
             attractorEnabled = !trialOngoing;
-            end_box->m_material->setRedDark();
+            if (!trialOngoing){end_box->m_material->setRedDark();}
             end_box -> setHapticEnabled(!attractorEnabled);
             blackHole -> setHapticEnabled(attractorEnabled);
             start_box -> setHapticEnabled(attractorEnabled);
@@ -715,7 +721,6 @@ void updateHaptics(void)
 
         if(trialOngoing)
         {
-            
             // read position 
             cVector3d position;
             hapticDevice->getPosition(position);
