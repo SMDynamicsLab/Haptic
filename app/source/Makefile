@@ -13,7 +13,8 @@ BIN_DIR = $(APP_DIR)/bin/$(OS)-$(ARCH)
 SUBDIRS  = test1 \
            test2 \
            test3 \
-		   test4	
+		   test4 \
+		   test5
 
 # rules
 all: $(SUBDIRS)
