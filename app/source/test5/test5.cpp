@@ -1,12 +1,18 @@
 #include<iostream>
 #include<string>
 #include<fstream>
+
+// #include <unistd.h> //for sleep();
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include "chai3d.h"
 #include <GLFW/glfw3.h>
 #include "create-shapes.h"
+#include "parser.h"
+
 using namespace chai3d;
 using namespace std;
-
 //------------------------------------------------------------------------------
 // stereo Mode
 /*
@@ -62,25 +68,29 @@ double maxDamping;
 bool trialOngoing = false;
 int trialCounter = 0;
 string outputPath = "/home/Carolina/Downloads/a.csv";
+bool useDamping = false; // a flag for using damping (ON/OFF)
+bool useForceField = false; // a flag for using force field (ON/OFF)
+
+time_t mod_time;
+vector<double> variables;
+string input;
+string output;
 
 int main(int argc, char* argv[])
 {
-    // INITIALIZATION
-    cout << endl;
-    cout << "-----------------------------------" << endl;
-    cout << "CHAI3D" << endl;
-    cout << "Demo: 04-shapes" << endl;
-    cout << "Copyright 2003-2016" << endl;
-    cout << "-----------------------------------" << endl << endl << endl;
-    cout << "Keyboard Options:" << endl << endl;
-    cout << "[f]    - Enable/Disable full screen mode" << endl;
-    cout << "[m]    - Enable/Disable vertical mirroring" << endl;
-    cout << "[q     - Exit application" << endl;
-    cout << "[b/l]  - Enable/Disable base or line" << endl;
-    cout << "El sujeto debe clickear antes de comenzar el test. Verde es finalizado, rojo esperando el click del sujeto y gris es trial en proceso" << endl;
-    cout << endl << endl;
-    // OPEN GL - WINDOW DISPLAY
+    if(argc != 3)
+    {
+        cout << "2 args expected " << argc-1 << " received" << endl;
+        return (0); // exit
+    }
+    input = argv[1];
+    output = argv[2];
+    cout << "Input file is "<< input << endl;
+    cout << "Output file is "<< output << endl;
+    
+    getVariables(input, mod_time, variables);
 
+    // OPEN GL - WINDOW DISPLAY
     // initialize GLFW library
     if (!glfwInit())
     {
@@ -259,7 +269,7 @@ int main(int argc, char* argv[])
         lineEnabled,
         attractorEnabled,
         maxLinearForce, 
-        maxLinearForce
+        maxStiffness
         );
 
     //--------------------------------------------------------------------------
@@ -391,6 +401,27 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
         base -> setEnabled(baseEnabled);
     }
 
+    // option - enable/disable force field
+    else if (a_key == GLFW_KEY_1)
+    {
+        useForceField = !useForceField;
+        if (useForceField)
+            cout << "> Enable force field     \r";
+        else
+            cout << "> Disable force field    \r";
+    }
+
+    // option - enable/disable damping
+    else if (a_key == GLFW_KEY_2)
+    {
+        useDamping = !useDamping;
+        if (useDamping)
+            cout << "> Enable damping         \r";
+        else
+            cout << "> Disable damping        \r";
+    }
+
+
 }
 
 //------------------------------------------------------------------------------
@@ -450,30 +481,24 @@ void updateHaptics(void)
 
     // main haptic simulation loop
     while(simulationRunning)
-    {
+    {   
         /////////////////////////////////////////////////////////////////////
         // SIMULATION TIME    
         /////////////////////////////////////////////////////////////////////
+        clock.stop(); // stop the simulation clock
+        double timeInterval = clock.getCurrentTimeSeconds(); // read the time increment in seconds
+        clock.reset(); // restart the simulation clock
+        clock.start(); 
+        freqCounterHaptics.signal(1); // signal frequency counter
 
-        // stop the simulation clock
-        clock.stop();
-
-        // read the time increment in seconds
-        double timeInterval = clock.getCurrentTimeSeconds();
-
-        // restart the simulation clock
-        clock.reset();
-        clock.start();
-
-        // signal frequency counter
-        freqCounterHaptics.signal(1);
-
+        // PARSE FILE IF MODIFIED
+        getVariables(input, mod_time, variables);        
 
         // HAPTIC FORCE COMPUTATION
         world->computeGlobalPositions(true); // compute global reference frames for each object
         tool->updateFromDevice(); // update position and orientation of tool
         tool->computeInteractionForces(); // compute interaction forces
-        tool->applyToDevice(); // send forces to haptic device
+        // tool->applyToDevice(); // send forces to haptic device
         
         // TRIAL ONGOING/FINISHED
         bool userSwitch = tool->getUserSwitch(0); // read user switch
@@ -507,26 +532,114 @@ void updateHaptics(void)
 
         if(trialOngoing)
         {
+            // // read position 
+            // cVector3d position;
+            // hapticDevice->getPosition(position);
+            //             ofstream fout;  // Create Object of Ofstream
+            // ifstream fin;
+            // fin.open(outputPath);
+            // fout.open (outputPath,ios::app); // Append mode
+            // if(fin.is_open())
+            //     fout<< trialCounter;
+            //     fout<< ", ";
+            //     fout<< position.x();
+            //     fout<< ", ";
+            //     fout<< position.y();
+            //     fout<< ", ";
+            //     fout<< position.z();
+            //     fout<< "\n";
+            // // cout<<"\n Data has been appended to file";
+            // fin.close();
+            // fout.close(); // Closing the file
+
+            
+            /////////////////////////////////////////////////////////////////////
+            // READ HAPTIC DEVICE
+            /////////////////////////////////////////////////////////////////////
+
             // read position 
             cVector3d position;
             hapticDevice->getPosition(position);
-                        ofstream fout;  // Create Object of Ofstream
-            ifstream fin;
-            fin.open(outputPath);
-            fout.open (outputPath,ios::app); // Append mode
-            if(fin.is_open())
-                fout<< trialCounter;
-                fout<< ", ";
-                fout<< position.x();
-                fout<< ", ";
-                fout<< position.y();
-                fout<< ", ";
-                fout<< position.z();
-                fout<< "\n";
-            // cout<<"\n Data has been appended to file";
-            fin.close();
-            fout.close(); // Closing the file
-        }     
+            
+            // read orientation 
+            cMatrix3d rotation;
+            hapticDevice->getRotation(rotation);
+
+            // read linear velocity 
+            cVector3d linearVelocity;
+            hapticDevice->getLinearVelocity(linearVelocity);
+
+            // read angular velocity
+            cVector3d angularVelocity;
+            hapticDevice->getAngularVelocity(angularVelocity);
+
+            
+            /////////////////////////////////////////////////////////////////////
+            // COMPUTE AND APPLY FORCES
+            /////////////////////////////////////////////////////////////////////
+            
+            // desired position
+            cVector3d desiredPosition;
+            desiredPosition.set(0.0, 0.0, 0.0);
+            // desiredPosition.set(0.0, 0.0, 0.0); // FIX THIS
+            // desiredPosition = start_box->getGlobalPos();
+
+            // // desired orientation
+            // cMatrix3d desiredRotation;
+            // desiredRotation.identity();
+            
+            // variables for forces
+            cVector3d force (0,0,0);
+            // cVector3d torque (0,0,0);
+
+            cMatrix3d rotateAroundZ;
+            cVector3d xAxis (1,0,0);
+            rotateAroundZ.setAxisAngleRotationRad(xAxis, 180.0);
+            
+            // apply force field
+            if (useForceField)
+            {
+                // compute linear force
+                double Kp = 3; // [N/m] //FIX
+                cVector3d forceField = Kp * (desiredPosition - position);
+                force.add(forceField);
+
+                // // compute angular torque
+                // double Kr = 0.05; // [N/m.rad]
+                // cVector3d axis;
+                // double angle;
+                // cMatrix3d deltaRotation = cTranspose(rotation) * desiredRotation;
+                // deltaRotation.toAxisAngle(axis, angle);
+                // torque = rotation * ((Kr * angle) * axis);
+                tool->addDeviceGlobalForce(force);
+            }
+            
+            
+            // apply damping term
+            // if (useDamping)
+            // {
+            //     cHapticDeviceInfo info = hapticDevice->getSpecifications();
+
+            //     // compute linear damping force
+            //     double Kv = 1.0 * info.m_maxLinearDamping;
+            //     cVector3d forceDamping = -Kv * linearVelocity;
+            //     force.add(forceDamping);
+
+            //     // compute angular damping force
+            //     double Kvr = 1.0 * info.m_maxAngularDamping;
+            //     cVector3d torqueDamping = -Kvr * angularVelocity;
+            //     torque.add(torqueDamping);
+            // }
+
+            // send computed force and torque to haptic device
+            // hapticDevice->setForceAndTorque(force, torque);
+            // hapticDevice->setForce(force);
+            
+        }
+        
+        tool->applyToDevice(); // send forces to haptic device
+
+
     }
     
     // exit haptics thread

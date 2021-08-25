@@ -1,5 +1,5 @@
-#ifndef FUNCTIONSEXAMPLE_H
-#define FUNCTIONSEXAMPLE_H
+#ifndef CREATESHAPES_H
+#define CREATESHAPES_H
 void createShapes(
     chai3d::cWorld*& world, 
     chai3d::cShapeBox*& base, 
