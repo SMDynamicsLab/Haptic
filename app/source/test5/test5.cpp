@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
     cout << "Input file is "<< input << endl;
     cout << "Output file is "<< output << endl;
     
-    // getVariables(input, mod_time, variables);
+    getVariables(input, mod_time, variables);
 
     // OPEN GL - WINDOW DISPLAY
     // initialize GLFW library
