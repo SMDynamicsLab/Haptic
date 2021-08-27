@@ -59,6 +59,10 @@ cShapeBox* end_box;
 cShapeBox* start_box;
 cShapeLine* line;
 cShapeSphere* blackHole;
+cFontPtr font; // a font for rendering text
+cLabel* labelMessage; // a label to explain what is happening
+cLabel* labelRates; // a label to display the rate [Hz] at which the simulation is running
+
 
 // Custom variables
 bool lineEnabled = false;
@@ -208,6 +212,30 @@ int main(int argc, char* argv[])
     // define direction of light beam
     light->setDir(-1.0, 0.0, 0.0);
 
+    //--------------------------------------------------------------------------
+    // WIDGETS
+    //--------------------------------------------------------------------------
+
+    // create a font
+    font = NEW_CFONTCALIBRI20();
+    
+    // create a label to display the haptic and graphic rate of the simulation
+    labelRates = new cLabel(font);
+    camera->m_frontLayer->addChild(labelRates);
+
+    // set font color
+    labelRates->m_fontColor.setGrayLevel(0.4);
+
+    // create a label with a small message
+    labelMessage = new cLabel(font);
+    camera->m_frontLayer->addChild(labelMessage);
+
+    // set font color
+    labelMessage->m_fontColor.setBlack();
+
+    // set text message
+    labelMessage->setText("Test output message");
+
 
     //--------------------------------------------------------------------------
     // HAPTIC DEVICES / TOOLS
@@ -327,6 +355,9 @@ void windowSizeCallback(GLFWwindow* a_window, int a_width, int a_height)
     // update window size
     width  = a_width;
     height = a_height;
+
+    // update position of label
+    labelMessage->setLocalPos((int)(0.5 * (width - labelMessage->getWidth())), 40);
 
 }
 
@@ -448,6 +479,18 @@ void close(void)
 void updateGraphics(void)
 {
     /////////////////////////////////////////////////////////////////////
+    // UPDATE WIDGETS
+    /////////////////////////////////////////////////////////////////////
+
+    // update haptic and graphic rate data
+    labelRates->setText(cStr(freqCounterGraphics.getFrequency(), 0) + " Hz / " +
+                        cStr(freqCounterHaptics.getFrequency(), 0) + " Hz");
+
+    // update position of label
+    labelRates->setLocalPos((int)(0.5 * (width - labelRates->getWidth())), 15);
+
+
+    /////////////////////////////////////////////////////////////////////
     // RENDER SCENE
     /////////////////////////////////////////////////////////////////////
 
@@ -492,7 +535,7 @@ void updateHaptics(void)
         freqCounterHaptics.signal(1); // signal frequency counter
 
         // PARSE FILE IF MODIFIED
-        getVariables(input, mod_time, variables);        
+        // getVariables(input, mod_time, variables);        
 
         // HAPTIC FORCE COMPUTATION
         world->computeGlobalPositions(true); // compute global reference frames for each object
@@ -557,10 +600,9 @@ void updateHaptics(void)
             // READ HAPTIC DEVICE
             /////////////////////////////////////////////////////////////////////
 
-            // read position 
-            cVector3d position;
-            hapticDevice->getPosition(position);
-            
+            // get position of cursor in global coordinates
+            cVector3d position = tool->getDeviceGlobalPos(); // global
+
             // read orientation 
             cMatrix3d rotation;
             hapticDevice->getRotation(rotation);
@@ -582,8 +624,8 @@ void updateHaptics(void)
             cVector3d desiredPosition;
             desiredPosition.set(0.0, 0.0, 0.0);
             // desiredPosition.set(0.0, 0.0, 0.0); // FIX THIS
-            // desiredPosition = start_box->getGlobalPos();
-
+            desiredPosition = start_box->getGlobalPos();
+            // desiredPosition.set(0.8, 0.0, 0.0);
             // // desired orientation
             // cMatrix3d desiredRotation;
             // desiredRotation.identity();
@@ -591,19 +633,17 @@ void updateHaptics(void)
             // variables for forces
             cVector3d force (0,0,0);
             // cVector3d torque (0,0,0);
-
-            cMatrix3d rotateAroundZ;
-            cVector3d xAxis (1,0,0);
-            rotateAroundZ.setAxisAngleRotationRad(xAxis, 180.0);
             
             // apply force field
             if (useForceField)
-            {
+            {   
+                
                 // compute linear force
-                double Kp = 3; // [N/m] //FIX
+                double Kp = 2; // [N/m] //FIX
                 cVector3d forceField = Kp * (desiredPosition - position);
+                forceField.set(0,forceField.x(),0); // elastic force x0-x = -x in Y dir (force to the right)
                 force.add(forceField);
-
+                labelMessage->setText("force" + force.str());
                 // // compute angular torque
                 // double Kr = 0.05; // [N/m.rad]
                 // cVector3d axis;
