@@ -77,6 +77,7 @@ bool useForceField = false; // a flag for using force field (ON/OFF)
 
 time_t mod_time;
 vector<double> variables;
+vector<vector<double>> data;
 string input;
 string output;
 
@@ -137,23 +138,12 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    // get width and height of window
-    glfwGetWindowSize(window, &width, &height);
-
-    // set position of window
-    glfwSetWindowPos(window, x, y);
-
-    // set key callback
-    glfwSetKeyCallback(window, keyCallback);
-
-    // set resize callback
-    glfwSetWindowSizeCallback(window, windowSizeCallback);
-
-    // set current display context
-    glfwMakeContextCurrent(window);
-
-    // sets the swap interval for the current display context
-    glfwSwapInterval(swapInterval);
+    glfwGetWindowSize(window, &width, &height); // get width and height of window
+    glfwSetWindowPos(window, x, y); // set position of window
+    glfwSetKeyCallback(window, keyCallback); // set key callback
+    glfwSetWindowSizeCallback(window, windowSizeCallback); // set resize callback
+    glfwMakeContextCurrent(window); // set current display context
+    glfwSwapInterval(swapInterval); // sets the swap interval for the current display context
 
 #ifdef GLEW_VERSION
     // initialize GLEW library
@@ -564,7 +554,12 @@ void updateHaptics(void)
 
         if(tool->isInContact(end_box))
         {
-            trialOngoing = false;
+            if (trialOngoing){
+                trialOngoing = false;
+                appendToCsv(output, data, trialCounter);
+                data.clear();
+            }
+                
             attractorEnabled = !trialOngoing;
             end_box->m_material->setGreenDark();
             end_box -> setHapticEnabled(!attractorEnabled);
@@ -574,11 +569,15 @@ void updateHaptics(void)
         }
 
         if(trialOngoing)
-        {
+        {   
+            // get position of cursor in global coordinates
+            cVector3d position = tool->getDeviceGlobalPos(); // global
+            vector<double> row = {position.x(), position.y(), position.z()};
+            data.push_back(row);
             // // read position 
             // cVector3d position;
             // hapticDevice->getPosition(position);
-            //             ofstream fout;  // Create Object of Ofstream
+            // ofstream fout;  // Create Object of Ofstream
             // ifstream fin;
             // fin.open(outputPath);
             // fout.open (outputPath,ios::app); // Append mode
@@ -600,8 +599,7 @@ void updateHaptics(void)
             // READ HAPTIC DEVICE
             /////////////////////////////////////////////////////////////////////
 
-            // get position of cursor in global coordinates
-            cVector3d position = tool->getDeviceGlobalPos(); // global
+
 
             // read orientation 
             cMatrix3d rotation;

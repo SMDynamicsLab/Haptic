@@ -14,7 +14,7 @@ void getVariables(
     string& filename, 
     time_t& stored_mod_time, 
     vector<double>& variables
-    )
+)
 {
     if(doesFileExist(filename) &&  hasFileChanged(filename, stored_mod_time)){
         cout << "Reading file" << endl;
@@ -74,4 +74,31 @@ vector<double> parseFile(string& filename)
     std::cout << "}; \n";
 
     return vars;
+}
+
+void appendToCsv(
+    string& output, 
+    vector<vector<double>>& data, 
+    int& trialCounter
+)
+{   
+    ofstream fout;
+    ifstream fin;
+    fin.open(output);
+    fout.open (output, ios::app); // Append mode
+    if(fin.is_open()){
+        for (auto & row : data)
+        {   
+            fout<< trialCounter; 
+            fout<< ", ";
+            for (auto & value : row) {
+                fout<< value;
+                fout<< ", ";
+            }
+            fout<< "\n";    
+        }        
+    }
+    fin.close();
+    fout.close();
+    cout<<"\n Data has been appended to file";
 }
