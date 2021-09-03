@@ -574,26 +574,6 @@ void updateHaptics(void)
             cVector3d position = tool->getDeviceGlobalPos(); // global
             vector<double> row = {position.x(), position.y(), position.z()};
             data.push_back(row);
-            // // read position 
-            // cVector3d position;
-            // hapticDevice->getPosition(position);
-            // ofstream fout;  // Create Object of Ofstream
-            // ifstream fin;
-            // fin.open(outputPath);
-            // fout.open (outputPath,ios::app); // Append mode
-            // if(fin.is_open())
-            //     fout<< trialCounter;
-            //     fout<< ", ";
-            //     fout<< position.x();
-            //     fout<< ", ";
-            //     fout<< position.y();
-            //     fout<< ", ";
-            //     fout<< position.z();
-            //     fout<< "\n";
-            // // cout<<"\n Data has been appended to file";
-            // fin.close();
-            // fout.close(); // Closing the file
-
             
             /////////////////////////////////////////////////////////////////////
             // READ HAPTIC DEVICE
@@ -620,8 +600,7 @@ void updateHaptics(void)
             
             // desired position
             cVector3d desiredPosition;
-            desiredPosition.set(0.0, 0.0, 0.0);
-            // desiredPosition.set(0.0, 0.0, 0.0); // FIX THIS
+            // desiredPosition.set(0.0, 0.0, 0.0);
             desiredPosition = start_box->getGlobalPos();
             // desiredPosition.set(0.8, 0.0, 0.0);
             // // desired orientation

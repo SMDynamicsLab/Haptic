@@ -83,10 +83,8 @@ void appendToCsv(
 )
 {   
     ofstream fout;
-    ifstream fin;
-    fin.open(output);
-    fout.open (output, ios::app); // Append mode
-    if(fin.is_open()){
+    fout.open(output, ios::app); // Append mode
+    if(fout.is_open()){
         for (auto & row : data)
         {   
             fout<< trialCounter; 
@@ -96,9 +94,12 @@ void appendToCsv(
                 fout<< ", ";
             }
             fout<< "\n";    
-        }        
+        }
+        cout<<"\n Data has been appended to file for trial " << trialCounter;        
     }
-    fin.close();
+    else{
+        cout<<"Output file not opened correctly";
+    }
     fout.close();
-    cout<<"\n Data has been appended to file";
+    
 }
