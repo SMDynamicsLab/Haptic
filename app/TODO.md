@@ -51,8 +51,17 @@
 * campos vectoriales (dep de la pos)
 * campos dep de la velocidad (coriolis y dep del angulo)
 
+# Papers 
+* Collins, J. J., & De Luca, C. J. (1995). The effects of visual input on open-loop and closed-loop postural control mechanisms. Experimental brain research, 103(1), 151-163.
+    * herramienta para caracterizar todos los trials como equivalentes (open/closed loop)
+* https://www.jneurosci.org/content/14/5/3208.short
+    * entender estructura basica (qué ve el sujeto, en que orden, perturbado, mezcla, etc)
+    * sacar la parte de los campos en coords relativas (angulares)
+    * fase de adaptacion y aftereffects 
+    * sacar la parte de generalizacion (dejar para mas adelante)
+    * como hacen los promedios espaciales (temporal y componen o interpolan)
+
 # Para mas adelante 
 * caracterizar el sistema, la frecuencia
 * timer o similar para no tener al script de python con un sleep
 * mejorar el parser (str/value pairs)
-
