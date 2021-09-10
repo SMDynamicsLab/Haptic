@@ -22,22 +22,18 @@
 * el parser se puede incluir en el loop haptico sin problemas
 * el script de python abre un proceso para correr el ejecutable de c y despues se queda mirando si un file se modifica
 * ver aprox cuanto esta consumiendo de cpu 
-
-
-# Por hacer 
-## guardar datos
+### guardar datos
 * archivo de 3 cols x y z desp de cada trial
 * en el archivo que tenga info del sujeto (python pasa esa info)
-
-## el controlador en python
+### el controlador en python
 * script en python que grafique los trials 
-
-## la comunicacion
+### la comunicacion
 * python tiene que informar nueva config de trial, c tiene que informar fin de los trials
 * archivo/buffer informa numero de trial (c lee y borra?)
 * guardar en variable y escribir a disco al final del trial 
 * buscar doc sobre shared buffers python c++ (si no hacer con archivo)
 
+# Por hacer 
 ## resolver trials individuales
 ### Orden 0
 * orden de los bloques (perturbado/no perturbado) esta predeterminado desde el inicio del script de c
@@ -65,3 +61,13 @@
 * caracterizar el sistema, la frecuencia
 * timer o similar para no tener al script de python con un sleep
 * mejorar el parser (str/value pairs)
+
+# Del paper
+* The cursor was a square of size 2 x 2 mm’ on a computer monitor and indicated the position of the handle of the manipulandum. Targets were specified by a square of size 8 x 8 mm’.
+*  After the subject had moved to the target, the next target, again chosen at a random direction and at 10 cm, was presented. All targets were kept with in the confines of the 15 x 15 cm workspace.
+* A target set consisted of 250 such sequential reaching movements.
+* For 48 randomly chosen members of the target set, hereafter referred to as
+the no-vision target set, the cursor position during the movement was
+blanked, removing visual feedback during the reaching period.
+* Dots are 10 msec apart. (en los graficos)
+* graficos: avg +- std de la trayectoria
