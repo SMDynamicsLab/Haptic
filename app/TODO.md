@@ -71,3 +71,10 @@ the no-vision target set, the cursor position during the movement was
 blanked, removing visual feedback during the reaching period.
 * Dots are 10 msec apart. (en los graficos)
 * graficos: avg +- std de la trayectoria
+
+# test6:
+* punto inicial / punto final
+* el target puede ser random dentro de 8 angulos 
+* que el cursor se pueda activar/desactivar visualmente
+* que entre a una zona en lugar de chocar con una pared
+* sigue siendo que vuelve a su posicion original

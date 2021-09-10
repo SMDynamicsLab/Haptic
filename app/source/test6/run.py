@@ -82,7 +82,7 @@ if __name__ == "__main__":
     input_file = os.path.join(data_path, 'in.csv')
     output_file = os.path.join(data_path, 'out.csv')
 
-    bin_file = os.path.join( sys.path[0], '../../bin/lin-x86_64/test5')
+    bin_file = os.path.join( sys.path[0], '../../bin/lin-x86_64/test6')
 
     start_simulation(bin_file, input_file, output_file)
     try:
