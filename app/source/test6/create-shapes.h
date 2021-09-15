@@ -11,6 +11,9 @@ void createShapes(
     bool lineEnabled, 
     bool attractorEnabled,
     double& maxLinearForce, 
-    double& maxStiffness
+    double& maxStiffness,
+    double& maxDamping,
+    chai3d::cVector3d& firstTargetPosition,
+    chai3d::cVector3d& startBoxPostition
     );
 #endif 

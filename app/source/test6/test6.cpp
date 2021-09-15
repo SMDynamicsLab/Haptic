@@ -62,7 +62,8 @@ cShapeSphere* blackHole;
 cFontPtr font; // a font for rendering text
 cLabel* labelMessage; // a label to explain what is happening
 cLabel* labelRates; // a label to display the rate [Hz] at which the simulation is running
-
+cVector3d firstTargetPosition = cVector3d(-0.5,0.0, 0.0);
+cVector3d startBoxPostition = cVector3d(0.0, 0.0, 0.0);
 
 // Custom variables
 bool lineEnabled = false;
@@ -171,7 +172,7 @@ int main(int argc, char* argv[])
     world->addChild(camera);
     
     // position and orient the camera
-    camera->set(cVector3d(0.0, 0.0, 3.0),    // camera position (eye)
+    camera->set(cVector3d(0.0, 0.0, 2.0),    // camera position (eye)
                 cVector3d(0.0, 0.0, 0.0),    // lookat position (target)
                 cVector3d(-1.0, 0.0, 0.0));   // direction of the (up) vector
 
@@ -183,24 +184,17 @@ int main(int argc, char* argv[])
     // set stereo mode
     camera->setStereoMode(stereoMode);
 
-    // set stereo eye separation and focal length (applies only if stereo is enabled)
-    // camera->setStereoEyeSeparation(0.02);
-    // camera->setStereoFocalLength(3.0);
 
     // set vertical mirrored display mode
     camera->setMirrorVertical(mirroredDisplay);
 
-    // create a directional light source
-    light = new cDirectionalLight(world);
+    
+    light = new cDirectionalLight(world); // create a directional light source
+    world->addChild(light); // insert light source inside world
+    light->setEnabled(true); // enable light source
+    light->setDir(-1.0, 0.0, 0.0); // define direction of light beam
 
-    // insert light source inside world
-    world->addChild(light);
 
-    // enable light source
-    light->setEnabled(true);
-
-    // define direction of light beam
-    light->setDir(-1.0, 0.0, 0.0);
 
     //--------------------------------------------------------------------------
     // WIDGETS
@@ -251,8 +245,9 @@ int main(int argc, char* argv[])
     tool->setWorkspaceRadius(1.0);
 
     // define a radius for the virtual tool (sphere)
-    tool->setRadius(0.1);
+    tool->setRadius(0.02);
     tool->setLocalPos(0.0, 0.0, 0.0);
+    tool->setDeviceGlobalPos(0.0, 0.0, 0.0);
     
     // haptic forces are enabled only if small forces are first sent to the device;
     // this mode avoids the force spike that occurs when the application starts when 
@@ -287,7 +282,10 @@ int main(int argc, char* argv[])
         lineEnabled,
         attractorEnabled,
         maxLinearForce, 
-        maxStiffness
+        maxStiffness,
+        maxDamping,
+        firstTargetPosition,
+        startBoxPostition
         );
 
     //--------------------------------------------------------------------------
@@ -525,7 +523,8 @@ void updateHaptics(void)
         freqCounterHaptics.signal(1); // signal frequency counter
 
         // PARSE FILE IF MODIFIED
-        // getVariables(input, mod_time, variables);        
+
+    
 
         // HAPTIC FORCE COMPUTATION
         world->computeGlobalPositions(true); // compute global reference frames for each object
@@ -539,18 +538,29 @@ void updateHaptics(void)
             trialOngoing = true;
             trialCounter += 1;
             end_box->m_material->setGrayDim();
+            
+            
+            getVariables(input, mod_time, variables);
+            cMatrix3d rot;
+            rot.identity();
+            rot.rotateAboutLocalAxisDeg(0,0,1,variables[0]);
+            cVector3d new_pos = rot * (firstTargetPosition - startBoxPostition);
+            end_box->setLocalPos(startBoxPostition + new_pos); 
+            cout << "new pos lenght: " << new_pos.length() << endl;
         }
         
         if(tool->isInContact(start_box))
         {
             attractorEnabled = !trialOngoing;
             if (!trialOngoing){end_box->m_material->setRedDark();}
-            end_box -> setHapticEnabled(!attractorEnabled);
+            end_box -> setEnabled(!attractorEnabled);
             blackHole -> setHapticEnabled(attractorEnabled);
             start_box -> setHapticEnabled(attractorEnabled);
             world->m_material->setViscosity(0.0 * maxDamping);
             
         }   
+        
+
 
         if(tool->isInContact(end_box))
         {
@@ -559,15 +569,18 @@ void updateHaptics(void)
                 appendToCsv(output, data, trialCounter);
                 data.clear();
             }
-                
+
+
+
             attractorEnabled = !trialOngoing;
             end_box->m_material->setGreenDark();
-            end_box -> setHapticEnabled(!attractorEnabled);
+            end_box -> setEnabled(!attractorEnabled);
+
             blackHole -> setHapticEnabled(attractorEnabled);
             start_box -> setHapticEnabled(attractorEnabled);
             world->m_material->setViscosity(0.5 * maxDamping);
         }
-
+        
         if(trialOngoing)
         {   
             // get position of cursor in global coordinates
@@ -578,8 +591,6 @@ void updateHaptics(void)
             /////////////////////////////////////////////////////////////////////
             // READ HAPTIC DEVICE
             /////////////////////////////////////////////////////////////////////
-
-
 
             // read orientation 
             cMatrix3d rotation;

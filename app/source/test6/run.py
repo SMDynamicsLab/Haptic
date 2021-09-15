@@ -7,11 +7,13 @@ from numpy.core.shape_base import block
 import pandas as pd 
 import matplotlib.pyplot as plt
 import numpy as np
+from random import randint
 
 def run_make():
     p_status, p_output = subprocess.getstatusoutput('make')
     if p_status != 0:
         print(p_output)
+        raise Exception("Make did not run succesfully")
 
 def start_simulation(bin_file, input_file, output_file):
     if not os.path.isfile(bin_file):
@@ -52,6 +54,10 @@ def plot_trials(output_file):
     return
 
 def change_variables(input_file):
+    pos = randint(0,5) * 60
+    f = open(input_file, "w")
+    print(pos, file = f)
+    f.close()
     return
 
 def start_controller(input_file, output_file):
@@ -75,20 +81,21 @@ def start_controller(input_file, output_file):
             output_exists = os.path.isfile(output_file)
 
 if __name__ == "__main__":
-    run_make()
-
-    data_path = os.path.join(sys.path[0], 'data')
-    os.makedirs(data_path, exist_ok=True)
-    input_file = os.path.join(data_path, 'in.csv')
-    output_file = os.path.join(data_path, 'out.csv')
-
-    bin_file = os.path.join( sys.path[0], '../../bin/lin-x86_64/test6')
-
-    start_simulation(bin_file, input_file, output_file)
     try:
+        run_make()
+        data_path = os.path.join(sys.path[0], 'data')
+        os.makedirs(data_path, exist_ok=True)
+        input_file = os.path.join(data_path, 'in.csv')
+        output_file = os.path.join(data_path, 'out.csv')
+
+        bin_file = os.path.join( sys.path[0], '../../bin/lin-x86_64/test6')
+
+        start_simulation(bin_file, input_file, output_file)
         start_controller(input_file, output_file)
     except KeyboardInterrupt:
         print('\nStopping due to KeyboardInterrupt')
+    except Exception as e:
+        print(str(e))
 
 
 

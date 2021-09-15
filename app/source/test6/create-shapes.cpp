@@ -18,7 +18,10 @@ void createShapes(
     bool lineEnabled,
     bool attractorEnabled,
     double& maxLinearForce, 
-    double& maxStiffness
+    double& maxStiffness,
+    double& maxDamping,
+    cVector3d& firstTargetPosition,
+    cVector3d& startBoxPostition
     )
 {
     // SHAPE - BASE
@@ -34,31 +37,41 @@ void createShapes(
     base->m_material->setStiffness(0.5 * maxStiffness);
 
     // SHAPE - end box
-    end_box = new cShapeBox(0.1,1.0,1.0);
+    end_box = new cShapeBox(0.08,0.08,0.1);
     world->addChild(end_box);
-    end_box->setLocalPos(-0.5,0.0, 0.0);
+    end_box->setLocalPos(firstTargetPosition);
+    cout << "end global:" << end_box->getGlobalPos() << endl;
+    cout << "end local:" << end_box->getLocalPos()<< endl;
     end_box->m_material->setRedDark();
-    end_box->createEffectSurface();
-    end_box->m_material->setStiffness(0.4 * maxStiffness);
+    // end_box->createEffectSurface();
+    // end_box->m_material->setStiffness(0.4 * maxStiffness);
+    //     // set haptic properties
+    end_box->m_material->setViscosity(0.1 * maxDamping);
+    end_box->createEffectViscosity();
 
     // SHAPE - start box
-    start_box = new cShapeBox(0.1,0.5,0.1);
+    start_box = new cShapeBox(0.08,0.08,0.1);
     world->addChild(start_box);
-    start_box->setLocalPos(0.8, 0.0, 0.0);
+    // start_box->setLocalPos(0.8, 0.0, 0.0);
+    start_box->setLocalPos(startBoxPostition);
+    cout << "start global:" << start_box->getGlobalPos() << endl;
+    cout << "start local:" << start_box->getLocalPos()<< endl;
     start_box->m_material-> setGrayDarkSlate();
     start_box-> setUseTransparency(true);
     start_box-> setTransparencyLevel(0.2);
-    start_box->createEffectSurface();
-    start_box->m_material->setStiffness(0.8 * maxStiffness);
+    // start_box->createEffectSurface();
+    // start_box->m_material->setStiffness(0.8 * maxStiffness);
+    start_box->m_material->setViscosity(0.1 * maxDamping);
+    start_box->createEffectViscosity();
 
     // SHAPE - Attractor
     blackHole = new cShapeSphere(0.01);
     world->addChild(blackHole);
-    blackHole->setLocalPos(0.8, 0.0, 0.0);
+    blackHole->setLocalPos(startBoxPostition);
     blackHole->createEffectSurface();
     blackHole->createEffectMagnetic();
     blackHole->m_material->setMagnetMaxDistance(10);
-    blackHole->m_material->setMagnetMaxForce(0.2 * maxLinearForce);   
+    blackHole->m_material->setMagnetMaxForce(0.3 * maxLinearForce);   
     blackHole->m_material->setStiffness(0.5 * maxStiffness);
     blackHole -> setHapticEnabled(attractorEnabled);
 
