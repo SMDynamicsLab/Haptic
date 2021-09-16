@@ -74,7 +74,7 @@ bool trialOngoing = false;
 int trialCounter = 0;
 string outputPath = "/home/Carolina/Downloads/a.csv";
 bool useDamping = false; // a flag for using damping (ON/OFF)
-bool useForceField = false; // a flag for using force field (ON/OFF)
+bool useForceField = true; // a flag for using force field (ON/OFF)
 
 time_t mod_time;
 vector<double> variables;
@@ -522,6 +522,9 @@ void updateHaptics(void)
         clock.start(); 
         freqCounterHaptics.signal(1); // signal frequency counter
 
+
+        
+
         // PARSE FILE IF MODIFIED
 
     
@@ -582,91 +585,64 @@ void updateHaptics(void)
         }
         
         if(trialOngoing)
-        {   
-            // get position of cursor in global coordinates
-            cVector3d position = tool->getDeviceGlobalPos(); // global
-            vector<double> row = {position.x(), position.y(), position.z()};
-            data.push_back(row);
-            
+        {    
             /////////////////////////////////////////////////////////////////////
             // READ HAPTIC DEVICE
             /////////////////////////////////////////////////////////////////////
-
-            // read orientation 
-            cMatrix3d rotation;
-            hapticDevice->getRotation(rotation);
+            // read position
+            cVector3d position;
+            hapticDevice->getPosition(position);
 
             // read linear velocity 
             cVector3d linearVelocity;
-            hapticDevice->getLinearVelocity(linearVelocity);
+            hapticDevice->getLinearVelocity(linearVelocity); //[m/s]
 
-            // read angular velocity
-            cVector3d angularVelocity;
-            hapticDevice->getAngularVelocity(angularVelocity);
-
+            //save position
+            vector<double> row = {position.x(), position.y(), position.z()};
+            data.push_back(row);
             
+            
+
+
             /////////////////////////////////////////////////////////////////////
             // COMPUTE AND APPLY FORCES
             /////////////////////////////////////////////////////////////////////
-            
-            // desired position
-            cVector3d desiredPosition;
-            // desiredPosition.set(0.0, 0.0, 0.0);
-            desiredPosition = start_box->getGlobalPos();
-            // desiredPosition.set(0.8, 0.0, 0.0);
-            // // desired orientation
-            // cMatrix3d desiredRotation;
-            // desiredRotation.identity();
-            
-            // variables for forces
-            cVector3d force (0,0,0);
-            // cVector3d torque (0,0,0);
-            
+      
             // apply force field
             if (useForceField)
             {   
-                
+                // variables for forces
+                cVector3d force (0,0,0);  
+
+                cMatrix3d B = cMatrix3d(
+                    cVector3d(-10.1, -11.2,    0),     // col1
+                    cVector3d(-11.2,  11.1,    0),     // col2
+                    cVector3d(    0,     0,    0)      // col3
+                ); // [N.sec/m]
+
                 // compute linear force
-                double Kp = 2; // [N/m] //FIX
-                cVector3d forceField = Kp * (desiredPosition - position);
-                forceField.set(0,forceField.x(),0); // elastic force x0-x = -x in Y dir (force to the right)
+                cVector3d forceField = B * linearVelocity * 0.5;
                 force.add(forceField);
                 labelMessage->setText("force" + force.str());
-                // // compute angular torque
-                // double Kr = 0.05; // [N/m.rad]
-                // cVector3d axis;
-                // double angle;
-                // cMatrix3d deltaRotation = cTranspose(rotation) * desiredRotation;
-                // deltaRotation.toAxisAngle(axis, angle);
-                // torque = rotation * ((Kr * angle) * axis);
                 tool->addDeviceGlobalForce(force);
+                
+                // cout << "position" << position << endl;
+                // cout << "linearVelocity" << linearVelocity << endl;
+                // cout << "force" << force  << endl;
+                if (lineEnabled){
+                    // update arrow
+                    line->m_pointB = force;
+                    cout << "line->m_pointA" << line->m_pointA << endl;
+                    cout << "line->m_pointB" << line->m_pointB << endl;
+                    cout << "position" << position << endl;
+                }
             }
             
-            
-            // apply damping term
-            // if (useDamping)
-            // {
-            //     cHapticDeviceInfo info = hapticDevice->getSpecifications();
 
-            //     // compute linear damping force
-            //     double Kv = 1.0 * info.m_maxLinearDamping;
-            //     cVector3d forceDamping = -Kv * linearVelocity;
-            //     force.add(forceDamping);
-
-            //     // compute angular damping force
-            //     double Kvr = 1.0 * info.m_maxAngularDamping;
-            //     cVector3d torqueDamping = -Kvr * angularVelocity;
-            //     torque.add(torqueDamping);
-            // }
-
-            // send computed force and torque to haptic device
-            // hapticDevice->setForceAndTorque(force, torque);
-            // hapticDevice->setForce(force);
             
         }
-        
-        tool->applyToDevice(); // send forces to haptic device
-
+        tool->applyToDevice(); // send forces to haptic device        
+        // cout << "tool->getDeviceGlobalForce()" << tool->getDeviceGlobalForce() << endl;
 
     }
     

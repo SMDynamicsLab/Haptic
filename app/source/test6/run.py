@@ -35,20 +35,18 @@ def plot_trials(output_file):
     names = ['trial', 'x', 'y', 'z']
     df = pd.read_csv(output_file, names=names, index_col=False)
     df['x'] = -df['x']
-    x_min = df['x'].min()
-    df['x'] = df['x']-x_min
     fig, axs = plt.subplots(2)
 
     x = np.linspace(df['x'].min(), df['x'].max(), 100)
     y = []
     for trial, group in df.groupby('trial'):
-        group.plot(x='x', y='y', ax=axs[0], label=f'trial {trial}')
-        y.append(np.interp(x, df[df['trial']==trial]['x'], df[df['trial']==trial]['y']))
-    midy = [np.mean([y[j][i] for j in range(len(df['trial'].unique()))]) for i in range(100)]
-    stdy = [np.std([y[j][i] for j in range(len(df['trial'].unique()))]) for i in range(100)]
-    axs[1].plot(x, midy, '--', c='black')
-    axs[1].plot(x, [midy[i]+stdy[i] for i in range(100)], '--', c='red')
-    axs[1].plot(x, [midy[i]-stdy[i] for i in range(100)], '--', c='red')
+        group.plot(x='y', y='x', ax=axs[0], label=f'trial {trial}')
+    #     y.append(np.interp(x, df[df['trial']==trial]['x'], df[df['trial']==trial]['y']))
+    # midy = [np.mean([y[j][i] for j in range(len(df['trial'].unique()))]) for i in range(100)]
+    # stdy = [np.std([y[j][i] for j in range(len(df['trial'].unique()))]) for i in range(100)]
+    # axs[1].plot(x, midy, '--', c='black')
+    # axs[1].plot(x, [midy[i]+stdy[i] for i in range(100)], '--', c='red')
+    # axs[1].plot(x, [midy[i]-stdy[i] for i in range(100)], '--', c='red')
     plt.draw()
     plt.pause(1)
     return

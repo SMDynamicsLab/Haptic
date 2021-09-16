@@ -78,3 +78,23 @@ blanked, removing visual feedback during the reaching period.
 * que el cursor se pueda activar/desactivar visualmente
 * que entre a una zona en lugar de chocar con una pared
 * sigue siendo que vuelve a su posicion original
+
+# info 
+* hapticDevice->getPosition / tool->getDeviceGlobalPos() = (0.075, 0.075, 0.075)
+* hapticDevice->getLinearVelocity / tool->getDeviceGlobalLinVel()  = (0.075, 0.075, 0.075)
+* object->getGlobalPos() es comparable a tool->getDeviceGlobalPos()
+* [hapticDevice->getPosition] = [m]
+* [hapticDevice->getLinearVelocity(linearVelocity] = [m/s]
+* [force] = [N]
+* [B] = [N.sec/m]
+* tool->getDeviceGlobalForce() = tool->getDeviceLocalForce() = hapticDevice->getForce
+
+
+# Para la prox
+* bloque sin fuerza (16 trials de direcciones al azar) training adaptacion al aparato (con feedback visual)
+* bloque sin fuerza sin feedback
+* bloque con fuerza sin feedback
+* bloque sin fuerza (para ver after effects) sin feedback
+* con el campo y trayectorias del paper comparar las trayectorias (subplot por posicion)
+* descartar trial si tarda mas de 2 segundos  (en el paper es limite 0.65) 
+* terminar el trial si se queda quieto (cerca del target por 500ms )

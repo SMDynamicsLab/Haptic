@@ -76,13 +76,15 @@ void createShapes(
     blackHole -> setHapticEnabled(attractorEnabled);
 
     // SHAPE - LINE
-    line = new cShapeLine(start_box, end_box);
+    // line = new cShapeLine(start_box, end_box);
+    line = new cShapeLine(cVector3d(0,0,0), 
+                              cVector3d(0,0,0));
     world->addChild(line);
     line -> setEnabled(lineEnabled);
     line->m_colorPointA.setWhite();
-    line->m_colorPointB.setWhite();
-    line->createEffectMagnetic();
-    line->m_material->setMagnetMaxDistance(0.05);
-    line->m_material->setMagnetMaxForce(0.3 * maxLinearForce);
-    line->m_material->setStiffness(0.2 * maxStiffness);      
+    line->m_colorPointB.setRedCrimson();
+    // line->createEffectMagnetic();
+    // line->m_material->setMagnetMaxDistance(0.05);
+    // line->m_material->setMagnetMaxForce(0.3 * maxLinearForce);
+    // line->m_material->setStiffness(0.2 * maxStiffness);      
 }
