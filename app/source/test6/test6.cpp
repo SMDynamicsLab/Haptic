@@ -579,7 +579,7 @@ void updateHaptics(void)
         {
             if (trialOngoing){
                 trialOngoing = false;
-                appendToCsv(output, data, trialCounter);
+                appendToCsv(output, data, trialCounter, variables);
                 data.clear();
                 trialCounter += 1;
             }

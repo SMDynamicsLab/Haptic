@@ -78,6 +78,10 @@ blanked, removing visual feedback during the reaching period.
 * que el cursor se pueda activar/desactivar visualmente
 * que entre a una zona en lugar de chocar con una pared
 * sigue siendo que vuelve a su posicion original
+* bloque sin fuerza (16 trials de direcciones al azar) training adaptacion al aparato (con feedback visual)
+* bloque sin fuerza sin feedback
+* bloque con fuerza sin feedback
+* bloque sin fuerza (para ver after effects) sin feedback
 
 # info 
 * hapticDevice->getPosition / tool->getDeviceGlobalPos() = (0.075, 0.075, 0.075)
@@ -91,12 +95,16 @@ blanked, removing visual feedback during the reaching period.
 
 
 # Para la prox
-* bloque sin fuerza (16 trials de direcciones al azar) training adaptacion al aparato (con feedback visual)
-* bloque sin fuerza sin feedback
-* bloque con fuerza sin feedback
-* bloque sin fuerza (para ver after effects) sin feedback
 * con el campo y trayectorias del paper comparar las trayectorias (subplot por posicion)
 * descartar trial si tarda mas de 2 segundos  (en el paper es limite 0.65) 
 * terminar el trial si se queda quieto (cerca del target por 500ms )
 
 * arreglar el plot (subplot por pos)
+* armar array [0,1,2,3,4,5]*N/6 y permutarlo al azar
+* input/output files con timestamp
+* arreglar que siempre sale el mismo angulo!
+
+# Nuevo test:
+* visuomotor rotation (ver paper del mail)
+* 3 bloques (sin, con, sin)
+* girar el vector "up" en la orientacion del cursor a un angulo definido (siempre el mismo)

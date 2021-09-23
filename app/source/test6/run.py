@@ -8,6 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from random import randint
+import random
 
 def run_make():
     p_status, p_output = subprocess.getstatusoutput('make')
@@ -61,15 +62,16 @@ def change_variables(input_file, variables_for_trial):
     return
 
 def get_variables(variables_array = []):
-    variables_array += get_variables_block(N=16, visual_feedback=1, force=0)
-    variables_array += get_variables_block(N=16, visual_feedback=0, force=0)
-    variables_array += get_variables_block(N=16, visual_feedback=0, force=1)
-    variables_array += get_variables_block(N=16, visual_feedback=0, force=0) 
+    variables_array += get_variables_block(N=1, visual_feedback=1, force=0)
+    variables_array += get_variables_block(N=1, visual_feedback=0, force=0)
+    variables_array += get_variables_block(N=1, visual_feedback=0, force=1)
+    variables_array += get_variables_block(N=1, visual_feedback=0, force=0) 
     return variables_array
 
 def get_variables_block(N, force, visual_feedback):
-    angle_array = (np.random.randint(0,5,(N)) * 60).tolist()
-    variables = [[angle, visual_feedback, force] for angle in angle_array]
+    angles = [0, 1, 2, 3, 4, 5]*N
+    random.shuffle(angles)
+    variables = [[angle*60, visual_feedback, force] for angle in angles]
     return variables
 
 def start_controller(input_file, output_file, variables):
