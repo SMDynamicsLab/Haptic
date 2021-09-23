@@ -40,8 +40,6 @@ void createShapes(
     end_box = new cShapeBox(0.08,0.08,0.1);
     world->addChild(end_box);
     end_box->setLocalPos(firstTargetPosition);
-    cout << "end global:" << end_box->getGlobalPos() << endl;
-    cout << "end local:" << end_box->getLocalPos()<< endl;
     end_box->m_material->setRedDark();
     // end_box->createEffectSurface();
     // end_box->m_material->setStiffness(0.4 * maxStiffness);
@@ -54,8 +52,6 @@ void createShapes(
     world->addChild(start_box);
     // start_box->setLocalPos(0.8, 0.0, 0.0);
     start_box->setLocalPos(startBoxPostition);
-    cout << "start global:" << start_box->getGlobalPos() << endl;
-    cout << "start local:" << start_box->getLocalPos()<< endl;
     start_box->m_material-> setGrayDarkSlate();
     start_box-> setUseTransparency(true);
     start_box-> setTransparencyLevel(0.2);
@@ -87,4 +83,18 @@ void createShapes(
     // line->m_material->setMagnetMaxDistance(0.05);
     // line->m_material->setMagnetMaxForce(0.3 * maxLinearForce);
     // line->m_material->setStiffness(0.2 * maxStiffness);      
+}
+
+void changeTargetPosition(
+    cShapeBox*& end_box,
+    cVector3d& firstTargetPosition,
+    cVector3d& startBoxPostition,
+    double& angle
+    )
+{
+    cMatrix3d rot;
+    rot.identity();
+    rot.rotateAboutLocalAxisDeg(0,0,1,angle);
+    cVector3d new_pos = rot * (firstTargetPosition - startBoxPostition);
+    end_box->setLocalPos(startBoxPostition + new_pos);
 }

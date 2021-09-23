@@ -16,4 +16,10 @@ void createShapes(
     chai3d::cVector3d& firstTargetPosition,
     chai3d::cVector3d& startBoxPostition
     );
+void changeTargetPosition(
+    chai3d::cShapeBox*& end_box, 
+    chai3d::cVector3d& firstTargetPosition,
+    chai3d::cVector3d& startBoxPostition,
+    double& angle
+    );
 #endif 

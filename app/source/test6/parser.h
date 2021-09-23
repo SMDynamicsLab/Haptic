@@ -12,6 +12,7 @@ std::vector<double> parseFile(std::string& filename);
 void appendToCsv(
     std::string& output, 
     std::vector<std::vector<double>>& data, 
-    int& trialCounter
+    int& trialCounter,
+    std::vector<double>& variables
 );
 #endif 

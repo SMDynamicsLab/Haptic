@@ -98,3 +98,5 @@ blanked, removing visual feedback during the reaching period.
 * con el campo y trayectorias del paper comparar las trayectorias (subplot por posicion)
 * descartar trial si tarda mas de 2 segundos  (en el paper es limite 0.65) 
 * terminar el trial si se queda quieto (cerca del target por 500ms )
+
+* arreglar el plot (subplot por pos)

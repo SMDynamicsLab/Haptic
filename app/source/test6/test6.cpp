@@ -75,12 +75,22 @@ int trialCounter = 0;
 string outputPath = "/home/Carolina/Downloads/a.csv";
 bool useDamping = false; // a flag for using damping (ON/OFF)
 bool useForceField = true; // a flag for using force field (ON/OFF)
+bool cursorVisible = true;
 
 time_t mod_time;
 vector<double> variables;
 vector<vector<double>> data;
 string input;
 string output;
+
+void setVariables()
+{
+    double angle = variables[0];
+    cursorVisible = variables[1];
+    useForceField = variables[2];
+    changeTargetPosition(end_box, firstTargetPosition, startBoxPostition, angle);
+    tool -> setShowEnabled(cursorVisible);
+}
 
 int main(int argc, char* argv[])
 {
@@ -93,8 +103,6 @@ int main(int argc, char* argv[])
     output = argv[2];
     cout << "Input file is "<< input << endl;
     cout << "Output file is "<< output << endl;
-    
-    getVariables(input, mod_time, variables);
 
     // OPEN GL - WINDOW DISPLAY
     // initialize GLFW library
@@ -256,11 +264,12 @@ int main(int argc, char* argv[])
 
     // start the haptic tool
     tool->start();
+    tool -> setShowEnabled(cursorVisible);
 
     // read the scale factor between the physical workspace of the haptic
     // device and the virtual workspace defined for the tool
     double workspaceScaleFactor = tool->getWorkspaceScaleFactor();
-
+    
     // get properties of haptic device
     double maxStiffness	= hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor;
     double maxLinearForce = cMin(hapticDeviceInfo.m_maxLinearForce, 7.0);
@@ -287,6 +296,8 @@ int main(int argc, char* argv[])
         firstTargetPosition,
         startBoxPostition
         );
+
+    
 
     //--------------------------------------------------------------------------
     // START SIMULATION
@@ -536,22 +547,21 @@ void updateHaptics(void)
         // tool->applyToDevice(); // send forces to haptic device
         
         // TRIAL ONGOING/FINISHED
+        bool trialFinishedManually=false;
         bool userSwitch = tool->getUserSwitch(0); // read user switch
         if (userSwitch && tool->isInContact(start_box) && !trialOngoing){
             trialOngoing = true;
-            trialCounter += 1;
             end_box->m_material->setGrayDim();
-            
-            
             getVariables(input, mod_time, variables);
-            cMatrix3d rot;
-            rot.identity();
-            rot.rotateAboutLocalAxisDeg(0,0,1,variables[0]);
-            cVector3d new_pos = rot * (firstTargetPosition - startBoxPostition);
-            end_box->setLocalPos(startBoxPostition + new_pos); 
-            cout << "new pos lenght: " << new_pos.length() << endl;
+            setVariables();
+            
+        }
+        else if (userSwitch && (tool->getDeviceGlobalPos()).distance(startBoxPostition) > 0.1) // no lo probe aun, PROBAR
+        {
+            trialFinishedManually = true;
         }
         
+
         if(tool->isInContact(start_box))
         {
             attractorEnabled = !trialOngoing;
@@ -565,12 +575,13 @@ void updateHaptics(void)
         
 
 
-        if(tool->isInContact(end_box))
+        if(tool->isInContact(end_box) or trialFinishedManually)
         {
             if (trialOngoing){
                 trialOngoing = false;
                 appendToCsv(output, data, trialCounter);
                 data.clear();
+                trialCounter += 1;
             }
 
 

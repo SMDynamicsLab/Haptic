@@ -33,6 +33,8 @@ def plot_trials(output_file):
     plt.show()
     # estructura: trial, x, y, z
     names = ['trial', 'x', 'y', 'z']
+    var_names = ['angle', 'visual_feedback', 'force']
+    names += var_names
     df = pd.read_csv(output_file, names=names, index_col=False)
     df['x'] = -df['x']
     fig, axs = plt.subplots(2)
@@ -51,17 +53,30 @@ def plot_trials(output_file):
     plt.pause(1)
     return
 
-def change_variables(input_file):
-    pos = randint(0,5) * 60
+def change_variables(input_file, variables_for_trial):
     f = open(input_file, "w")
-    print(pos, file = f)
+    variables_str = " ".join([str(i) for i in variables_for_trial])
+    print(variables_str, file = f)
     f.close()
     return
 
-def start_controller(input_file, output_file):
+def get_variables(variables_array = []):
+    variables_array += get_variables_block(N=16, visual_feedback=1, force=0)
+    variables_array += get_variables_block(N=16, visual_feedback=0, force=0)
+    variables_array += get_variables_block(N=16, visual_feedback=0, force=1)
+    variables_array += get_variables_block(N=16, visual_feedback=0, force=0) 
+    return variables_array
+
+def get_variables_block(N, force, visual_feedback):
+    angle_array = (np.random.randint(0,5,(N)) * 60).tolist()
+    variables = [[angle, visual_feedback, force] for angle in angle_array]
+    return variables
+
+def start_controller(input_file, output_file, variables):
     fname = pathlib.Path(output_file)
     last_mod_time = None # epoch float
     output_exists = os.path.isfile(output_file)
+    trial = 1
     # Consumo de memoria/CPU: htop -p "$(pgrep -d , "python|test")"
     while True:
         # no sleep 99% CPU
@@ -74,7 +89,8 @@ def start_controller(input_file, output_file):
                 print('file changed')
                 last_mod_time = mod_time
                 plot_trials(output_file)
-                change_variables(input_file)
+                change_variables(input_file, variables[trial])
+                trial+=1
         else:
             output_exists = os.path.isfile(output_file)
 
@@ -88,8 +104,10 @@ if __name__ == "__main__":
 
         bin_file = os.path.join( sys.path[0], '../../bin/lin-x86_64/test6')
 
+        variables = get_variables()
+        change_variables(input_file, variables[0]) # first trial
         start_simulation(bin_file, input_file, output_file)
-        start_controller(input_file, output_file)
+        start_controller(input_file, output_file, variables)
     except KeyboardInterrupt:
         print('\nStopping due to KeyboardInterrupt')
     except Exception as e:

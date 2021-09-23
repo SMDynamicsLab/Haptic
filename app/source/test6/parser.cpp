@@ -79,7 +79,8 @@ vector<double> parseFile(string& filename)
 void appendToCsv(
     string& output, 
     vector<vector<double>>& data, 
-    int& trialCounter
+    int& trialCounter,
+    vector<double>& variables
 )
 {   
     ofstream fout;
@@ -93,6 +94,10 @@ void appendToCsv(
                 fout<< value;
                 fout<< ", ";
             }
+            for (auto & value : variables) {
+                fout<< value;
+                fout<< ", ";
+            }            
             fout<< "\n";    
         }
         cout<<"\n Data has been appended to file for trial " << trialCounter;        
