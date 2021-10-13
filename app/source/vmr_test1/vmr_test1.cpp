@@ -67,18 +67,15 @@ void close(void); // this function closes the application
 
 // Haptic custom objects
 cShapeBox* base;
-cShapeBox* end_box;
-cShapeBox* start_box;
-cShapeLine* line;
-cShapeSphere* blackHole;
+cShapeSphere* target;
+cShapeSphere* center;
 cFontPtr font; // a font for rendering text
 cLabel* labelMessage; // a label to explain what is happening
 cLabel* labelRates; // a label to display the rate [Hz] at which the simulation is running
 cVector3d firstTargetPosition = cVector3d(-0.5,0.0, 0.0);
-cVector3d startBoxPostition = cVector3d(0.0, 0.0, 0.0);
+cVector3d centerPostition = cVector3d(0.0, 0.0, 0.0);
 
 // Custom variables
-bool lineEnabled = false;
 bool baseEnabled = true;
 bool attractorEnabled = true;
 double maxDamping;
@@ -95,13 +92,37 @@ vector<vector<double>> data;
 string input;
 string output;
 
+// Camera Settings
+cVector3d localPosition = cVector3d(0.0, 0.0, 2.0); // camera position (eye)
+cVector3d localLookAt = cVector3d(0.0, 0.0, 0.0); // lookat position (target)
+cVector3d localUp = cVector3d(-1.0, 0.0, 0.0); // direction of the (up) vector
+
+// VMR
+bool vmrEnabled = false;
+cMatrix3d vmrRotation;
+cVector3d vmrUpVector;
+
+// Trial Phases
+cPrecisionClock clockPhaseTime; // precision clock
+int trialPhase = 0;
+double totalPhaseDurationInMs;
+void startTrialPhase(int phase);
+
 void setVariables()
 {
     double angle = variables[0];
     cursorVisible = variables[1];
     useForceField = variables[2];
-    changeTargetPosition(end_box, firstTargetPosition, startBoxPostition, angle);
+    changeTargetPosition(target, firstTargetPosition, centerPostition, angle);
     tool -> setShowEnabled(cursorVisible);
+}
+
+void setVrmUpVector()
+{   
+    cMatrix3d vmrRotation;
+    vmrRotation.identity();
+    vmrRotation.rotateAboutLocalAxisDeg(0,0,1,60);
+    vmrUpVector = vmrRotation * localUp;
 }
 
 int main(int argc, char* argv[])
@@ -111,14 +132,13 @@ int main(int argc, char* argv[])
         cout << "2 args expected " << argc-1 << " received" << endl;
         return (0); // exit
     }
+    // parse first arg to try and locate resources
+    resourceRoot = string(argv[0]).substr(0,string(argv[0]).find_last_of("/\\")+1);
+
     input = argv[1];
     output = argv[2];
     cout << "Input file is "<< input << endl;
     cout << "Output file is "<< output << endl;
-
-    // parse first arg to try and locate resources
-    resourceRoot = string(argv[0]).substr(0,string(argv[0]).find_last_of("/\\")+1);
-    cout << "resourceRoot is "<< resourceRoot << endl;
 
     // OPEN GL - WINDOW DISPLAY
     // initialize GLFW library
@@ -196,9 +216,7 @@ int main(int argc, char* argv[])
     world->addChild(camera);
     
     // position and orient the camera
-    camera->set(cVector3d(0.0, 0.0, 2.0),    // camera position (eye)
-                cVector3d(0.0, 0.0, 0.0),    // lookat position (target)
-                cVector3d(-1.0, 0.0, 0.0));   // direction of the (up) vector
+    camera->set(localPosition, localLookAt, localUp);
 
     camera->setUseMultipassTransparency(true);
 
@@ -216,7 +234,7 @@ int main(int argc, char* argv[])
     light = new cDirectionalLight(world); // create a directional light source
     world->addChild(light); // insert light source inside world
     light->setEnabled(true); // enable light source
-    light->setDir(-1.0, 0.0, 0.0); // define direction of light beam
+    light->setDir(localUp); // define direction of light beam
 
 
 
@@ -269,7 +287,7 @@ int main(int argc, char* argv[])
     tool->setWorkspaceRadius(1.0);
 
     // define a radius for the virtual tool (sphere)
-    tool->setRadius(0.02);
+    tool->setRadius(0.07);
     tool->setLocalPos(0.0, 0.0, 0.0);
     tool->setDeviceGlobalPos(0.0, 0.0, 0.0);
     
@@ -335,18 +353,14 @@ int main(int argc, char* argv[])
     createShapes(
         world, 
         base, 
-        start_box,
-        end_box,
-        blackHole,
-        line,
+        center,
+        target,
         baseEnabled, 
-        lineEnabled,
-        attractorEnabled,
         maxLinearForce, 
         maxStiffness,
         maxDamping,
         firstTargetPosition,
-        startBoxPostition
+        centerPostition
         );
 
     
@@ -470,11 +484,22 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
         mirroredDisplay = !mirroredDisplay;
         camera->setMirrorVertical(mirroredDisplay);
     }
-
-    else if (a_key == GLFW_KEY_L)
+    
+    else if (a_key = GLFW_KEY_V)
     {   
-        lineEnabled = !lineEnabled;
-        line -> setEnabled(lineEnabled);
+        vmrEnabled = !vmrEnabled;
+        if (vmrEnabled)
+        {   
+            setVrmUpVector();
+            camera->set(localPosition, localLookAt, vmrUpVector);
+            light->setDir(vmrUpVector);
+        }
+        else 
+        {
+            camera->set(localPosition, localLookAt, localUp);
+            light->setDir(localUp);
+        }
+        
     }
 
     else if (a_key == GLFW_KEY_B)
@@ -571,150 +596,149 @@ void updateGraphics(void)
 void updateHaptics(void)
 {
     // precision clock
-    cPrecisionClock clock;
-    clock.reset();
+    clockPhaseTime.reset();
 
     // simulation in now running
     simulationRunning  = true;
     simulationFinished = false;
-
+    startTrialPhase(trialPhase);
     // main haptic simulation loop
     while(simulationRunning)
     {   
         /////////////////////////////////////////////////////////////////////
         // SIMULATION TIME    
         /////////////////////////////////////////////////////////////////////
-        clock.stop(); // stop the simulation clock
-        double timeInterval = clock.getCurrentTimeSeconds(); // read the time increment in seconds
-        clock.reset(); // restart the simulation clock
-        clock.start(); 
-        freqCounterHaptics.signal(1); // signal frequency counter
-
-
-        
-
-        // PARSE FILE IF MODIFIED
-
-    
+        freqCounterHaptics.signal(1); // signal frequency counter    
 
         // HAPTIC FORCE COMPUTATION
         world->computeGlobalPositions(true); // compute global reference frames for each object
         tool->updateFromDevice(); // update position and orientation of tool
         tool->computeInteractionForces(); // compute interaction forces
-        // tool->applyToDevice(); // send forces to haptic device
-        
-        // TRIAL ONGOING/FINISHED
-        bool trialFinishedManually=false;
-        bool userSwitch = tool->getUserSwitch(0); // read user switch
-        if (userSwitch && tool->isInContact(start_box) && !trialOngoing){
-            trialOngoing = true;
-            end_box->m_material->setGrayDim();
-            getVariables(input, mod_time, variables);
-            setVariables();
-            
+        tool->applyToDevice(); // send forces to haptic device
+
+        double timeSincePhaseStartedInMs = clockPhaseTime.stop() * 1000; // read the clockPhaseTime increment in seconds
+        clockPhaseTime.start();
+        if (trialPhase == 0 && (tool->getDeviceGlobalPos()).distance(center->getGlobalPos()) < 0.05) // GO TO CENTER
+        {
+            trialPhase = 1;
+            startTrialPhase(trialPhase); // HOLD CENTER
         }
-        else if (userSwitch && (tool->getDeviceGlobalPos()).distance(startBoxPostition) > 0.1) // no lo probe aun, PROBAR
-        {
-            trialFinishedManually = true;
-        }
-        
 
-        if(tool->isInContact(start_box))
-        {
-            attractorEnabled = !trialOngoing;
-            if (!trialOngoing){end_box->m_material->setRedDark();}
-            end_box -> setEnabled(!attractorEnabled);
-            blackHole -> setHapticEnabled(attractorEnabled);
-            start_box -> setHapticEnabled(attractorEnabled);
-            world->m_material->setViscosity(0.0 * maxDamping);
+        if (trialPhase == 1) // HOLD CENTER
+        {   
+            bool afuera_del_centro = (tool->getDeviceGlobalPos()).distance(center->getGlobalPos()) > 0.1;
             
-        }   
-        
-
-
-        if(tool->isInContact(end_box) or trialFinishedManually)
-        {
-            if (trialOngoing){
-                trialOngoing = false;
-                appendToCsv(output, data, trialCounter, variables);
-                data.clear();
-                trialCounter += 1;
+            if (afuera_del_centro) //Moved outside of center
+            {   
+                cout << "hold center failed" << endl;
+                audioSourceFailure -> play();
+                trialPhase = 0;
+                startTrialPhase(trialPhase); // GO TO CENTER
             }
-
-
-
-            attractorEnabled = !trialOngoing;
-            end_box->m_material->setGreenDark();
-            end_box -> setEnabled(!attractorEnabled);
-
-            blackHole -> setHapticEnabled(attractorEnabled);
-            start_box -> setHapticEnabled(attractorEnabled);
-            world->m_material->setViscosity(0.5 * maxDamping);
+            
+            if (timeSincePhaseStartedInMs > totalPhaseDurationInMs) //center hold finished
+            {   
+                trialPhase = 2;
+                startTrialPhase(trialPhase); // TRIAL ONGOING
+            }            
         }
-        
-        if(trialOngoing)
-        {    
-            /////////////////////////////////////////////////////////////////////
-            // READ HAPTIC DEVICE
-            /////////////////////////////////////////////////////////////////////
+
+        if (trialPhase==2) // TRIAL ONGOING
+        {
             // read position
             cVector3d position;
             hapticDevice->getPosition(position);
 
-            // read linear velocity 
-            cVector3d linearVelocity;
-            hapticDevice->getLinearVelocity(linearVelocity); //[m/s]
-
             //save position
             vector<double> row = {position.x(), position.y(), position.z()};
             data.push_back(row);
-            
-            
 
-
-            /////////////////////////////////////////////////////////////////////
-            // COMPUTE AND APPLY FORCES
-            /////////////////////////////////////////////////////////////////////
-      
-            // apply force field
-            if (useForceField)
-            {   
-                // variables for forces
-                cVector3d force (0,0,0);  
-
-                cMatrix3d B = cMatrix3d(
-                    cVector3d(-10.1, -11.2,    0),     // col1
-                    cVector3d(-11.2,  11.1,    0),     // col2
-                    cVector3d(    0,     0,    0)      // col3
-                ); // [N.sec/m]
-
-                // compute linear force
-                cVector3d forceField = B * linearVelocity * 0.5;
-                force.add(forceField);
-                labelMessage->setText("force" + force.str());
-                tool->addDeviceGlobalForce(force);
-                
-                // cout << "position" << position << endl;
-                // cout << "linearVelocity" << linearVelocity << endl;
-                // cout << "force" << force  << endl;
-                if (lineEnabled){
-                    // update arrow
-                    line->m_pointB = force;
-                    cout << "line->m_pointA" << line->m_pointA << endl;
-                    cout << "line->m_pointB" << line->m_pointB << endl;
-                    cout << "position" << position << endl;
+            if (timeSincePhaseStartedInMs > totalPhaseDurationInMs) //Timeout
+            {
+                audioSourceFailure -> play();
+                trialPhase = 0;
+                startTrialPhase(trialPhase); // GO TO CENTER
+            }
+            else 
+            {
+                if ((tool->getDeviceGlobalPos()).distance(target->getGlobalPos()) < 0.05) //Tool is inside target
+                {   
+                    trialPhase = 3;
+                    startTrialPhase(trialPhase); // HOLD TARGET
                 }
             }
-            
-
-            
         }
-        tool->applyToDevice(); // send forces to haptic device        
-        // cout << "tool->getDeviceGlobalForce()" << tool->getDeviceGlobalForce() << endl;
 
+        if (trialPhase==3) // HOLD TARGET
+        {   
+            if ((tool->getDeviceGlobalPos()).distance(target->getGlobalPos()) > 0.1) //Moved outside of target
+            {
+                audioSourceFailure -> play();
+                trialPhase = 0;
+                startTrialPhase(trialPhase); // GO TO CENTER
+            }
+            else if (timeSincePhaseStartedInMs > totalPhaseDurationInMs) //Target hold finished
+            {
+                audioSourceSuccess -> play();
+                trialPhase = 4;
+                startTrialPhase(trialPhase);
+            }
+        }
+
+        if (trialPhase == 4 && timeSincePhaseStartedInMs > totalPhaseDurationInMs) // TRIAL SUCCESFUL / WAITING FOR NEXT TRIAL
+        {
+            trialPhase = 0;
+            startTrialPhase(trialPhase);
+            // si llega al ultimo trial que lo corte
+        }
     }
     
     // exit haptics thread
     simulationFinished = true;
 }
+
+void startTrialPhase(int phase)
+{   
+    clockPhaseTime.reset(); // restart the clock
+    switch(phase) 
+    {   
+        case 0: // GO TO CENTER
+            center -> m_material->setGrayDim();
+            center -> setEnabled(true);
+            target -> setEnabled(false);
+            labelMessage->setText("PHASE 0 - Go to center");
+            
+            break;
+        case 1: // HOLD CENTER
+            center->m_material->setGreenDark();
+            totalPhaseDurationInMs = 2000; // + random entre 200 y 800ms
+            labelMessage->setText("PHASE 1 - Hold center");
+            break;
+        case 2: // TRIAL ONGOING
+            center -> setEnabled(false);
+            target->m_material->setGrayDim();
+            target -> setEnabled(true);
+            totalPhaseDurationInMs = 10000;
+            labelMessage->setText("PHASE 2 - Trial ongoing");
+            break;
+        case 3: // HOLD TARGET
+            target->m_material->setGreenDark();
+            totalPhaseDurationInMs = 2000;
+            labelMessage->setText("PHASE 3 - Hold target");
+            break;
+        case 4: // TRIAL SUCCESSFUL  
+            target -> setEnabled(false);
+            appendToCsv(output, data, trialCounter, variables);
+            data.clear();
+            trialCounter += 1;
+            totalPhaseDurationInMs = 1000; // deberia ser random entre 500 y 1.5s
+            labelMessage->setText("PHASE 4 - Trial succesful");
+            break;   
+        default :
+            cout << "Invalid phase" << phase << endl;  
+    }
+}
+
+
+
 

@@ -556,7 +556,7 @@ void updateHaptics(void)
             setVariables();
             
         }
-        else if (userSwitch && (tool->getDeviceGlobalPos()).distance(startBoxPostition) > 0.1) // no lo probe aun, PROBAR
+        else if (userSwitch && (tool->getDeviceGlobalPos()).distance(startBoxPostition) > 0.1) 
         {
             trialFinishedManually = true;
         }

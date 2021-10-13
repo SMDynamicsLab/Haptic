@@ -3,23 +3,19 @@
 void createShapes(
     chai3d::cWorld*& world, 
     chai3d::cShapeBox*& base, 
-    chai3d::cShapeBox*& start_box,
-    chai3d::cShapeBox*& end_box,
-    chai3d::cShapeSphere*& blackHole,
-    chai3d::cShapeLine*& line,
+    chai3d::cShapeSphere*& center,
+    chai3d::cShapeSphere*& target,
     bool baseEnabled, 
-    bool lineEnabled, 
-    bool attractorEnabled,
     double& maxLinearForce, 
     double& maxStiffness,
     double& maxDamping,
     chai3d::cVector3d& firstTargetPosition,
-    chai3d::cVector3d& startBoxPostition
+    chai3d::cVector3d& centerPostition
     );
 void changeTargetPosition(
-    chai3d::cShapeBox*& end_box, 
+    chai3d::cShapeSphere*& target, 
     chai3d::cVector3d& firstTargetPosition,
-    chai3d::cVector3d& startBoxPostition,
+    chai3d::cVector3d& centerPostition,
     double& angle
     );
 #endif 
