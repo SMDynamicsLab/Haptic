@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from random import randint
 import random
+from datetime import datetime
 
 def run_make():
     p_status, p_output = subprocess.getstatusoutput('make')
@@ -66,6 +67,7 @@ def get_variables(variables_array = []):
     variables_array += get_variables_block(N=1, visual_feedback=0, force=0)
     variables_array += get_variables_block(N=1, visual_feedback=0, force=1)
     variables_array += get_variables_block(N=1, visual_feedback=0, force=0) 
+    print(len(variables_array))
     return variables_array
 
 def get_variables_block(N, force, visual_feedback):
@@ -92,6 +94,7 @@ def start_controller(input_file, output_file, variables):
                 last_mod_time = mod_time
                 plot_trials(output_file)
                 change_variables(input_file, variables[trial])
+                print('len vars = ', len(variables), 'trial # = ', trial)
                 trial+=1
         else:
             output_exists = os.path.isfile(output_file)
@@ -101,8 +104,9 @@ if __name__ == "__main__":
         run_make()
         data_path = os.path.join(sys.path[0], 'data')
         os.makedirs(data_path, exist_ok=True)
-        input_file = os.path.join(data_path, 'in.csv')
-        output_file = os.path.join(data_path, 'out.csv')
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        input_file = os.path.join(data_path, f'in_{timestamp}.csv')
+        output_file = os.path.join(data_path, f'out_{timestamp}.csv')
 
         bin_file = os.path.join( sys.path[0], '../../bin/lin-x86_64/test6')
 
@@ -113,7 +117,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print('\nStopping due to KeyboardInterrupt')
     except Exception as e:
-        print(str(e))
+        print(f"Python error: {str(e)}")
 
 
 

@@ -100,10 +100,10 @@ void appendToCsv(
             }            
             fout<< "\n";    
         }
-        cout<<"\n Data has been appended to file for trial " << trialCounter;        
+        cout<<"\n Data has been appended to file for trial " << trialCounter<< endl;        
     }
     else{
-        cout<<"Output file not opened correctly";
+        cout<<"Output file not opened correctly"<< endl;
     }
     fout.close();
     

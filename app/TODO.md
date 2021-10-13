@@ -108,3 +108,11 @@ blanked, removing visual feedback during the reaching period.
 * visuomotor rotation (ver paper del mail)
 * 3 bloques (sin, con, sin)
 * girar el vector "up" en la orientacion del cursor a un angulo definido (siempre el mismo)
+
+# vmr 
+* mantener en el centro 500ms (en tamaño ejemplo de https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0026020 section 4)
+* luego arranca tiempo random (uniforme) entre 200 y 800ms que suena un beep de go y el centro desaparece
+* timeout (tiempo limite 2s) para llegar al target
+* mantener cerca del target por 500ms , luego sonido de exito (o fracaso) y desaparece el target
+* tiempo random entre 500 y 1.5s vuelve a aparecer el centro
+* el sujeto lleva al centro (sin perturbacion) y lo mantiene y vuelve a empezar 
