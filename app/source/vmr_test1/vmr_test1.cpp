@@ -37,6 +37,18 @@ int width  = 0; // current width of window
 int height = 0; // current height of window
 int swapInterval = 1; // swap interval for the display context (vertical synchronization)
 
+    
+// DECLARED MACROS
+string resourceRoot; // root resource path
+#define RESOURCE_PATH(p)    (char*)((resourceRoot+string(p)).c_str()) // convert to resource path
+
+// Audio
+cAudioDevice* audioDevice; // audio device to play sound
+cAudioBuffer* audioBufferSuccess;
+cAudioBuffer* audioBufferFailure;
+cAudioSource* audioSourceSuccess;
+cAudioSource* audioSourceFailure;
+
 // Haptic Basics
 cWorld* world; // a world that contains all objects of the virtual environment
 cCamera* camera; // a camera to render the world in the window display
@@ -103,6 +115,10 @@ int main(int argc, char* argv[])
     output = argv[2];
     cout << "Input file is "<< input << endl;
     cout << "Output file is "<< output << endl;
+
+    // parse first arg to try and locate resources
+    resourceRoot = string(argv[0]).substr(0,string(argv[0]).find_last_of("/\\")+1);
+    cout << "resourceRoot is "<< resourceRoot << endl;
 
     // OPEN GL - WINDOW DISPLAY
     // initialize GLFW library
@@ -266,6 +282,41 @@ int main(int argc, char* argv[])
     tool->start();
     tool -> setShowEnabled(cursorVisible);
 
+
+    //--------------------------------------------------------------------------
+    // SETUP AUDIO MATERIAL
+    //--------------------------------------------------------------------------
+    audioDevice = new cAudioDevice(); // create an audio device to play sounds
+    camera->attachAudioDevice(audioDevice); // attach audio device to camera
+    // create audio buffers and load audio wave files
+    audioBufferSuccess = new cAudioBuffer();
+    bool fileload1 = audioBufferSuccess->loadFromFile(RESOURCE_PATH("../resources/sounds/micro-bell.wav"));
+
+    audioBufferFailure = new cAudioBuffer();
+    bool fileload2 = audioBufferFailure->loadFromFile(RESOURCE_PATH("../resources/sounds/cartoon-bing-low.wav"));
+
+    // check for errors
+    if (!(fileload1 && fileload2))
+    {
+        cout << "Error - Sound file failed to load or initialize correctly." << endl;
+        close();
+        return (-1);
+    }
+
+    audioSourceSuccess = new cAudioSource();
+    audioSourceSuccess->setAudioBuffer(audioBufferSuccess);
+    audioSourceSuccess->setGain(4.0);
+    // audioSourceSuccess->play();
+
+
+    audioSourceFailure = new cAudioSource();
+    audioSourceFailure->setAudioBuffer(audioBufferFailure);
+    audioSourceFailure->setGain(4.0);
+
+    //--------------------------------------------------------------------------
+    // CREATE OBJECTS / SET WORLD PROPERTIES
+    //--------------------------------------------------------------------------
+
     // read the scale factor between the physical workspace of the haptic
     // device and the virtual workspace defined for the tool
     double workspaceScaleFactor = tool->getWorkspaceScaleFactor();
@@ -279,6 +330,7 @@ int main(int argc, char* argv[])
     // create some viscous environment
     cEffectViscosity* viscosity = new cEffectViscosity(world);
     world->addEffect(viscosity);
+
     world->m_material->setViscosity(0.5 * maxDamping);
     createShapes(
         world, 
@@ -471,6 +523,11 @@ void close(void)
     delete hapticsThread;
     delete world;
     delete handler;
+    delete audioDevice;
+    delete audioBufferSuccess;
+    delete audioBufferFailure;
+    delete audioSourceSuccess;
+    delete audioSourceFailure;    
 }
 
 //------------------------------------------------------------------------------
