@@ -101,6 +101,8 @@ cVector3d localUp = cVector3d(-1.0, 0.0, 0.0); // direction of the (up) vector
 bool vmrEnabled = false;
 cMatrix3d vmrRotation;
 cVector3d vmrUpVector;
+void setVrmEnabled(bool vmrEnabled); 
+int blockN;
 
 // Trial Phases
 cPrecisionClock clockPhaseTime; // precision clock
@@ -108,13 +110,20 @@ int trialPhase = 0;
 double totalPhaseDurationInMs;
 void startTrialPhase(int phase);
 
+int randNum(int min, int max)
+{
+    int num = rand()%(max-min + 1) + min;
+    return num;
+}
+
 void setVariables()
 {
     double angle = variables[0];
-    cursorVisible = variables[1];
-    useForceField = variables[2];
+    vmrEnabled = variables[1];
+    blockN = variables[2];
+    setVrmEnabled(vmrEnabled);
     changeTargetPosition(target, firstTargetPosition, centerPostition, angle);
-    tool -> setShowEnabled(cursorVisible);
+    
 }
 
 void setVrmUpVector()
@@ -124,6 +133,22 @@ void setVrmUpVector()
     vmrRotation.rotateAboutLocalAxisDeg(0,0,1,60);
     vmrUpVector = vmrRotation * localUp;
 }
+
+void setVrmEnabled(bool vmrEnabled)
+{
+    if (vmrEnabled)
+    {   
+        setVrmUpVector();
+        camera->set(localPosition, localLookAt, vmrUpVector);
+        light->setDir(vmrUpVector);
+    }
+    else 
+    {
+        camera->set(localPosition, localLookAt, localUp);
+        light->setDir(localUp);
+    }
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -488,17 +513,7 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
     else if (a_key = GLFW_KEY_V)
     {   
         vmrEnabled = !vmrEnabled;
-        if (vmrEnabled)
-        {   
-            setVrmUpVector();
-            camera->set(localPosition, localLookAt, vmrUpVector);
-            light->setDir(vmrUpVector);
-        }
-        else 
-        {
-            camera->set(localPosition, localLookAt, localUp);
-            light->setDir(localUp);
-        }
+        setVrmEnabled(vmrEnabled);
         
     }
 
@@ -618,78 +633,94 @@ void updateHaptics(void)
 
         double timeSincePhaseStartedInMs = clockPhaseTime.stop() * 1000; // read the clockPhaseTime increment in seconds
         clockPhaseTime.start();
-        if (trialPhase == 0 && (tool->getDeviceGlobalPos()).distance(center->getGlobalPos()) < 0.05) // GO TO CENTER
-        {
-            trialPhase = 1;
-            startTrialPhase(trialPhase); // HOLD CENTER
-        }
-
-        if (trialPhase == 1) // HOLD CENTER
+        vector<double> row;
+        cVector3d position;
+        switch(trialPhase) 
         {   
-            bool afuera_del_centro = (tool->getDeviceGlobalPos()).distance(center->getGlobalPos()) > 0.1;
-            
-            if (afuera_del_centro) //Moved outside of center
-            {   
-                cout << "hold center failed" << endl;
-                audioSourceFailure -> play();
-                trialPhase = 0;
-                startTrialPhase(trialPhase); // GO TO CENTER
-            }
-            
-            if (timeSincePhaseStartedInMs > totalPhaseDurationInMs) //center hold finished
-            {   
-                trialPhase = 2;
-                startTrialPhase(trialPhase); // TRIAL ONGOING
-            }            
-        }
+            case 0: // GO TO CENTER
+                // Si esta en el centro:
+                if((tool->getDeviceGlobalPos()).distance(center->getGlobalPos()) < 0.03)
+                {
+                    trialPhase = 1;
+                    startTrialPhase(trialPhase); // HOLD CENTER
+                }
+                break;
+            case 1: // HOLD CENTER
+                // Si se salió del centro:
+                if ((tool->getDeviceGlobalPos()).distance(center->getGlobalPos()) > 0.03) //Moved outside of center
+                {   
+                    cout << "hold center failed" << endl;
+                    audioSourceFailure -> play();
+                    trialPhase = 0;
+                    startTrialPhase(trialPhase); // GO TO CENTER
+                    
+                }
+                // Si ya estuvo el tiempo suficiente:
+                else if (timeSincePhaseStartedInMs > totalPhaseDurationInMs) //center hold finished
+                {   
+                    trialPhase = 2;
+                    startTrialPhase(trialPhase); // TRIAL ONGOING
+                }   
 
-        if (trialPhase==2) // TRIAL ONGOING
-        {
-            // read position
-            cVector3d position;
-            hapticDevice->getPosition(position);
+                break;
+            case 2: // TRIAL ONGOING
+                // read position
+                hapticDevice->getPosition(position);
 
-            //save position
-            vector<double> row = {position.x(), position.y(), position.z()};
-            data.push_back(row);
+                //save position
+                row = {position.x(), position.y(), position.z()};
+                data.push_back(row);
 
-            if (timeSincePhaseStartedInMs > totalPhaseDurationInMs) //Timeout
-            {
-                audioSourceFailure -> play();
-                trialPhase = 0;
-                startTrialPhase(trialPhase); // GO TO CENTER
-            }
-            else 
-            {
-                if ((tool->getDeviceGlobalPos()).distance(target->getGlobalPos()) < 0.05) //Tool is inside target
+                // Si se le acabó el tiempo:
+                if (timeSincePhaseStartedInMs > totalPhaseDurationInMs)
+                {
+                    audioSourceFailure -> play();
+                    trialPhase = 0;
+                    startTrialPhase(trialPhase); // GO TO CENTER
+                    
+                }
+
+                // Si entró al target:
+                else if ((tool->getDeviceGlobalPos()).distance(target->getGlobalPos()) < 0.03) //Tool is inside target
                 {   
                     trialPhase = 3;
                     startTrialPhase(trialPhase); // HOLD TARGET
                 }
-            }
-        }
 
-        if (trialPhase==3) // HOLD TARGET
-        {   
-            if ((tool->getDeviceGlobalPos()).distance(target->getGlobalPos()) > 0.1) //Moved outside of target
-            {
-                audioSourceFailure -> play();
-                trialPhase = 0;
-                startTrialPhase(trialPhase); // GO TO CENTER
-            }
-            else if (timeSincePhaseStartedInMs > totalPhaseDurationInMs) //Target hold finished
-            {
-                audioSourceSuccess -> play();
-                trialPhase = 4;
-                startTrialPhase(trialPhase);
-            }
-        }
+                break;
+            case 3: // HOLD TARGET
+                // Si salió del centro: 
+                if ((tool->getDeviceGlobalPos()).distance(target->getGlobalPos()) > 0.03) //Moved outside of target
+                {
+                    audioSourceFailure -> play();
+                    trialPhase = 4;
+                    startTrialPhase(trialPhase); // TRIAL ENDED - wait for next trial
+                    break;
+                }
 
-        if (trialPhase == 4 && timeSincePhaseStartedInMs > totalPhaseDurationInMs) // TRIAL SUCCESFUL / WAITING FOR NEXT TRIAL
-        {
-            trialPhase = 0;
-            startTrialPhase(trialPhase);
-            // si llega al ultimo trial que lo corte
+                // Si ya mantuvo suficiente tiempo el target:
+                else if (timeSincePhaseStartedInMs > totalPhaseDurationInMs) //Target hold finished
+                {   
+                    appendToCsv(output, data, trialCounter, variables);
+                    data.clear();
+                    trialCounter += 1;
+                    audioSourceSuccess -> play();
+
+                    trialPhase = 4;
+                    startTrialPhase(trialPhase); // TRIAL ENDED - wait for next trial
+                }
+                break;
+            case 4: // TRIAL ENDED - wait for next trial 
+                // Si ya pasó el tiempo de espera:
+                if (timeSincePhaseStartedInMs > totalPhaseDurationInMs) // TRIAL SUCCESFUL / WAITING FOR NEXT TRIAL
+                {
+                    trialPhase = 0;
+                    startTrialPhase(trialPhase);
+                    // TODO: si llega al ultimo trial que lo corte
+                }
+                break;   
+            default:
+                cout << "Invalid phase" << trialPhase << endl;  
         }
     }
     
@@ -700,41 +731,52 @@ void updateHaptics(void)
 void startTrialPhase(int phase)
 {   
     clockPhaseTime.reset(); // restart the clock
+    bool trialShouldKeepGoing;
     switch(phase) 
     {   
         case 0: // GO TO CENTER
+            data.clear();
             center -> m_material->setGrayDim();
+            tool -> setShowEnabled(true);
             center -> setEnabled(true);
             target -> setEnabled(false);
             labelMessage->setText("PHASE 0 - Go to center");
-            
             break;
         case 1: // HOLD CENTER
             center->m_material->setGreenDark();
-            totalPhaseDurationInMs = 2000; // + random entre 200 y 800ms
+            totalPhaseDurationInMs = 500 + randNum(200, 800); // 500ms + random entre 200 y 800ms
             labelMessage->setText("PHASE 1 - Hold center");
             break;
         case 2: // TRIAL ONGOING
+            trialShouldKeepGoing = getVariables(input, mod_time, variables); // input file ya no existe (la simulacion termino)
+            if (!trialShouldKeepGoing)
+            {   
+                cout << "no more trials" << endl;
+                glfwSetWindowShouldClose(window, GLFW_TRUE);
+            }
+            setVariables();
+            data.clear();
             center -> setEnabled(false);
             target->m_material->setGrayDim();
             target -> setEnabled(true);
-            totalPhaseDurationInMs = 10000;
+            totalPhaseDurationInMs = 2000;
             labelMessage->setText("PHASE 2 - Trial ongoing");
             break;
         case 3: // HOLD TARGET
             target->m_material->setGreenDark();
-            totalPhaseDurationInMs = 2000;
+            totalPhaseDurationInMs = 500;
             labelMessage->setText("PHASE 3 - Hold target");
             break;
-        case 4: // TRIAL SUCCESSFUL  
+        case 4: // TRIAL ENDED - wait for next trial
             target -> setEnabled(false);
-            appendToCsv(output, data, trialCounter, variables);
-            data.clear();
-            trialCounter += 1;
-            totalPhaseDurationInMs = 1000; // deberia ser random entre 500 y 1.5s
-            labelMessage->setText("PHASE 4 - Trial succesful");
-            break;   
-        default :
+            tool -> setShowEnabled(false);
+            // appendToCsv(output, data, trialCounter, variables);
+            // data.clear();
+            // trialCounter += 1;
+            totalPhaseDurationInMs = randNum(500, 5000); // deberia ser random entre 500 y 1.5s
+            labelMessage->setText("PHASE 4 - Trial ended");
+            break;
+        default:
             cout << "Invalid phase" << phase << endl;  
     }
 }

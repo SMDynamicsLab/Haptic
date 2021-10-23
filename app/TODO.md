@@ -115,4 +115,12 @@ blanked, removing visual feedback during the reaching period.
 * timeout (tiempo limite 2s) para llegar al target
 * mantener cerca del target por 500ms , luego sonido de exito (o fracaso) y desaparece el target
 * tiempo random entre 500 y 1.5s vuelve a aparecer el centro
-* el sujeto lleva al centro (sin perturbacion) y lo mantiene y vuelve a empezar 
+* el sujeto lleva al centro y lo mantiene y vuelve a empezar 
+
+
+* si el trial termino que se cierre
+* plotear correctamente cada intento
+* activar/ desactivar vmr a traves de las variables
+## falta:
+* beep de go al terminar de sostener el centro
+* el sujeto lleva al centro sin perturbacion?

@@ -1,6 +1,6 @@
 #ifndef PARSER_H
 #define PARSER_H
-void getVariables(
+bool getVariables(
     std::string& filename, 
     time_t& stored_mod_time, 
     std::vector<double>& variables

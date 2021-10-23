@@ -37,6 +37,8 @@ void createShapes(
     world->addChild(target);
     target->setLocalPos(firstTargetPosition);
     target->m_material->setGrayDarkSlate();
+    target-> setUseTransparency(true);
+    target-> setTransparencyLevel(0.8);
     target->m_material->setViscosity(0.1 * maxDamping);
     target->createEffectViscosity();
     target -> setEnabled(false);
@@ -46,8 +48,8 @@ void createShapes(
     world->addChild(center);
     center->setLocalPos(centerPostition);
     center->m_material-> setGrayDarkSlate();
-    // center-> setUseTransparency(true);
-    // center-> setTransparencyLevel(0.2);
+    center-> setUseTransparency(true);
+    center-> setTransparencyLevel(0.8);
     center->m_material->setViscosity(0.1 * maxDamping);
     center->createEffectViscosity();     
 }

@@ -10,7 +10,7 @@
 #include "parser.h"
 using namespace std;
 
-void getVariables(
+bool getVariables(
     string& filename, 
     time_t& stored_mod_time, 
     vector<double>& variables
@@ -21,7 +21,12 @@ void getVariables(
         variables = parseFile(filename);
         stored_mod_time = getModTime(filename); //store last modification date
     }
-    
+    else if (!doesFileExist(filename))
+    {
+        cout << "Input file does not exist (anymore)" << endl;
+        return 0;
+    }
+    return 1;
 }
 
 bool doesFileExist(const string& name)
@@ -83,6 +88,7 @@ void appendToCsv(
     vector<double>& variables
 )
 {   
+    cout<<"\n Appending data to file " << trialCounter<< endl;
     ofstream fout;
     fout.open(output, ios::app); // Append mode
     if(fout.is_open()){
@@ -106,5 +112,6 @@ void appendToCsv(
         cout<<"Output file not opened correctly"<< endl;
     }
     fout.close();
+    cout<<"\n Output file closed" << trialCounter<< endl;
     
 }
