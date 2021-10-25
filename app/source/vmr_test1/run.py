@@ -34,7 +34,7 @@ def plot_trials(output_file, block_count):
     plt.ion()
     plt.show()
     # estructura: trial, x, y, z
-    names = ['trial', 'x', 'y', 'z']
+    names = ['time', 'trial', 'x', 'y', 'z']
     var_names = ['angle', 'vmr', 'blockN']
     names += var_names
     df = pd.read_csv(output_file, names=names, index_col=False)

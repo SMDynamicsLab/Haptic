@@ -649,7 +649,6 @@ void updateHaptics(void)
                 // Si se salió del centro:
                 if ((tool->getDeviceGlobalPos()).distance(center->getGlobalPos()) > 0.03) //Moved outside of center
                 {   
-                    cout << "hold center failed" << endl;
                     audioSourceFailure -> play();
                     trialPhase = 0;
                     startTrialPhase(trialPhase); // GO TO CENTER
@@ -668,14 +667,14 @@ void updateHaptics(void)
                 hapticDevice->getPosition(position);
 
                 //save position
-                row = {position.x(), position.y(), position.z()};
+                row = {timeSincePhaseStartedInMs, position.x(), position.y(), position.z()}; // aca agregar el tiempo {t, x, y , z}
                 data.push_back(row);
 
                 // Si se le acabó el tiempo:
                 if (timeSincePhaseStartedInMs > totalPhaseDurationInMs)
                 {
                     audioSourceFailure -> play();
-                    trialPhase = 0;
+                    trialPhase = 4;
                     startTrialPhase(trialPhase); // GO TO CENTER
                     
                 }
@@ -744,7 +743,7 @@ void startTrialPhase(int phase)
             break;
         case 1: // HOLD CENTER
             center->m_material->setGreenDark();
-            totalPhaseDurationInMs = 500 + randNum(200, 800); // 500ms + random entre 200 y 800ms
+            totalPhaseDurationInMs = randNum(700, 1300); // 500ms + random entre 200 y 800ms
             labelMessage->setText("PHASE 1 - Hold center");
             break;
         case 2: // TRIAL ONGOING
@@ -759,7 +758,7 @@ void startTrialPhase(int phase)
             center -> setEnabled(false);
             target->m_material->setGrayDim();
             target -> setEnabled(true);
-            totalPhaseDurationInMs = 2000;
+            totalPhaseDurationInMs = 900; // 900ms
             labelMessage->setText("PHASE 2 - Trial ongoing");
             break;
         case 3: // HOLD TARGET
@@ -773,7 +772,7 @@ void startTrialPhase(int phase)
             // appendToCsv(output, data, trialCounter, variables);
             // data.clear();
             // trialCounter += 1;
-            totalPhaseDurationInMs = randNum(500, 5000); // deberia ser random entre 500 y 1.5s
+            totalPhaseDurationInMs = randNum(500, 1500); // deberia ser random entre 500 y 1.5s
             labelMessage->setText("PHASE 4 - Trial ended");
             break;
         default:

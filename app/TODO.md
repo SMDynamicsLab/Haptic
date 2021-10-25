@@ -124,3 +124,9 @@ blanked, removing visual feedback during the reaching period.
 ## falta:
 * beep de go al terminar de sostener el centro
 * el sujeto lleva al centro sin perturbacion?
+
+* armar el grafico del error abs y signado entre la tray seguida y la real
+* guardar trials invalidos etiquetados, que python interprete y agregue un trial mas
+* si el hold falla que no haga timeout y guardar la posicion hasta que termine el trial (por valido o invalido)
+* agregar timestamp en el csv de data
+* mandar mail preguntando fecha de informe de avance
