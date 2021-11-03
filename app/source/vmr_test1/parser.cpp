@@ -85,7 +85,8 @@ void appendToCsv(
     string& output, 
     vector<vector<double>>& data, 
     int& trialCounter,
-    vector<double>& variables
+    vector<double>& variables,
+    bool& trialSuccess
 )
 {   
     cout<<"\n Appending data to file " << trialCounter<< endl;
@@ -95,15 +96,16 @@ void appendToCsv(
         for (auto & row : data)
         {   
             fout<< trialCounter; 
-            fout<< ", ";
+            fout<< ",";
             for (auto & value : row) {
                 fout<< value;
-                fout<< ", ";
+                fout<< ",";
             }
             for (auto & value : variables) {
                 fout<< value;
-                fout<< ", ";
-            }            
+                fout<< ",";
+            }
+            fout<< trialSuccess;             
             fout<< "\n";    
         }
         cout<<"\n Data has been appended to file for trial " << trialCounter<< endl;        

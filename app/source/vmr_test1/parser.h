@@ -13,6 +13,7 @@ void appendToCsv(
     std::string& output, 
     std::vector<std::vector<double>>& data, 
     int& trialCounter,
-    std::vector<double>& variables
+    std::vector<double>& variables,
+    bool& trialSuccess
 );
 #endif 
