@@ -1,6 +1,11 @@
 # Analisis previo
 * decision por CHAI3D por sobre el SDK de forcedimension porque los autores son los mismos y es open source y vienen muchas cosas graficas resueltas (y el SDK no compila)
 
+* en el while de python: 
+no sleep 99% CPU
+time.sleep(0.001) #~9% CPU
+time.sleep(0.01) # ~2% CPU
+
 # Tests
 ## Primer intento de un trial de reaching (test4)
 * un plano (con efecto magnetico fuerte)
@@ -121,6 +126,7 @@ blanked, removing visual feedback during the reaching period.
 * si el trial termino que se cierre
 * plotear correctamente cada intento
 * activar/ desactivar vmr a traves de las variables
+* agregar timestamp en el csv de data
 ## falta:
 * beep de go al terminar de sostener el centro
 * el sujeto lleva al centro sin perturbacion?
@@ -128,5 +134,31 @@ blanked, removing visual feedback during the reaching period.
 * armar el grafico del error abs y signado entre la tray seguida y la real
 * guardar trials invalidos etiquetados, que python interprete y agregue un trial mas
 * si el hold falla que no haga timeout y guardar la posicion hasta que termine el trial (por valido o invalido)
-* agregar timestamp en el csv de data
+
 * mandar mail preguntando fecha de informe de avance
+
+* incorporar al plot promedio de los trials de un mismo sujeto (ejemplo 8 trials consecutivos)
+* metodos de analisis de berniker fig 5 Estimating the sources of motor errors for adaptation and generalization
+
+* referencia 4 para el error
+* referencia 6 de berniker para curl (shadmehr)
+* cambiar los bloques de lista a dict, ejemplo:
+dict:
+{
+0:{ 
+[]
+[]
+[]
+}
+1:{
+[]
+[]
+[]
+}
+}
+for block in dict:
+  initial_block_len = len(block)
+  while (i < len(block) AND (i < initial_block_len *1.1)  : 
+    trial = block[i]
+    si el trial es incorrecto : agrega el mismo trial al final
+    i +=1

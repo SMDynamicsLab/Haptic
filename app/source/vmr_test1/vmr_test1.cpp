@@ -79,7 +79,7 @@ cVector3d centerPostition = cVector3d(0.0, 0.0, 0.0);
 bool baseEnabled = true;
 bool attractorEnabled = true;
 double maxDamping;
-bool trialOngoing = false;
+
 int trialCounter = 0;
 string outputPath = "/home/Carolina/Downloads/a.csv";
 bool useDamping = false; // a flag for using damping (ON/OFF)
@@ -105,9 +105,15 @@ void setVrmEnabled(bool vmrEnabled);
 int blockN;
 
 // Trial Phases
-cPrecisionClock clockPhaseTime; // precision clock
+cPrecisionClock clockTrialTime; // precision clock
+cPrecisionClock clockHoldTime; // precision clock
+cPrecisionClock clockWaitTime; // precision clock
+bool trialOngoing = false;
+bool trialSuccess;
 int trialPhase = 0;
-double totalPhaseDurationInMs;
+double totalTrialDurationInMs;
+double totalHoldDurationInMs;
+double totalWaitDurationInMs;
 void startTrialPhase(int phase);
 
 int randNum(int min, int max)
@@ -611,12 +617,20 @@ void updateGraphics(void)
 void updateHaptics(void)
 {
     // precision clock
-    clockPhaseTime.reset();
+    clockTrialTime.reset();
+    clockHoldTime.reset();
+    clockWaitTime.reset();
 
     // simulation in now running
     simulationRunning  = true;
     simulationFinished = false;
     startTrialPhase(trialPhase);
+
+    vector<double> row;
+    cVector3d position;
+    double timeSinceHoldStartedInMs;
+    double timeSinceTrialStartedInMs;
+    double timeSinceWaitStartedInMs;
     // main haptic simulation loop
     while(simulationRunning)
     {   
@@ -630,11 +644,17 @@ void updateHaptics(void)
         tool->updateFromDevice(); // update position and orientation of tool
         tool->computeInteractionForces(); // compute interaction forces
         tool->applyToDevice(); // send forces to haptic device
+        
+        if (trialOngoing)
+        {
+            // read position
+            hapticDevice->getPosition(position);
 
-        double timeSincePhaseStartedInMs = clockPhaseTime.stop() * 1000; // read the clockPhaseTime increment in seconds
-        clockPhaseTime.start();
-        vector<double> row;
-        cVector3d position;
+            //save position
+            row = {timeSinceTrialStartedInMs, position.x(), position.y(), position.z()}; // aca agregar el tiempo {t, x, y , z}
+            data.push_back(row);
+        }
+
         switch(trialPhase) 
         {   
             case 0: // GO TO CENTER
@@ -646,6 +666,10 @@ void updateHaptics(void)
                 }
                 break;
             case 1: // HOLD CENTER
+                // read the clockHoldTime increment in seconds
+                timeSinceHoldStartedInMs = clockHoldTime.stop() * 1000; 
+                clockHoldTime.start();
+
                 // Si se salió del centro:
                 if ((tool->getDeviceGlobalPos()).distance(center->getGlobalPos()) > 0.03) //Moved outside of center
                 {   
@@ -655,24 +679,25 @@ void updateHaptics(void)
                     
                 }
                 // Si ya estuvo el tiempo suficiente:
-                else if (timeSincePhaseStartedInMs > totalPhaseDurationInMs) //center hold finished
+                else if (timeSinceHoldStartedInMs > totalHoldDurationInMs) //center hold finished
                 {   
                     trialPhase = 2;
+                    data.clear();
+                    clockTrialTime.reset(); // restart the clock
+                    trialOngoing = true;
                     startTrialPhase(trialPhase); // TRIAL ONGOING
                 }   
 
                 break;
             case 2: // TRIAL ONGOING
-                // read position
-                hapticDevice->getPosition(position);
-
-                //save position
-                row = {timeSincePhaseStartedInMs, position.x(), position.y(), position.z()}; // aca agregar el tiempo {t, x, y , z}
-                data.push_back(row);
+                // read the clockTrialTime increment in seconds
+                timeSinceTrialStartedInMs = clockTrialTime.stop() * 1000; 
+                clockTrialTime.start();
 
                 // Si se le acabó el tiempo:
-                if (timeSincePhaseStartedInMs > totalPhaseDurationInMs)
-                {
+                if (timeSinceTrialStartedInMs > totalTrialDurationInMs)
+                {   
+                    trialSuccess = false;
                     audioSourceFailure -> play();
                     trialPhase = 4;
                     startTrialPhase(trialPhase); // GO TO CENTER
@@ -683,39 +708,43 @@ void updateHaptics(void)
                 else if ((tool->getDeviceGlobalPos()).distance(target->getGlobalPos()) < 0.03) //Tool is inside target
                 {   
                     trialPhase = 3;
+                    clockHoldTime.reset(); // restart the clock
                     startTrialPhase(trialPhase); // HOLD TARGET
                 }
 
                 break;
             case 3: // HOLD TARGET
+                // read the clockHoldTime increment in seconds
+                timeSinceHoldStartedInMs = clockHoldTime.stop() * 1000; 
+                clockHoldTime.start();
+
                 // Si salió del centro: 
                 if ((tool->getDeviceGlobalPos()).distance(target->getGlobalPos()) > 0.03) //Moved outside of target
                 {
-                    audioSourceFailure -> play();
-                    trialPhase = 4;
-                    startTrialPhase(trialPhase); // TRIAL ENDED - wait for next trial
+                    trialPhase = 2;
+                    startTrialPhase(trialPhase); // Trial is still ongoing
                     break;
                 }
 
                 // Si ya mantuvo suficiente tiempo el target:
-                else if (timeSincePhaseStartedInMs > totalPhaseDurationInMs) //Target hold finished
+                else if (timeSinceHoldStartedInMs > totalHoldDurationInMs) //Target hold finished
                 {   
-                    appendToCsv(output, data, trialCounter, variables);
-                    data.clear();
-                    trialCounter += 1;
+                    trialSuccess = true;
                     audioSourceSuccess -> play();
-
                     trialPhase = 4;
                     startTrialPhase(trialPhase); // TRIAL ENDED - wait for next trial
                 }
                 break;
             case 4: // TRIAL ENDED - wait for next trial 
+                // read the clockWaitTime increment in seconds
+                timeSinceWaitStartedInMs = clockWaitTime.stop() * 1000; 
+                clockWaitTime.start();
+
                 // Si ya pasó el tiempo de espera:
-                if (timeSincePhaseStartedInMs > totalPhaseDurationInMs) // TRIAL SUCCESFUL / WAITING FOR NEXT TRIAL
+                if (timeSinceWaitStartedInMs > totalWaitDurationInMs) // TRIAL SUCCESFUL / WAITING FOR NEXT TRIAL
                 {
                     trialPhase = 0;
                     startTrialPhase(trialPhase);
-                    // TODO: si llega al ultimo trial que lo corte
                 }
                 break;   
             default:
@@ -729,8 +758,9 @@ void updateHaptics(void)
 
 void startTrialPhase(int phase)
 {   
-    clockPhaseTime.reset(); // restart the clock
+    // clockPhaseTime.reset(); // restart the clock
     bool trialShouldKeepGoing;
+    cout << "Start trial phase: " << phase << endl;
     switch(phase) 
     {   
         case 0: // GO TO CENTER
@@ -742,8 +772,9 @@ void startTrialPhase(int phase)
             labelMessage->setText("PHASE 0 - Go to center");
             break;
         case 1: // HOLD CENTER
+            clockHoldTime.reset(); // restart the clock
             center->m_material->setGreenDark();
-            totalPhaseDurationInMs = randNum(700, 1300); // 500ms + random entre 200 y 800ms
+            totalHoldDurationInMs = randNum(700, 1300); // 500ms + random entre 200 y 800ms
             labelMessage->setText("PHASE 1 - Hold center");
             break;
         case 2: // TRIAL ONGOING
@@ -754,25 +785,31 @@ void startTrialPhase(int phase)
                 glfwSetWindowShouldClose(window, GLFW_TRUE);
             }
             setVariables();
-            data.clear();
+            // data.clear();
             center -> setEnabled(false);
             target->m_material->setGrayDim();
             target -> setEnabled(true);
-            totalPhaseDurationInMs = 900; // 900ms
+            totalTrialDurationInMs = 2000; // 900ms
             labelMessage->setText("PHASE 2 - Trial ongoing");
             break;
         case 3: // HOLD TARGET
             target->m_material->setGreenDark();
-            totalPhaseDurationInMs = 500;
+            totalHoldDurationInMs = 500;
             labelMessage->setText("PHASE 3 - Hold target");
             break;
         case 4: // TRIAL ENDED - wait for next trial
+            clockWaitTime.reset(); // restart the clock
+
+            trialOngoing = false;
             target -> setEnabled(false);
             tool -> setShowEnabled(false);
-            // appendToCsv(output, data, trialCounter, variables);
-            // data.clear();
-            // trialCounter += 1;
-            totalPhaseDurationInMs = randNum(500, 1500); // deberia ser random entre 500 y 1.5s
+            
+            // Save data
+            appendToCsv(output, data, trialCounter, variables, trialSuccess);
+            data.clear();
+            trialCounter += 1;
+            
+            totalWaitDurationInMs = randNum(500, 1500); // deberia ser random entre 500 y 1.5s
             labelMessage->setText("PHASE 4 - Trial ended");
             break;
         default:
