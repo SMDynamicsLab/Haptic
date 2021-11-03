@@ -142,23 +142,5 @@ blanked, removing visual feedback during the reaching period.
 
 * referencia 4 para el error
 * referencia 6 de berniker para curl (shadmehr)
-* cambiar los bloques de lista a dict, ejemplo:
-dict:
-{
-0:{ 
-[]
-[]
-[]
-}
-1:{
-[]
-[]
-[]
-}
-}
-for block in dict:
-  initial_block_len = len(block)
-  while (i < len(block) AND (i < initial_block_len *1.1)  : 
-    trial = block[i]
-    si el trial es incorrecto : agrega el mismo trial al final
-    i +=1
+* cambiar los bloques de lista a dict
+|!
