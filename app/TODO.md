@@ -127,20 +127,34 @@ blanked, removing visual feedback during the reaching period.
 * plotear correctamente cada intento
 * activar/ desactivar vmr a traves de las variables
 * agregar timestamp en el csv de data
-## falta:
-* beep de go al terminar de sostener el centro
-* el sujeto lleva al centro sin perturbacion?
-
+* cambiar los bloques de lista a dic
 * armar el grafico del error abs y signado entre la tray seguida y la real
 * guardar trials invalidos etiquetados, que python interprete y agregue un trial mas
 * si el hold falla que no haga timeout y guardar la posicion hasta que termine el trial (por valido o invalido)
 
+## falta:
+* beep de go al terminar de sostener el centro
+* el sujeto lleva al centro sin perturbacion
 * mandar mail preguntando fecha de informe de avance
-
 * incorporar al plot promedio de los trials de un mismo sujeto (ejemplo 8 trials consecutivos)
 * metodos de analisis de berniker fig 5 Estimating the sources of motor errors for adaptation and generalization
-
 * referencia 4 para el error
 * referencia 6 de berniker para curl (shadmehr)
-* cambiar los bloques de lista a dict
-|!
+t
+
+
+# Grafico para un sujeto
+* trayectorias (empezando en gris claro y yendo a negro)
+
+# Grafico entre sujetos
+* trayectorias: cada sujeto (con un color asociado) es una curva mostrando las primeras o ultimas 2 del bloque de cada angulo (2 graficos, uno para inicial y otro para final)
+* error absoluto y error signado (cada sujeto es una trayectoria)
+* distancia recorrida (serie de trials) (cada sujeto es una trayectoria)
+* tiempo total  (serie de trials) (cada sujeto es una trayectoria)
+* velocidad media (serie de trials) (cada sujeto es una trayectoria)
+
+ver codigo para calcular area: 
+https://stackoverflow.com/questions/451426/how-do-i-calculate-the-area-of-a-2d-polygon
+https://www.geeksforgeeks.org/area-of-a-polygon-with-given-n-ordered-vertices/
+https://stackoverflow.com/questions/34326728/how-do-i-calculate-the-area-of-a-non-convex-polygon
+buscar para nonsimple polygon
