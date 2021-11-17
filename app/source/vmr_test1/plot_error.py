@@ -35,51 +35,49 @@ def calculate_error_area(trial_data, angle):
 
 
 
+if __name__ == "__main__":
+    output_file = '/home/Carolina/Documents/Personal/Tesis/Haptic/app/source/vmr_test1/resultados/out_20211022212151_ESTE.csv'
+    names = ['trial', 'x', 'y', 'z']
+    var_names = ['angle', 'vmr', 'blockN']
+    names += var_names
+    df = pd.read_csv(output_file, names=names, index_col=False)
+    df['x'] = -df['x']*100
+    df['y'] = df['y']*100
+    block_count = len(df.blockN.unique())
+    fig, axs = plt.subplots(3,block_count, sharey='row')
+    fig.tight_layout()
+
+
+    grouped = df.groupby(['trial','blockN', 'vmr'])
+
+    for ax in axs[0]:
+        ax.axis('equal')
+        ax.set_box_aspect(1)
+
+
+    for (trial, blockN, vmr), group in grouped:
+        group.plot(x='y', y='x', ax=axs[0][blockN], label=f'trial {trial}', legend=False)
+        
+
+    for (blockN, vmr), group in df.groupby(['blockN', 'vmr']):
+        trial_count = len(group.trial.unique())
+        axs[0][blockN].set_title(f'vmr: {vmr} trials: {trial_count}')
 
 
 
-output_file = '/home/Carolina/Documents/Personal/Tesis/Haptic/app/source/vmr_test1/resultados/out_20211022212151_ESTE.csv'
-names = ['trial', 'x', 'y', 'z']
-var_names = ['angle', 'vmr', 'blockN']
-names += var_names
-df = pd.read_csv(output_file, names=names, index_col=False)
-df['x'] = -df['x']*100
-df['y'] = df['y']*100
-block_count = len(df.blockN.unique())
-fig, axs = plt.subplots(3,block_count, sharey='row')
-fig.tight_layout()
+    grouped_block = df.groupby(['blockN'])
+    for blockN, group_block in grouped_block:
+        grouped = group_block.groupby(['trial','blockN', 'vmr', 'angle'])
+        area_error_arr = []
+        area_error_abs_arr = []
+        for (trial, blockN, vmr, angle), group in grouped: 
+            area_error, area_error_abs = calculate_error_area(group, angle)
+            area_error_arr.append(area_error)
+            area_error_abs_arr.append(area_error_abs)
+        axs[1][blockN].plot(area_error_arr)
+        axs[1][blockN].set_title('Error signado')
+        axs[2][blockN].plot(area_error_abs_arr)
+        axs[2][blockN].set_title('Error absoluto')
 
-
-grouped = df.groupby(['trial','blockN', 'vmr'])
-
-for ax in axs[0]:
-    ax.axis('equal')
-    ax.set_box_aspect(1)
-
-
-for (trial, blockN, vmr), group in grouped:
-    group.plot(x='y', y='x', ax=axs[0][blockN], label=f'trial {trial}', legend=False)
-    
-
-for (blockN, vmr), group in df.groupby(['blockN', 'vmr']):
-    trial_count = len(group.trial.unique())
-    axs[0][blockN].set_title(f'vmr: {vmr} trials: {trial_count}')
-
-
-
-grouped_block = df.groupby(['blockN'])
-for blockN, group_block in grouped_block:
-    grouped = group_block.groupby(['trial','blockN', 'vmr', 'angle'])
-    area_error_arr = []
-    area_error_abs_arr = []
-    for (trial, blockN, vmr, angle), group in grouped: 
-        area_error, area_error_abs = calculate_error_area(group, angle)
-        area_error_arr.append(area_error)
-        area_error_abs_arr.append(area_error_abs)
-    axs[1][blockN].plot(area_error_arr)
-    axs[1][blockN].set_title('Error signado')
-    axs[2][blockN].plot(area_error_abs_arr)
-    axs[2][blockN].set_title('Error absoluto')
-
-plt.show()
+    plt.show()
 

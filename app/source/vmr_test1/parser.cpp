@@ -17,13 +17,13 @@ bool getVariables(
 )
 {
     if(doesFileExist(filename) &&  hasFileChanged(filename, stored_mod_time)){
-        cout << "Reading file" << endl;
+        cout << "C++: Reading input file" << endl;
         variables = parseFile(filename);
         stored_mod_time = getModTime(filename); //store last modification date
     }
     else if (!doesFileExist(filename))
     {
-        cout << "Input file does not exist (anymore)" << endl;
+        cout << "C++: Input file does not exist (anymore)" << endl;
         return 0;
     }
     return 1;
@@ -72,11 +72,11 @@ vector<double> parseFile(string& filename)
     }
 
     // Print out the vector
-    std::cout << "vars = { ";
+    std::cout << "C++: variables = ( ";
     for (double n : vars) {
         std::cout << n << ", ";
     }
-    std::cout << "}; \n";
+    std::cout << ")" << endl;
 
     return vars;
 }
@@ -89,7 +89,7 @@ void appendToCsv(
     bool& trialSuccess
 )
 {   
-    cout<<"\n Appending data to file " << trialCounter<< endl;
+    cout<<"C++: Appending data to file for trial " << trialCounter<< endl;
     ofstream fout;
     fout.open(output, ios::app); // Append mode
     if(fout.is_open()){
@@ -108,12 +108,12 @@ void appendToCsv(
             fout<< trialSuccess;             
             fout<< "\n";    
         }
-        cout<<"\n Data has been appended to file for trial " << trialCounter<< endl;        
+        cout<<"C++: Data has been appended to file for trial " << trialCounter<< endl;        
     }
     else{
-        cout<<"Output file not opened correctly"<< endl;
+        cout<<"C++: Output file not opened correctly"<< endl;
     }
     fout.close();
-    cout<<"\n Output file closed" << trialCounter<< endl;
+    cout<<"C++: Output file closed" << trialCounter<< endl;
     
 }

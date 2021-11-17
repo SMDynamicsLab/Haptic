@@ -20,10 +20,6 @@ def run_make():
 def start_simulation(bin_file, input_file, output_file):
     if not os.path.isfile(bin_file):
         print(f'Python: Bin file does not exist at {bin_file}')
-
-    # while not os.path.isfile(input_file):
-    #     print("Python: Waiting for input file to start simulation")
-    #     time.sleep(1)
         
     subprocess.Popen([
         bin_file, 
@@ -67,13 +63,14 @@ def change_variables(input_file, variables_for_trial):
     variables_str = " ".join([str(i) for i in variables_for_trial])
     print(variables_str, file = f)
     f.close()
+    print("Python: finished writing input file")
     return
 
 def get_variables():
     var = {}
-    var[len(var)] = get_variables_block(N=1, vmr=0)
-    var[len(var)] = get_variables_block(N=1, vmr=1)
-    var[len(var)] = get_variables_block(N=1, vmr=0)
+    var[len(var)] = get_variables_block(N=12, vmr=0)
+    var[len(var)] = get_variables_block(N=12, vmr=1)
+    var[len(var)] = get_variables_block(N=12, vmr=0)
     return var
 
 def get_variables_block(N, vmr):
@@ -98,17 +95,22 @@ def start_controller(input_file, output_file, variables):
         initial_block_len = block['n']
         vmr = block['vmr']
         i = 0
-        while (i < len(angles) and i < initial_block_len*1.5):
-            print(f'blockN: {blockN} trial:{i}')
+        while (i < len(angles) and i < initial_block_len*1.1):
+            print(f'\nPython: blockN: {blockN} trial:{i}')
             angle = angles[i]
             trial_variables = [angle, vmr, blockN]
             change_variables(input_file, trial_variables)
+
             last_mod_time = waitForFileChange(output_file, last_mod_time)
-            plot_trials(output_file, block_count)
+
+            try:
+                plot_trials(output_file, block_count)
+            except Exception as e:
+                print(f"Python: WARNING plot_trials error: {str(e)}")
+
             if not lastTrialSuccess(output_file):
                 angles.append(angle)
                 print(f"Trial {i} failed. Adding new trial for block {blockN} with angle {angle}")
-                print(angles)
             i += 1
     print("Python: Trials done. Closing simulation and removing input file")
     os.remove(input_file)
@@ -118,8 +120,8 @@ def start_controller(input_file, output_file, variables):
 def lastTrialSuccess(output_file):
     f = open(output_file, "r")
     last_char = f.read()[-2]
+    f.close()
     trialSuccess = int(last_char)
-    f.close() 
     return trialSuccess
 
 def waitForFileChange(output_file, last_mod_time):
@@ -129,10 +131,10 @@ def waitForFileChange(output_file, last_mod_time):
     fname = pathlib.Path(output_file)
     while True:
         mod_time = fname.stat().st_mtime 
-        if (last_mod_time != mod_time) and (time.time() - mod_time > 0.1):
+        if (last_mod_time != mod_time) and (time.time() - mod_time > 0.2): 
             print('Python: output file changed')
             return mod_time
-        time.sleep(0.1)
+        time.sleep(0.2)
         
 
 
@@ -141,20 +143,22 @@ if __name__ == "__main__":
         run_make()
         data_path = os.path.join(sys.path[0], 'data')
         os.makedirs(data_path, exist_ok=True)
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        input_file = os.path.join(data_path, f'in_{timestamp}.csv')
-        output_file = os.path.join(data_path, f'out_{timestamp}.csv')
+        timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        subject_name = input("Nombre sel sujeto: ")
+        filepreffix = f'vmr_{subject_name}_{timestamp}'
+        input_file = os.path.join(data_path, f'{filepreffix}_in.csv')
+        output_file = os.path.join(data_path, f'{filepreffix}_out.csv')
 
         bin_file = os.path.join( sys.path[0], '../../bin/lin-x86_64/vmr_test1')
 
         variables = get_variables()
-        # change_variables(input_file, variables[0][0]) # first trial
         start_simulation(bin_file, input_file, output_file)
         start_controller(input_file, output_file, variables)
     except KeyboardInterrupt:
         print('\nPython: Stopping due to KeyboardInterrupt')
     except Exception as e:
         print(f"Python error: {str(e)}")
+        raise e
 
 
 

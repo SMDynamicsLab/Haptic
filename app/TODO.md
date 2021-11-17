@@ -158,3 +158,8 @@ https://stackoverflow.com/questions/451426/how-do-i-calculate-the-area-of-a-2d-p
 https://www.geeksforgeeks.org/area-of-a-polygon-with-given-n-ordered-vertices/
 https://stackoverflow.com/questions/34326728/how-do-i-calculate-the-area-of-a-non-convex-polygon
 buscar para nonsimple polygon
+
+* restar tiempo de hold para la velocidad
+* cambiar figura de center 
+* cambiar colores de tool 
+* armar la demo (2 vece sa cada angulo con y sin vmr)

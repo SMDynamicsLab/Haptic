@@ -77,14 +77,7 @@ cVector3d centerPostition = cVector3d(0.0, 0.0, 0.0);
 
 // Custom variables
 bool baseEnabled = true;
-bool attractorEnabled = true;
 double maxDamping;
-
-int trialCounter = 0;
-string outputPath = "/home/Carolina/Downloads/a.csv";
-bool useDamping = false; // a flag for using damping (ON/OFF)
-bool useForceField = true; // a flag for using force field (ON/OFF)
-bool cursorVisible = true;
 
 time_t mod_time;
 vector<double> variables;
@@ -115,6 +108,7 @@ double totalTrialDurationInMs;
 double totalHoldDurationInMs;
 double totalWaitDurationInMs;
 void startTrialPhase(int phase);
+int trialCounter = 0;
 
 int randNum(int min, int max)
 {
@@ -155,12 +149,11 @@ void setVrmEnabled(bool vmrEnabled)
     }
 }
 
-
 int main(int argc, char* argv[])
 {
     if(argc != 3)
     {
-        cout << "2 args expected " << argc-1 << " received" << endl;
+        cout << "C++: 2 args expected " << argc-1 << " received" << endl;
         return (0); // exit
     }
     // parse first arg to try and locate resources
@@ -168,8 +161,8 @@ int main(int argc, char* argv[])
 
     input = argv[1];
     output = argv[2];
-    cout << "Input file is "<< input << endl;
-    cout << "Output file is "<< output << endl;
+    cout << "C++: Input file is "<< input << endl;
+    cout << "C++: Output file is "<< output << endl;
 
     // OPEN GL - WINDOW DISPLAY
     // initialize GLFW library
@@ -329,8 +322,6 @@ int main(int argc, char* argv[])
 
     // start the haptic tool
     tool->start();
-    tool -> setShowEnabled(cursorVisible);
-
 
     //--------------------------------------------------------------------------
     // SETUP AUDIO MATERIAL
@@ -461,7 +452,7 @@ void windowSizeCallback(GLFWwindow* a_window, int a_width, int a_height)
 
 void errorCallback(int a_error, const char* a_description)
 {
-    cout << "Error: " << a_description << endl;
+    cout << "C++: Error: " << a_description << endl;
 }
 
 //------------------------------------------------------------------------------
@@ -516,39 +507,18 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
         camera->setMirrorVertical(mirroredDisplay);
     }
     
-    else if (a_key = GLFW_KEY_V)
-    {   
-        vmrEnabled = !vmrEnabled;
-        setVrmEnabled(vmrEnabled);
+    // else if (a_key = GLFW_KEY_V)
+    // {   
+    //     vmrEnabled = !vmrEnabled;
+    //     setVrmEnabled(vmrEnabled);
         
-    }
+    // }
 
-    else if (a_key == GLFW_KEY_B)
-    {   
-        baseEnabled = !baseEnabled;
-        base -> setEnabled(baseEnabled);
-    }
-
-    // option - enable/disable force field
-    else if (a_key == GLFW_KEY_1)
-    {
-        useForceField = !useForceField;
-        if (useForceField)
-            cout << "> Enable force field     \r";
-        else
-            cout << "> Disable force field    \r";
-    }
-
-    // option - enable/disable damping
-    else if (a_key == GLFW_KEY_2)
-    {
-        useDamping = !useDamping;
-        if (useDamping)
-            cout << "> Enable damping         \r";
-        else
-            cout << "> Disable damping        \r";
-    }
-
+    // else if (a_key == GLFW_KEY_B)
+    // {   
+    //     baseEnabled = !baseEnabled;
+    //     base -> setEnabled(baseEnabled);
+    // }
 
 }
 
@@ -631,6 +601,11 @@ void updateHaptics(void)
     double timeSinceHoldStartedInMs;
     double timeSinceTrialStartedInMs;
     double timeSinceWaitStartedInMs;
+
+    double centerDistance;
+    double targetDistance;
+    cVector3d toolGlobalPosXY;
+
     // main haptic simulation loop
     while(simulationRunning)
     {   
@@ -650,28 +625,38 @@ void updateHaptics(void)
             // read position
             hapticDevice->getPosition(position);
 
+            // read the clockTrialTime increment in seconds
+            timeSinceTrialStartedInMs = clockTrialTime.stop() * 1000; 
+            clockTrialTime.start();
+
             //save position
             row = {timeSinceTrialStartedInMs, position.x(), position.y(), position.z()}; // aca agregar el tiempo {t, x, y , z}
             data.push_back(row);
         }
 
+        //Calculate distances
+        toolGlobalPosXY = tool->getDeviceGlobalPos();
+        toolGlobalPosXY = cVector3d(toolGlobalPosXY.x(), toolGlobalPosXY.y(), 0);
+        centerDistance = (toolGlobalPosXY).distance(center->getGlobalPos());
+        targetDistance = (toolGlobalPosXY).distance(target->getGlobalPos());
+        
         switch(trialPhase) 
         {   
             case 0: // GO TO CENTER
                 // Si esta en el centro:
-                if((tool->getDeviceGlobalPos()).distance(center->getGlobalPos()) < 0.03)
+                if(centerDistance < 0.03)
                 {
                     trialPhase = 1;
                     startTrialPhase(trialPhase); // HOLD CENTER
                 }
-                break;
+            break;
             case 1: // HOLD CENTER
                 // read the clockHoldTime increment in seconds
                 timeSinceHoldStartedInMs = clockHoldTime.stop() * 1000; 
                 clockHoldTime.start();
 
                 // Si se salió del centro:
-                if ((tool->getDeviceGlobalPos()).distance(center->getGlobalPos()) > 0.03) //Moved outside of center
+                if (centerDistance > 0.03) //Moved outside of center
                 {   
                     audioSourceFailure -> play();
                     trialPhase = 0;
@@ -688,14 +673,18 @@ void updateHaptics(void)
                     startTrialPhase(trialPhase); // TRIAL ONGOING
                 }   
 
-                break;
+            break;
             case 2: // TRIAL ONGOING
-                // read the clockTrialTime increment in seconds
-                timeSinceTrialStartedInMs = clockTrialTime.stop() * 1000; 
-                clockTrialTime.start();
+                // Si entró al target:
+                if (targetDistance < 0.03) //Tool is inside target
+                {   
+                    trialPhase = 3;
+                    clockHoldTime.reset(); // restart the clock
+                    startTrialPhase(trialPhase); // HOLD TARGET
+                }
 
                 // Si se le acabó el tiempo:
-                if (timeSinceTrialStartedInMs > totalTrialDurationInMs)
+                else if (timeSinceTrialStartedInMs > totalTrialDurationInMs)
                 {   
                     trialSuccess = false;
                     audioSourceFailure -> play();
@@ -704,26 +693,19 @@ void updateHaptics(void)
                     
                 }
 
-                // Si entró al target:
-                else if ((tool->getDeviceGlobalPos()).distance(target->getGlobalPos()) < 0.03) //Tool is inside target
-                {   
-                    trialPhase = 3;
-                    clockHoldTime.reset(); // restart the clock
-                    startTrialPhase(trialPhase); // HOLD TARGET
-                }
 
-                break;
+
+            break;
             case 3: // HOLD TARGET
                 // read the clockHoldTime increment in seconds
                 timeSinceHoldStartedInMs = clockHoldTime.stop() * 1000; 
                 clockHoldTime.start();
 
                 // Si salió del centro: 
-                if ((tool->getDeviceGlobalPos()).distance(target->getGlobalPos()) > 0.03) //Moved outside of target
+                if (targetDistance > 0.03) //Moved outside of target
                 {
                     trialPhase = 2;
                     startTrialPhase(trialPhase); // Trial is still ongoing
-                    break;
                 }
 
                 // Si ya mantuvo suficiente tiempo el target:
@@ -734,7 +716,7 @@ void updateHaptics(void)
                     trialPhase = 4;
                     startTrialPhase(trialPhase); // TRIAL ENDED - wait for next trial
                 }
-                break;
+            break;
             case 4: // TRIAL ENDED - wait for next trial 
                 // read the clockWaitTime increment in seconds
                 timeSinceWaitStartedInMs = clockWaitTime.stop() * 1000; 
@@ -746,7 +728,7 @@ void updateHaptics(void)
                     trialPhase = 0;
                     startTrialPhase(trialPhase);
                 }
-                break;   
+            break;   
             default:
                 cout << "Invalid phase" << trialPhase << endl;  
         }
@@ -759,8 +741,7 @@ void updateHaptics(void)
 void startTrialPhase(int phase)
 {   
     // clockPhaseTime.reset(); // restart the clock
-    bool trialShouldKeepGoing;
-    cout << "Start trial phase: " << phase << endl;
+    bool trialShouldStart;
     switch(phase) 
     {   
         case 0: // GO TO CENTER
@@ -776,20 +757,20 @@ void startTrialPhase(int phase)
             center->m_material->setGreenDark();
             totalHoldDurationInMs = randNum(700, 1300); // 500ms + random entre 200 y 800ms
             labelMessage->setText("PHASE 1 - Hold center");
-            break;
-        case 2: // TRIAL ONGOING
-            trialShouldKeepGoing = getVariables(input, mod_time, variables); // input file ya no existe (la simulacion termino)
-            if (!trialShouldKeepGoing)
+
+            trialShouldStart = getVariables(input, mod_time, variables); // input file ya no existe (la simulacion termino)
+            if (!trialShouldStart)
             {   
-                cout << "no more trials" << endl;
+                cout << "C++: no more trials" << endl;
                 glfwSetWindowShouldClose(window, GLFW_TRUE);
             }
-            setVariables();
-            // data.clear();
+            setVariables();            
+            break;
+        case 2: // TRIAL ONGOING
             center -> setEnabled(false);
             target->m_material->setGrayDim();
             target -> setEnabled(true);
-            totalTrialDurationInMs = 2000; // 900ms
+            totalTrialDurationInMs = 2000; // 900ms es muy poco
             labelMessage->setText("PHASE 2 - Trial ongoing");
             break;
         case 3: // HOLD TARGET
@@ -813,7 +794,7 @@ void startTrialPhase(int phase)
             labelMessage->setText("PHASE 4 - Trial ended");
             break;
         default:
-            cout << "Invalid phase" << phase << endl;  
+            cout << "C++: Invalid phase" << phase << endl;  
     }
 }
 
