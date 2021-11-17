@@ -152,6 +152,8 @@ t
 * distancia recorrida (serie de trials) (cada sujeto es una trayectoria)
 * tiempo total  (serie de trials) (cada sujeto es una trayectoria)
 * velocidad media (serie de trials) (cada sujeto es una trayectoria)
+* restar tiempo de hold para la velocidad
+
 
 ver codigo para calcular area: 
 https://stackoverflow.com/questions/451426/how-do-i-calculate-the-area-of-a-2d-polygon
@@ -159,7 +161,12 @@ https://www.geeksforgeeks.org/area-of-a-polygon-with-given-n-ordered-vertices/
 https://stackoverflow.com/questions/34326728/how-do-i-calculate-the-area-of-a-non-convex-polygon
 buscar para nonsimple polygon
 
-* restar tiempo de hold para la velocidad
 * cambiar figura de center 
 * cambiar colores de tool 
 * armar la demo (2 vece sa cada angulo con y sin vmr)
+    * se muestran los elementos de a uno 
+    * ir a cada angulo sin y con vmr (hasta que lo haga correcto)
+    * para reutilizar la estructura: pasar la lista sobre la que hace shuffle (poruqe queremos que por cada ang haga con y sin vrm), agregar que el limite 1.1 sea una var
+    * mensaje de feedback (mas grande)
+* agregar descansos
+* curl force: caper de crisimagna y shadmehr, revisar instrucciones y restricciones de esos trials
