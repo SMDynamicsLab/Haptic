@@ -10,13 +10,12 @@ include $(TOP_DIR)/Makefile.common
 BIN_DIR = $(APP_DIR)/bin/$(OS)-$(ARCH)
 
 # tests
-SUBDIRS  = test1 \
-           test2 \
-           test3 \
-		   test4 \
-		   test5 \
-		   test6 \
-		   test7_vmr \
+SUBDIRS  = tests_previos/test1 \
+           tests_previos/test2 \
+           tests_previos/test3 \
+		   tests_previos/test4 \
+		   tests_previos/test5 \
+		   tests_previos/test6 \
 		   vmr
 
 

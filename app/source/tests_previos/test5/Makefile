@@ -1,5 +1,5 @@
 # app dir
-APP_DIR = ./../..
+APP_DIR = ./../../..
 CHAI3D_DIR = $(APP_DIR)/external/chai3d-3.2.0
 
 # project layout

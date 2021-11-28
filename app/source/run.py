@@ -186,7 +186,7 @@ if __name__ == "__main__":
         print("\nElegir tipo de simulación. (V o F)\nV: vmr\nF: fuerza")
         exp_choice = input()
     if exp_choice in ["V", "v", "vmr"]:
-        bin_file = os.path.join(sys.path[0], '../../bin/lin-x86_64/test7_vmr')
+        bin_file = os.path.join(sys.path[0], '../bin/lin-x86_64/vmr')
     else:
         raise Exception("Experimento de fuerza no esta definido aun")
 
@@ -198,7 +198,7 @@ if __name__ == "__main__":
 
     timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 
-    data_path = os.path.join(sys.path[0], 'data')
+    data_path = os.path.join(sys.path[0], '../data')
     os.makedirs(data_path, exist_ok=True)
 
     filepreffix = f'{exp_choice}_{subject_name}_{type_choice}_{timestamp}'
