@@ -16,7 +16,9 @@ SUBDIRS  = test1 \
 		   test4 \
 		   test5 \
 		   test6 \
-		   vmr_test1
+		   test7_vmr \
+		   vmr
+
 
 # rules
 all: $(SUBDIRS)
