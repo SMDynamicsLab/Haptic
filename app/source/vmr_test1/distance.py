@@ -1,7 +1,5 @@
 import numpy as np
-import pandas as pd 
-
-
+import pandas as pd
 
 
 def distance(data):
@@ -9,13 +7,13 @@ def distance(data):
     p1 = df.iloc[:-1]
     p2 = df.iloc[1:]
     p2 = p2.reset_index(drop=True)
-    ds = p2 - p1 
+    ds = p2 - p1
     d = np.sqrt(ds.x ** 2 + ds.y ** 2)
     return d.sum()
 
+
 def total_distance(data):
     df = data.reset_index(drop=True)
-    last_index = len(df)
     p1 = df.iloc[0]
     p2 = df.iloc[-1]
     ds = p2 - p1
@@ -34,20 +32,15 @@ if __name__ == "__main__":
     df['y'] = df['y']*100
 
     block_count = len(df.blockN.unique())
-    fig, axs = plt.subplots(1,block_count, sharey=True)
+    fig, axs = plt.subplots(1, block_count, sharey=True)
     fig.tight_layout()
 
-    grouped = df.groupby(['trial','blockN', 'vmr'])
+    grouped = df.groupby(['trial', 'blockN', 'vmr'])
 
     for (trial, blockN, vmr), group in grouped:
         d = distance(group)
         i = total_distance(group)
         print(f'trial:{trial} block:{blockN} distance:{d} i:{i}')
-        axs[blockN].scatter(trial,d)
-
+        axs[blockN].scatter(trial, d)
 
     plt.show()
-
-
-    
-
