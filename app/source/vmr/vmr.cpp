@@ -70,6 +70,7 @@ cShapeBox* base;
 cShapeSphere* target;
 cShapeSphere* center;
 cFontPtr font; // a font for rendering text
+cFontPtr fontBig;  // a font for rendering text
 cLabel* labelMessage; // a label to explain what is happening
 cLabel* labelRates; // a label to display the rate [Hz] at which the simulation is running
 cVector3d firstTargetPosition = cVector3d(-0.5,0.0, 0.0);
@@ -109,6 +110,8 @@ double totalHoldDurationInMs;
 double totalWaitDurationInMs;
 void startTrialPhase(int phase);
 int trialCounter = 0;
+int blockTrialCounter = 0;
+int blockWaitTimeInMs = 60 * 1000;
 
 int randNum(int min, int max)
 {
@@ -120,6 +123,17 @@ void setVariables()
 {
     double angle = variables[0];
     vmrEnabled = variables[1];
+
+    // Si el bloque dura mas de 10 trials, descansa 
+    // (en la demo no descansa)
+    if (blockN != variables[2]){
+        if (blockTrialCounter > 2){
+            trialPhase = 4;
+            startTrialPhase(5); // BLOCK ENDED - wait for next trial
+        }   
+        blockTrialCounter = 0;
+    }
+
     blockN = variables[2];
     setVrmEnabled(vmrEnabled);
     changeTargetPosition(target, firstTargetPosition, centerPostition, angle);
@@ -233,7 +247,7 @@ int main(int argc, char* argv[])
     world = new cWorld();
 
     // set the background color of the environment
-    world -> m_backgroundColor.setBlack();
+    world -> m_backgroundColor.setGrayLight();
 
     // create a camera and insert it into the virtual world
     camera = new cCamera(world);
@@ -268,6 +282,7 @@ int main(int argc, char* argv[])
 
     // create a font
     font = NEW_CFONTCALIBRI20();
+    fontBig = NEW_CFONTCALIBRI40();
     
     // create a label to display the haptic and graphic rate of the simulation
     labelRates = new cLabel(font);
@@ -277,7 +292,7 @@ int main(int argc, char* argv[])
     labelRates -> m_fontColor.setGrayLevel(0.4);
 
     // create a label with a small message
-    labelMessage = new cLabel(font);
+    labelMessage = new cLabel(fontBig);
     camera -> m_frontLayer -> addChild(labelMessage);
 
     // set font color
@@ -441,9 +456,6 @@ void windowSizeCallback(GLFWwindow* a_window, int a_width, int a_height)
     width  = a_width;
     height = a_height;
 
-    // update position of label
-    labelMessage -> setLocalPos((int)(0.5 * (width - labelMessage -> getWidth())), 40);
-
 }
 
 //------------------------------------------------------------------------------
@@ -504,19 +516,6 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
         mirroredDisplay = !mirroredDisplay;
         camera -> setMirrorVertical(mirroredDisplay);
     }
-    
-    // else if (a_key = GLFW_KEY_V)
-    // {   
-    //     vmrEnabled = !vmrEnabled;
-    //     setVrmEnabled(vmrEnabled);
-        
-    // }
-
-    // else if (a_key == GLFW_KEY_B)
-    // {   
-    //     baseEnabled = !baseEnabled;
-    //     base -> setEnabled(baseEnabled);
-    // }
 
 }
 
@@ -559,6 +558,8 @@ void updateGraphics(void)
     // update position of label
     labelRates -> setLocalPos((int)(0.5 * (width - labelRates -> getWidth())), 15);
 
+    // update position of label
+    labelMessage -> setLocalPos((int)(0.5 * (width - labelMessage -> getWidth())), 40);
 
     /////////////////////////////////////////////////////////////////////
     // RENDER SCENE
@@ -786,12 +787,22 @@ void startTrialPhase(int phase)
             appendToCsv(output, data, trialCounter, variables, trialSuccess);
             data.clear();
             trialCounter += 1;
+            blockTrialCounter += 1;
             
             totalWaitDurationInMs = randNum(500, 1500); // deberia ser random entre 500 y 1.5s
             labelMessage -> setText("");
             break;
+        case 5: // BLOCK ENDED - wait some time 
+            clockWaitTime.reset(); // restart the clock
+            trialOngoing = false;
+            center -> setEnabled(false);
+            target -> setEnabled(false);
+            tool -> setShowEnabled(false);
+            totalWaitDurationInMs = blockWaitTimeInMs; // 1 minuto
+            labelMessage -> setText("Tomar un descanso");
+            break;
         default:
-            cout << "C++: Invalid phase" << phase << endl;  
+            cout << "C++: Invalid phase " << phase << endl;  
     }
 }
 

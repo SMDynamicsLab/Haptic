@@ -100,7 +100,6 @@ def get_variables_block(N, vmr, positions_arr):
 def start_controller(input_file, output_file, variables, type='experiment'):
     if type is 'demo':
         max_per_block = float('inf')
-        max_per_block = 1
     else:
         max_per_block = 1.1
 
@@ -125,7 +124,7 @@ def start_controller(input_file, output_file, variables, type='experiment'):
 
             if not lastTrialSuccess(output_file):
                 print(f"Python: Trial {i} for block {blockN} failed.")
-                if len(angles) + 1 < initial_block_len * max_per_block:
+                if len(angles) + 1 <= initial_block_len * max_per_block:
                     angles.append(angle)
                     print(f"Python: Adding new trial for block {blockN} with angle {angle}.")
             i += 1
