@@ -8,7 +8,7 @@ from distance import distance
 
 
 # Trajectory
-def plot_trajectory(df, vmr, blockN):
+def plot_trajectory(df, vmr, blockN, trial_vars, axs, colors):
     # Plot aspect
     for ax in axs[0]:
         ax.axis('equal')
@@ -28,7 +28,7 @@ def plot_trajectory(df, vmr, blockN):
 
 
 # Area errors (integral)
-def plot_area_errors(df, blockN):
+def plot_area_errors(df, blockN, trial_vars, axs, colors):
 
     # Line colors for area error
     min_trial = df.trial.min()
@@ -45,7 +45,7 @@ def plot_area_errors(df, blockN):
 
 
 # Distancia recorrida
-def plot_curve_distance_and_velocity(df, blockN):
+def plot_curve_distance_and_velocity(df, blockN, trial_vars, axs, colors):
 
     # Line colors for curve distance
     min_trial = df.trial.min()
@@ -68,46 +68,50 @@ def filter_hold_time(df, hold_time=500):
     return filtered_df
 
 
-# Read file
-output_file = '/home/Carolina/Documents/Personal/Tesis/Haptic/app/source/vmr_test1/data/vmr_Nico_2021_11_09_22_07_35_out.csv'
-# output_file = '/home/Carolina/Documents/Personal/Tesis/Haptic/app/source/vmr_test1/data/vmr_Carolina_2021_11_09_19_28_24_out.csv'
-names = [
-    'trial',
-    'timeMs',
-    'x', 'y', 'z',
-    'angle',
-    'vmr',
-    'blockN',
-    'trialSuccess'
-    ]
-df = pd.read_csv(output_file, names=names, index_col=False)
-df['x'] = -df['x']*100
-df['y'] = df['y']*100
+def plot(output_file):
+    names = [
+        'trial',
+        'timeMs',
+        'x', 'y', 'z',
+        'angle',
+        'vmr',
+        'blockN',
+        'trialSuccess'
+        ]
+    df = pd.read_csv(output_file, names=names, index_col=False)
+    df['x'] = -df['x']*100
+    df['y'] = df['y']*100
 
-# Prepare plots
-block_count = len(df.blockN.unique())
-fig, axs = plt.subplots(5, block_count, sharey='row')
-fig.tight_layout()
+    # Prepare plots
+    block_count = len(df.blockN.unique())
+    fig, axs = plt.subplots(5, block_count, sharey='row')
+    fig.tight_layout()
 
-ticks = ticker.MaxNLocator(5)
-for ax in axs.flat:
-    plt.setp(ax.get_xticklabels(), fontsize=8)
-    plt.setp(ax.get_yticklabels(), fontsize=8)
+    ticks = ticker.MaxNLocator(5)
+    for ax in axs.flat:
+        plt.setp(ax.get_xticklabels(), fontsize=8)
+        plt.setp(ax.get_yticklabels(), fontsize=8)
 
 
-# Prepare data
-trial_vars = ['trial', 'angle', 'trialSuccess']
-block_vars = ['vmr', 'blockN']
-grouped_block = df.groupby(block_vars)
+    # Prepare data
+    trial_vars = ['trial', 'angle', 'trialSuccess']
+    block_vars = ['vmr', 'blockN']
+    grouped_block = df.groupby(block_vars)
 
-colormap = plt.cm.winter
+    colormap = plt.cm.winter
 
-for (vmr, blockN), block_group in grouped_block:
-    colors = [colormap(i) for i in np.linspace(0, 1, len(block_group.trial.unique()))]
+    for (vmr, blockN), block_group in grouped_block:
+        colors = [colormap(i) for i in np.linspace(0, 1, len(block_group.trial.unique()))]
 
-    block_group = block_group[block_group.trialSuccess == 1]
-    plot_trajectory(block_group, vmr, blockN)
-    plot_area_errors(block_group, blockN)
-    plot_curve_distance_and_velocity(block_group, blockN)
+        block_group = block_group[block_group.trialSuccess == 1]
+        plot_trajectory(block_group, vmr, blockN, trial_vars, axs, colors)
+        plot_area_errors(block_group, blockN, trial_vars, axs, colors)
+        plot_curve_distance_and_velocity(block_group, blockN, trial_vars, axs, colors)
 
-plt.show()
+    plt.show()
+
+if __name__ == "__main__":
+    # Read file
+    output_file = '/home/Carolina/Documents/Personal/Tesis/Haptic/app/source/vmr_test1/data/vmr_Nico_2021_11_09_22_07_35_out.csv'
+    # output_file = '/home/Carolina/Documents/Personal/Tesis/Haptic/app/source/vmr_test1/data/vmr_Carolina_2021_11_09_19_28_24_out.csv'
+    plot(output_file)

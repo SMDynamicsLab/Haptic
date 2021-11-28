@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import random
 from datetime import datetime
-
+from plot import plot
 
 def run_make():
     p_status, p_output = subprocess.getstatusoutput('make')
@@ -33,7 +33,6 @@ def plot_trials(output_file, block_count):
     plt.close('all')
     plt.ion()
     plt.show()
-    # estructura: trial, x, y, z
     names = ['trial', 'timeMs', 'x', 'y', 'z']
     var_names = ['angle', 'vmr', 'blockN', 'trialSuccess']
     # TO DO: filtrar trialSuccess = 0
@@ -71,18 +70,15 @@ def change_variables(input_file, variables_for_trial):
 def get_variables(type='experiment'):
     var = {}
     positions_arr = [0, 1, 2, 3, 4, 5]
-    if type not in ['experiment', 'demo']:
-        raise Exception('Tipo invalido de experimento')
 
     if type is 'demo':
         N = 1
         for i in positions_arr:
-            for vmr in [0, 1]:
-                var[len(var)] = get_variables_block(N=N, vmr=vmr, positions_arr=[i])
+            var[len(var)] = get_variables_block(N=N, vmr=0, positions_arr=[i])
+            var[len(var)] = get_variables_block(N=N, vmr=1, positions_arr=[i+1])  # el +1 es porque vmr gira
 
     if type is 'experiment':
         N = 12
-        N = 2
         for vmr in [0, 1, 0]:
             var[len(var)] = get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr)
 
@@ -103,6 +99,7 @@ def get_variables_block(N, vmr, positions_arr):
 def start_controller(input_file, output_file, variables, type='experiment'):
     if type is 'demo':
         max_per_block = float('inf')
+        max_per_block = 1
     else:
         max_per_block = 1.1
 
@@ -125,11 +122,6 @@ def start_controller(input_file, output_file, variables, type='experiment'):
 
             last_mod_time = waitForFileChange(output_file, last_mod_time)
 
-            # try:
-            #     plot_trials(output_file, block_count)
-            # except Exception as e:
-            #     print(f"Python: WARNING plot_trials error: {str(e)}")
-
             if not lastTrialSuccess(output_file):
                 print(f"Python: Trial {i} for block {blockN} failed.")
                 if len(angles) + 1 < initial_block_len * max_per_block:
@@ -140,7 +132,8 @@ def start_controller(input_file, output_file, variables, type='experiment'):
     os.remove(input_file)
     time.sleep(5)
     try:
-        plot_trials(output_file, block_count)
+        # plot_trials(output_file, block_count)
+        plot(output_file)
     except Exception as e:
         print(f"Python: WARNING plot_trials error: {str(e)}")
 
@@ -187,19 +180,19 @@ if __name__ == "__main__":
     type_choice = None
 
     # VMR o Fuerza
-    while exp_choice not in ["V", "F"]:
+    while exp_choice not in ["V", "v", "vmr", "F", "f", "fuerza"]:
         print("\nElegir tipo de simulación. (V o F)\nV: vmr\nF: fuerza")
         exp_choice = input()
-    if exp_choice is "V":
+    if exp_choice in ["V", "v", "vmr"]:
         bin_file = os.path.join(sys.path[0], '../../bin/lin-x86_64/vmr_test1')
     else:
         raise Exception("Experimento de fuerza no esta definido aun")
 
     # Demo o Experimento
-    while type_choice not in ["D", "E"]:
+    while type_choice not in ["D", "d", "demo", "E", "e", "experimento"]:
         print("\nElegir tipo de simulación. (E o D)\nD: demo\nE: experimento")
         type_choice = input()
-    type = 'demo' if type_choice is 'D' else 'experiment'
+    type = 'demo' if type_choice in ['D', 'd', 'demo'] else 'experiment'
 
     timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 
@@ -216,3 +209,6 @@ if __name__ == "__main__":
         output_file=output_file,
         type=type
         )
+
+
+     
