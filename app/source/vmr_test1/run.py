@@ -63,27 +63,45 @@ def change_variables(input_file, variables_for_trial):
     variables_str = " ".join([str(i) for i in variables_for_trial])
     print(variables_str, file = f)
     f.close()
-    print("Python: finished writing input file")
+    print(f"Python: finished writing input file with {variables_for_trial}")
     return
 
-def get_variables():
+def get_variables(type='experiment'):
     var = {}
-    var[len(var)] = get_variables_block(N=12, vmr=0)
-    var[len(var)] = get_variables_block(N=12, vmr=1)
-    var[len(var)] = get_variables_block(N=12, vmr=0)
+    positions_arr=[0, 1, 2, 3, 4, 5]
+    if type not in ['experiment', 'demo']:
+        raise Exception('Tipo invalido de experimento')
+
+    if type is 'demo':
+        N = 1
+        for i in positions_arr:
+            for vmr in [0, 1]:
+                var[len(var)] = get_variables_block(N=N, vmr=vmr, positions_arr=[i])
+
+    if type is 'experiment':
+        N = 12
+        N = 2
+        for vmr in [0, 1, 0]:
+            var[len(var)] = get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr)
+
     return var
 
-def get_variables_block(N, vmr):
+def get_variables_block(N, vmr, positions_arr):
     block = {}
-    positions = [0, 1, 2, 3, 4, 5]*N
-    angles = [i*60 for i in positions]
+    positions = positions_arr * N
+    angles = [i * 60 for i in positions]
     random.shuffle(angles)    
     block["vmr"] = vmr
     block["n"] = len(angles)
     block["angles"] = angles
     return block
 
-def start_controller(input_file, output_file, variables):
+def start_controller(input_file, output_file, variables, type='experiment'):
+    if type is 'demo':
+        max_per_block = float('inf')
+    else:
+        max_per_block = 1.1
+
     last_mod_time = None # epoch float
 
     block_count = len(variables) # cant de bloques
@@ -95,7 +113,7 @@ def start_controller(input_file, output_file, variables):
         initial_block_len = block['n']
         vmr = block['vmr']
         i = 0
-        while (i < len(angles) and i < initial_block_len*1.1):
+        while i < len(angles):
             print(f'\nPython: blockN: {blockN} trial:{i}')
             angle = angles[i]
             trial_variables = [angle, vmr, blockN]
@@ -103,18 +121,25 @@ def start_controller(input_file, output_file, variables):
 
             last_mod_time = waitForFileChange(output_file, last_mod_time)
 
-            try:
-                plot_trials(output_file, block_count)
-            except Exception as e:
-                print(f"Python: WARNING plot_trials error: {str(e)}")
+            # try:
+            #     plot_trials(output_file, block_count)
+            # except Exception as e:
+            #     print(f"Python: WARNING plot_trials error: {str(e)}")
 
             if not lastTrialSuccess(output_file):
-                angles.append(angle)
-                print(f"Trial {i} failed. Adding new trial for block {blockN} with angle {angle}")
+                print(f"Python: Trial {i} for block {blockN} failed.")
+                if len(angles) + 1 < initial_block_len * max_per_block:
+                    angles.append(angle)
+                    print(f"Python: Adding new trial for block {blockN} with angle {angle}. New len angles {len(angles)}")
             i += 1
     print("Python: Trials done. Closing simulation and removing input file")
     os.remove(input_file)
     time.sleep(5)
+    try:
+        plot_trials(output_file, block_count)
+    except Exception as e:
+        print(f"Python: WARNING plot_trials error: {str(e)}")
+
     input("Python: Press enter to finish script")
 
 def lastTrialSuccess(output_file):
@@ -135,31 +160,52 @@ def waitForFileChange(output_file, last_mod_time):
             print('Python: output file changed')
             return mod_time
         time.sleep(0.2)
-        
 
-
-if __name__ == "__main__":
+def run(bin_file, input_file, output_file, type='experiment'):
     try:
-        run_make()
-        data_path = os.path.join(sys.path[0], 'data')
-        os.makedirs(data_path, exist_ok=True)
-        timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-        subject_name = input("Nombre sel sujeto: ")
-        filepreffix = f'vmr_{subject_name}_{timestamp}'
-        input_file = os.path.join(data_path, f'{filepreffix}_in.csv')
-        output_file = os.path.join(data_path, f'{filepreffix}_out.csv')
-
-        bin_file = os.path.join( sys.path[0], '../../bin/lin-x86_64/vmr_test1')
-
-        variables = get_variables()
+        variables = get_variables(type=type)
         start_simulation(bin_file, input_file, output_file)
-        start_controller(input_file, output_file, variables)
+        start_controller(input_file, output_file, variables, type=type)
     except KeyboardInterrupt:
         print('\nPython: Stopping due to KeyboardInterrupt')
     except Exception as e:
         print(f"Python error: {str(e)}")
         raise e
 
+if __name__ == "__main__":
+    run_make()
+    subject_name = input("Nombre del sujeto: ") 
+    exp_choice = None 
+    type_choice = None
 
+    # VMR o Fuerza
+    while exp_choice not in ["V", "F"]:
+        print("\nElegir tipo de simulación. (V o F)\nV: vmr\nF: fuerza")
+        exp_choice = input()
+    if exp_choice is "V":
+        bin_file = os.path.join( sys.path[0], '../../bin/lin-x86_64/vmr_test1')
+    else:
+        raise Exception("Experimento de fuerza no esta definido aun")
 
+    # Demo o Experimento
+    while type_choice not in ["D", "E"]:
+        print("\nElegir tipo de simulación. (E o D)\nD: demo\nE: experimento")
+        type_choice = input()
+    type = 'demo' if type_choice is 'D' else 'experiment'
+
+    timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+
+    data_path = os.path.join(sys.path[0], 'data')
+    os.makedirs(data_path, exist_ok=True)
+
+    filepreffix = f'{exp_choice}_{subject_name}_{type_choice}_{timestamp}'
+    input_file = os.path.join(data_path, f'{filepreffix}_in.csv')
+    output_file = os.path.join(data_path, f'{filepreffix}_out.csv')
+
+    run(
+        bin_file=bin_file, 
+        input_file=input_file, 
+        output_file=output_file, 
+        type=type
+        )
 

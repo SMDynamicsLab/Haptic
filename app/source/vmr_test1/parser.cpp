@@ -15,9 +15,10 @@ bool getVariables(
     time_t& stored_mod_time, 
     vector<double>& variables
 )
-{
-    if(doesFileExist(filename) &&  hasFileChanged(filename, stored_mod_time)){
-        cout << "C++: Reading input file" << endl;
+{   
+    cout << "C++: Checking if input file has changed" << endl;
+    if(doesFileExist(filename) && hasFileChanged(filename, stored_mod_time)){
+        cout << "C++: Input file has changed. Reading input file" << endl;
         variables = parseFile(filename);
         stored_mod_time = getModTime(filename); //store last modification date
     }

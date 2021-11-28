@@ -139,13 +139,13 @@ void setVrmEnabled(bool vmrEnabled)
     if (vmrEnabled)
     {   
         setVrmUpVector();
-        camera->set(localPosition, localLookAt, vmrUpVector);
-        light->setDir(vmrUpVector);
+        camera -> set(localPosition, localLookAt, vmrUpVector);
+        light -> setDir(vmrUpVector);
     }
     else 
     {
-        camera->set(localPosition, localLookAt, localUp);
-        light->setDir(localUp);
+        camera -> set(localPosition, localLookAt, localUp);
+        light -> setDir(localUp);
     }
 }
 
@@ -178,10 +178,10 @@ int main(int argc, char* argv[])
 
     // compute desired size of window
     const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-    int w = 0.8 * mode->height;
-    int h = 0.5 * mode->height;
-    int x = 0.5 * (mode->width - w);
-    int y = 0.5 * (mode->height - h);
+    int w = 0.8 * mode -> height;
+    int h = 0.5 * mode -> height;
+    int x = 0.5 * (mode -> width - w);
+    int y = 0.5 * (mode -> height - h);
 
     // set OpenGL version
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
@@ -233,32 +233,32 @@ int main(int argc, char* argv[])
     world = new cWorld();
 
     // set the background color of the environment
-    world->m_backgroundColor.setBlack();
+    world -> m_backgroundColor.setBlack();
 
     // create a camera and insert it into the virtual world
     camera = new cCamera(world);
-    world->addChild(camera);
+    world -> addChild(camera);
     
     // position and orient the camera
-    camera->set(localPosition, localLookAt, localUp);
+    camera -> set(localPosition, localLookAt, localUp);
 
-    camera->setUseMultipassTransparency(true);
+    camera -> setUseMultipassTransparency(true);
 
     // set the near and far clipping planes of the camera
-    camera->setClippingPlanes(0.01, 10.0);
+    camera -> setClippingPlanes(0.01, 10.0);
 
     // set stereo mode
-    camera->setStereoMode(stereoMode);
+    camera -> setStereoMode(stereoMode);
 
 
     // set vertical mirrored display mode
-    camera->setMirrorVertical(mirroredDisplay);
+    camera -> setMirrorVertical(mirroredDisplay);
 
     
     light = new cDirectionalLight(world); // create a directional light source
-    world->addChild(light); // insert light source inside world
-    light->setEnabled(true); // enable light source
-    light->setDir(localUp); // define direction of light beam
+    world -> addChild(light); // insert light source inside world
+    light -> setEnabled(true); // enable light source
+    light -> setDir(localUp); // define direction of light beam
 
 
 
@@ -271,20 +271,20 @@ int main(int argc, char* argv[])
     
     // create a label to display the haptic and graphic rate of the simulation
     labelRates = new cLabel(font);
-    camera->m_frontLayer->addChild(labelRates);
+    camera -> m_frontLayer -> addChild(labelRates);
 
     // set font color
-    labelRates->m_fontColor.setGrayLevel(0.4);
+    labelRates -> m_fontColor.setGrayLevel(0.4);
 
     // create a label with a small message
     labelMessage = new cLabel(font);
-    camera->m_frontLayer->addChild(labelMessage);
+    camera -> m_frontLayer -> addChild(labelMessage);
 
     // set font color
-    labelMessage->m_fontColor.setBlack();
+    labelMessage -> m_fontColor.setBlack();
 
     // set text message
-    labelMessage->setText("Test output message");
+    labelMessage -> setText("Test output message");
 
 
     //--------------------------------------------------------------------------
@@ -295,45 +295,45 @@ int main(int argc, char* argv[])
     handler = new cHapticDeviceHandler();
 
     // get access to the first available haptic device found
-    handler->getDevice(hapticDevice, 0);
+    handler -> getDevice(hapticDevice, 0);
 
     // retrieve information about the current haptic device
-    cHapticDeviceInfo hapticDeviceInfo = hapticDevice->getSpecifications();
+    cHapticDeviceInfo hapticDeviceInfo = hapticDevice -> getSpecifications();
 
     // create a tool (cursor) and insert into the world
     tool = new cToolCursor(world);
-    world->addChild(tool);
+    world -> addChild(tool);
 
     // connect the haptic device to the virtual tool
-    tool->setHapticDevice(hapticDevice);
+    tool -> setHapticDevice(hapticDevice);
 
     // map the physical workspace of the haptic device to a larger virtual workspace.
-    tool->setWorkspaceRadius(1.0);
+    tool -> setWorkspaceRadius(1.0);
 
     // define a radius for the virtual tool (sphere)
-    tool->setRadius(0.07);
-    tool->setLocalPos(0.0, 0.0, 0.0);
-    tool->setDeviceGlobalPos(0.0, 0.0, 0.0);
+    tool -> setRadius(0.07);
+    tool -> setLocalPos(0.0, 0.0, 0.0);
+    tool -> setDeviceGlobalPos(0.0, 0.0, 0.0);
     
     // haptic forces are enabled only if small forces are first sent to the device;
     // this mode avoids the force spike that occurs when the application starts when 
     // the tool is located inside an object for instance. 
-    // tool->setWaitForSmallForce(true);
+    // tool -> setWaitForSmallForce(true);
 
     // start the haptic tool
-    tool->start();
+    tool -> start();
 
     //--------------------------------------------------------------------------
     // SETUP AUDIO MATERIAL
     //--------------------------------------------------------------------------
     audioDevice = new cAudioDevice(); // create an audio device to play sounds
-    camera->attachAudioDevice(audioDevice); // attach audio device to camera
+    camera -> attachAudioDevice(audioDevice); // attach audio device to camera
     // create audio buffers and load audio wave files
     audioBufferSuccess = new cAudioBuffer();
-    bool fileload1 = audioBufferSuccess->loadFromFile(RESOURCE_PATH("../resources/sounds/micro-bell.wav"));
+    bool fileload1 = audioBufferSuccess -> loadFromFile(RESOURCE_PATH("../resources/sounds/micro-bell.wav"));
 
     audioBufferFailure = new cAudioBuffer();
-    bool fileload2 = audioBufferFailure->loadFromFile(RESOURCE_PATH("../resources/sounds/cartoon-bing-low.wav"));
+    bool fileload2 = audioBufferFailure -> loadFromFile(RESOURCE_PATH("../resources/sounds/cartoon-bing-low.wav"));
 
     // check for errors
     if (!(fileload1 && fileload2))
@@ -344,14 +344,12 @@ int main(int argc, char* argv[])
     }
 
     audioSourceSuccess = new cAudioSource();
-    audioSourceSuccess->setAudioBuffer(audioBufferSuccess);
-    audioSourceSuccess->setGain(4.0);
-    // audioSourceSuccess->play();
-
+    audioSourceSuccess -> setAudioBuffer(audioBufferSuccess);
+    audioSourceSuccess -> setGain(4.0);
 
     audioSourceFailure = new cAudioSource();
-    audioSourceFailure->setAudioBuffer(audioBufferFailure);
-    audioSourceFailure->setGain(4.0);
+    audioSourceFailure -> setAudioBuffer(audioBufferFailure);
+    audioSourceFailure -> setGain(4.0);
 
     //--------------------------------------------------------------------------
     // CREATE OBJECTS / SET WORLD PROPERTIES
@@ -359,7 +357,7 @@ int main(int argc, char* argv[])
 
     // read the scale factor between the physical workspace of the haptic
     // device and the virtual workspace defined for the tool
-    double workspaceScaleFactor = tool->getWorkspaceScaleFactor();
+    double workspaceScaleFactor = tool -> getWorkspaceScaleFactor();
     
     // get properties of haptic device
     double maxStiffness	= hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor;
@@ -369,9 +367,9 @@ int main(int argc, char* argv[])
     // Damping of the world
     // create some viscous environment
     cEffectViscosity* viscosity = new cEffectViscosity(world);
-    world->addEffect(viscosity);
+    world -> addEffect(viscosity);
 
-    world->m_material->setViscosity(0.5 * maxDamping);
+    world -> m_material -> setViscosity(0.5 * maxDamping);
     createShapes(
         world, 
         base, 
@@ -393,7 +391,7 @@ int main(int argc, char* argv[])
 
     // create a thread which starts the main haptics rendering loop
     hapticsThread = new cThread();
-    hapticsThread->start(updateHaptics, CTHREAD_PRIORITY_HAPTICS);
+    hapticsThread -> start(updateHaptics, CTHREAD_PRIORITY_HAPTICS);
 
     // setup callback when application exits
     atexit(close);
@@ -444,7 +442,7 @@ void windowSizeCallback(GLFWwindow* a_window, int a_width, int a_height)
     height = a_height;
 
     // update position of label
-    labelMessage->setLocalPos((int)(0.5 * (width - labelMessage->getWidth())), 40);
+    labelMessage -> setLocalPos((int)(0.5 * (width - labelMessage -> getWidth())), 40);
 
 }
 
@@ -486,16 +484,16 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
         // set fullscreen or window mode
         if (fullscreen)
         {
-            glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+            glfwSetWindowMonitor(window, monitor, 0, 0, mode -> width, mode -> height, mode -> refreshRate);
             glfwSwapInterval(swapInterval);
         }
         else
         {
-            int w = 0.8 * mode->height;
-            int h = 0.5 * mode->height;
-            int x = 0.5 * (mode->width - w);
-            int y = 0.5 * (mode->height - h);
-            glfwSetWindowMonitor(window, NULL, x, y, w, h, mode->refreshRate);
+            int w = 0.8 * mode -> height;
+            int h = 0.5 * mode -> height;
+            int x = 0.5 * (mode -> width - w);
+            int y = 0.5 * (mode -> height - h);
+            glfwSetWindowMonitor(window, NULL, x, y, w, h, mode -> refreshRate);
             glfwSwapInterval(swapInterval);
         }
     }
@@ -504,7 +502,7 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
     else if (a_key == GLFW_KEY_M)
     {
         mirroredDisplay = !mirroredDisplay;
-        camera->setMirrorVertical(mirroredDisplay);
+        camera -> setMirrorVertical(mirroredDisplay);
     }
     
     // else if (a_key = GLFW_KEY_V)
@@ -533,7 +531,7 @@ void close(void)
     while (!simulationFinished) { cSleepMs(100); }
 
     // close haptic device
-    tool->stop();
+    tool -> stop();
 
     // delete resources
     delete hapticsThread;
@@ -555,11 +553,11 @@ void updateGraphics(void)
     /////////////////////////////////////////////////////////////////////
 
     // update haptic and graphic rate data
-    labelRates->setText(cStr(freqCounterGraphics.getFrequency(), 0) + " Hz / " +
+    labelRates -> setText(cStr(freqCounterGraphics.getFrequency(), 0) + " Hz / " +
                         cStr(freqCounterHaptics.getFrequency(), 0) + " Hz");
 
     // update position of label
-    labelRates->setLocalPos((int)(0.5 * (width - labelRates->getWidth())), 15);
+    labelRates -> setLocalPos((int)(0.5 * (width - labelRates -> getWidth())), 15);
 
 
     /////////////////////////////////////////////////////////////////////
@@ -567,10 +565,10 @@ void updateGraphics(void)
     /////////////////////////////////////////////////////////////////////
 
     // update shadow maps (if any)
-    world->updateShadowMaps(false, mirroredDisplay);
+    world -> updateShadowMaps(false, mirroredDisplay);
 
     // render world
-    camera->renderView(width, height);
+    camera -> renderView(width, height);
 
     // wait until all GL commands are completed
     glFinish();
@@ -615,15 +613,15 @@ void updateHaptics(void)
         freqCounterHaptics.signal(1); // signal frequency counter    
 
         // HAPTIC FORCE COMPUTATION
-        world->computeGlobalPositions(true); // compute global reference frames for each object
-        tool->updateFromDevice(); // update position and orientation of tool
-        tool->computeInteractionForces(); // compute interaction forces
-        tool->applyToDevice(); // send forces to haptic device
+        world -> computeGlobalPositions(true); // compute global reference frames for each object
+        tool -> updateFromDevice(); // update position and orientation of tool
+        tool -> computeInteractionForces(); // compute interaction forces
+        tool -> applyToDevice(); // send forces to haptic device
         
         if (trialOngoing)
         {
             // read position
-            hapticDevice->getPosition(position);
+            hapticDevice -> getPosition(position);
 
             // read the clockTrialTime increment in seconds
             timeSinceTrialStartedInMs = clockTrialTime.stop() * 1000; 
@@ -635,10 +633,10 @@ void updateHaptics(void)
         }
 
         //Calculate distances
-        toolGlobalPosXY = tool->getDeviceGlobalPos();
+        toolGlobalPosXY = tool -> getDeviceGlobalPos();
         toolGlobalPosXY = cVector3d(toolGlobalPosXY.x(), toolGlobalPosXY.y(), 0);
-        centerDistance = (toolGlobalPosXY).distance(center->getGlobalPos());
-        targetDistance = (toolGlobalPosXY).distance(target->getGlobalPos());
+        centerDistance = (toolGlobalPosXY).distance(center -> getGlobalPos());
+        targetDistance = (toolGlobalPosXY).distance(target -> getGlobalPos());
         
         switch(trialPhase) 
         {   
@@ -658,7 +656,6 @@ void updateHaptics(void)
                 // Si se salió del centro:
                 if (centerDistance > 0.03) //Moved outside of center
                 {   
-                    audioSourceFailure -> play();
                     trialPhase = 0;
                     startTrialPhase(trialPhase); // GO TO CENTER
                     
@@ -730,7 +727,7 @@ void updateHaptics(void)
                 }
             break;   
             default:
-                cout << "Invalid phase" << trialPhase << endl;  
+                cout << "C++: Invalid phase" << trialPhase << endl;  
         }
     }
     
@@ -746,17 +743,17 @@ void startTrialPhase(int phase)
     {   
         case 0: // GO TO CENTER
             data.clear();
-            center -> m_material->setGrayDim();
+            center -> m_material -> setBlueAqua();
             tool -> setShowEnabled(true);
             center -> setEnabled(true);
             target -> setEnabled(false);
-            labelMessage->setText("PHASE 0 - Go to center");
+            labelMessage -> setText("Ir al centro");
             break;
         case 1: // HOLD CENTER
             clockHoldTime.reset(); // restart the clock
-            center->m_material->setGreenDark();
+            center -> m_material -> setGreenDark();
             totalHoldDurationInMs = randNum(700, 1300); // 500ms + random entre 200 y 800ms
-            labelMessage->setText("PHASE 1 - Hold center");
+            labelMessage -> setText("Mantener");
 
             trialShouldStart = getVariables(input, mod_time, variables); // input file ya no existe (la simulacion termino)
             if (!trialShouldStart)
@@ -764,19 +761,19 @@ void startTrialPhase(int phase)
                 cout << "C++: no more trials" << endl;
                 glfwSetWindowShouldClose(window, GLFW_TRUE);
             }
-            setVariables();            
+            setVariables();
             break;
         case 2: // TRIAL ONGOING
             center -> setEnabled(false);
-            target->m_material->setGrayDim();
+            target -> m_material -> setRedDark();
             target -> setEnabled(true);
             totalTrialDurationInMs = 2000; // 900ms es muy poco
-            labelMessage->setText("PHASE 2 - Trial ongoing");
+            labelMessage -> setText("Ir al objetivo");
             break;
         case 3: // HOLD TARGET
-            target->m_material->setGreenDark();
+            target -> m_material -> setGreenDark();
             totalHoldDurationInMs = 500;
-            labelMessage->setText("PHASE 3 - Hold target");
+            labelMessage -> setText("Mantener");
             break;
         case 4: // TRIAL ENDED - wait for next trial
             clockWaitTime.reset(); // restart the clock
@@ -791,7 +788,7 @@ void startTrialPhase(int phase)
             trialCounter += 1;
             
             totalWaitDurationInMs = randNum(500, 1500); // deberia ser random entre 500 y 1.5s
-            labelMessage->setText("PHASE 4 - Trial ended");
+            labelMessage -> setText("");
             break;
         default:
             cout << "C++: Invalid phase" << phase << endl;  
