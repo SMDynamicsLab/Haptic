@@ -30,7 +30,7 @@ def start_simulation(bin_file, input_file, output_file):
         )
 
 
-def plot_trials(output_file, block_count):
+def vmr_plot_trials(output_file, block_count):
     plt.close('all')
     plt.ion()
     plt.show()
@@ -68,25 +68,25 @@ def change_variables(input_file, variables_for_trial):
     return
 
 
-def get_variables(type='experiment'):
+def vmr_get_variables(type='experiment'):
     var = {}
     positions_arr = [0, 1, 2, 3, 4, 5]
 
     if type is 'demo':
         N = 1
         for i in positions_arr:
-            var[len(var)] = get_variables_block(N=N, vmr=0, positions_arr=[i])
-            var[len(var)] = get_variables_block(N=N, vmr=1, positions_arr=[i+1])  # el +1 es porque vmr gira
+            var[len(var)] = vmr_get_variables_block(N=N, vmr=0, positions_arr=[i])
+            var[len(var)] = vmr_get_variables_block(N=N, vmr=1, positions_arr=[i+1])  # el +1 es porque vmr gira
 
     if type is 'experiment':
         N = 12
         for vmr in [0, 1, 0]:
-            var[len(var)] = get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr)
+            var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr)
 
     return var
 
 
-def get_variables_block(N, vmr, positions_arr):
+def vmr_get_variables_block(N, vmr, positions_arr):
     block = {}
     positions = positions_arr * N
     angles = [i * 60 for i in positions]
@@ -97,7 +97,7 @@ def get_variables_block(N, vmr, positions_arr):
     return block
 
 
-def start_controller(input_file, output_file, variables, type='experiment'):
+def vmr_start_controller(input_file, output_file, variables, type='experiment'):
     if type is 'demo':
         max_per_block = float('inf')
     else:
@@ -132,11 +132,11 @@ def start_controller(input_file, output_file, variables, type='experiment'):
     os.remove(input_file)
     time.sleep(5)
     try:
-        # plot_trials(output_file, block_count)
+        # vmr_plot_trials(output_file, block_count)
         if type == 'experiment':
             plot(output_file)
     except Exception as e:
-        print(f"Python: WARNING plot_trials error: {str(e)}")
+        print(f"Python: WARNING vmr_plot_trials error: {str(e)}")
 
     input("Python: Press enter to finish")
 
@@ -164,9 +164,9 @@ def waitForFileChange(output_file, last_mod_time):
 
 def run(bin_file, input_file, output_file, type='experiment'):
     try:
-        variables = get_variables(type=type)
+        variables = vmr_get_variables(type=type)
         start_simulation(bin_file, input_file, output_file)
-        start_controller(input_file, output_file, variables, type=type)
+        vmr_start_controller(input_file, output_file, variables, type=type)
     except KeyboardInterrupt:
         print('\nPython: Stopping due to KeyboardInterrupt')
     except Exception as e:
@@ -187,6 +187,7 @@ if __name__ == "__main__":
     if exp_choice in ["V", "v", "vmr"]:
         bin_file = os.path.join(sys.path[0], '../bin/lin-x86_64/vmr')
     else:
+        bin_file = os.path.join(sys.path[0], '../bin/lin-x86_64/force')
         raise Exception("Experimento de fuerza no esta definido aun")
 
     # Demo o Experimento

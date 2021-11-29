@@ -127,7 +127,7 @@ void setVariables()
     // Si el bloque dura mas de 10 trials, descansa 
     // (en la demo no descansa)
     if (blockN != variables[2]){
-        if (blockTrialCounter > 2){
+        if (blockTrialCounter > 10){
             trialPhase = 4;
             startTrialPhase(5); // BLOCK ENDED - wait for next trial
         }   

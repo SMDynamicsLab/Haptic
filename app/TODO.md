@@ -168,3 +168,6 @@ buscar para nonsimple polygon
     * mensaje de feedback (mas grande)
 * agregar descansos
 * curl force: paper de crisimagna y shadmehr, revisar instrucciones y restricciones de esos trials
+    * tablas con desarrollo experimental aca https://journals.physiology.org/doi/full/10.1152/jn.00622.2002
+
+* correcciones despues del trial (ver wpp)
