@@ -17,7 +17,8 @@ void createShapes(
     double& maxStiffness,
     double& maxDamping,
     cVector3d& firstTargetPosition,
-    cVector3d& centerPostition
+    cVector3d& centerPostition,
+    cShapeSphere*& blackHole
     )
 {
     // SHAPE - BASE
@@ -49,7 +50,18 @@ void createShapes(
     center-> setUseTransparency(true);
     center-> setTransparencyLevel(0.8);
     center->m_material->setViscosity(0.1 * maxDamping);
-    center->createEffectViscosity();     
+    center->createEffectViscosity();
+
+    // SHAPE - Attractor
+    blackHole = new cShapeSphere(0.001);
+    world->addChild(blackHole);
+    blackHole->setLocalPos(firstTargetPosition);
+    blackHole->createEffectSurface();
+    blackHole->createEffectMagnetic();
+    blackHole->m_material->setMagnetMaxDistance(10);
+    blackHole->m_material->setMagnetMaxForce(0.2 * maxLinearForce);
+    blackHole->m_material->setStiffness(0.5 * maxStiffness);
+    blackHole -> setEnabled(false);
 }
 
 void changeTargetPosition(

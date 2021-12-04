@@ -10,7 +10,8 @@ void createShapes(
     double& maxStiffness,
     double& maxDamping,
     chai3d::cVector3d& firstTargetPosition,
-    chai3d::cVector3d& centerPostition
+    chai3d::cVector3d& centerPostition,
+    chai3d::cShapeSphere*& blackHole
     );
 void changeTargetPosition(
     chai3d::cShapeSphere*& target, 

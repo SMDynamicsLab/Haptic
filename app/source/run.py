@@ -71,12 +71,10 @@ def change_variables(input_file, variables_for_trial):
 def vmr_get_variables(type='experiment'):
     var = {}
     positions_arr = [0, 1, 2, 3, 4, 5]
-
     if type is 'demo':
-        N = 1
         for i in positions_arr:
-            var[len(var)] = vmr_get_variables_block(N=N, vmr=0, positions_arr=[i])
-            var[len(var)] = vmr_get_variables_block(N=N, vmr=1, positions_arr=[i+1])  # el +1 es porque vmr gira
+            var[len(var)] = vmr_get_variables_block(N=1, vmr=0, positions_arr=[i])
+            var[len(var)] = vmr_get_variables_block(N=2, vmr=1, positions_arr=[i+1])  # el +1 es porque vmr gira
 
     if type is 'experiment':
         N = 12
@@ -130,15 +128,6 @@ def vmr_start_controller(input_file, output_file, variables, type='experiment'):
             i += 1
     print("Python: Trials done. Closing simulation and removing input file")
     os.remove(input_file)
-    time.sleep(5)
-    try:
-        # vmr_plot_trials(output_file, block_count)
-        if type == 'experiment':
-            plot(output_file)
-    except Exception as e:
-        print(f"Python: WARNING vmr_plot_trials error: {str(e)}")
-
-    input("Python: Press enter to finish")
 
 
 def lastTrialSuccess(output_file):
@@ -162,11 +151,22 @@ def waitForFileChange(output_file, last_mod_time):
         time.sleep(0.2)
 
 
-def run(bin_file, input_file, output_file, type='experiment'):
+def run(bin_file, input_file, output_file, plot_file=None, type='experiment'):
     try:
         variables = vmr_get_variables(type=type)
         start_simulation(bin_file, input_file, output_file)
         vmr_start_controller(input_file, output_file, variables, type=type)
+
+        time.sleep(5)
+        if type == 'experiment':
+            try:
+                # vmr_plot_trials(output_file, block_count)
+                plot(output_file, plot_file)
+            except Exception as e:
+                print(f"Python: WARNING vmr_plot_trials error: {str(e)}")
+
+        input("Python: Press enter to finish")
+
     except KeyboardInterrupt:
         print('\nPython: Stopping due to KeyboardInterrupt')
     except Exception as e:
@@ -204,10 +204,14 @@ if __name__ == "__main__":
     filepreffix = f'{exp_choice}_{subject_name}_{type_choice}_{timestamp}'
     input_file = os.path.join(data_path, f'{filepreffix}_in.csv')
     output_file = os.path.join(data_path, f'{filepreffix}_out.csv')
-
+    if type == 'experiment':
+        plot_file = os.path.join(data_path, f'{filepreffix}_plot.png')
+    else:
+        plot_file = None
     run(
         bin_file=bin_file,
         input_file=input_file,
         output_file=output_file,
+        plot_file=plot_file,
         type=type
         )

@@ -140,7 +140,6 @@ blanked, removing visual feedback during the reaching period.
 * metodos de analisis de berniker fig 5 Estimating the sources of motor errors for adaptation and generalization
 * referencia 4 para el error
 * referencia 6 de berniker para curl (shadmehr)
-t
 
 
 # Grafico para un sujeto
@@ -170,4 +169,31 @@ buscar para nonsimple polygon
 * curl force: paper de crisimagna y shadmehr, revisar instrucciones y restricciones de esos trials
     * tablas con desarrollo experimental aca https://journals.physiology.org/doi/full/10.1152/jn.00622.2002
 
-* correcciones despues del trial (ver wpp)
+# Correcciones despues del trial en lo de rodri:
+## Hechos 
+* parte de los ajustes que sea ajustar el sonido con los sonidos del experimento
+* Settings de la compu para que no se apague 
+* Brillo pantalla
+* Girado de pantalla (vmr 180) (+ girado de instrucciones)
+* En la demo 1 sin, 2 con vmr
+* final mas suave, llevar al centro y que termine o algo asi
+* graficos se guardan en lugar de abrirse
+* Después del descanso aparece en el centro y falla (probar)
+
+## Por hacer
+* Escala del movimiento (escala real)
+ * mi pantalla: 31cm * 18.5
+ * en fullscreen width: 1366, height: 768
+ * esfera roja: 95px  (=> 2.14 cm)
+ * esfera gris: 64px  (=> 1.44 cm)
+ * separacion entre esferas: 153px (=> 3.46)
+ * de ppo esfera a final de la otra: 312 px (=> 7.05)
+ * distancia entre el centro de la esferas 232.5 px (=> 5.259)
+ * eDP-1 connected primary 1366x768+288+1080 (normal left inverted right x axis y axis) 309mm x 173mm (xrandr | grep ' connected')
+* Alerta de application not responding al iniciar
+
+## Por hacer (no tan urgentes)
+* Timeout variable/adaptativo ?
+* inercia
+* pd maximun perpendicular errors
+* zipear los archivos

@@ -67,19 +67,19 @@ def filter_hold_time(df, hold_time=500):
     return filtered_df
 
 
-def plot(output_file):
+def plot(output_file, plot_file=None):
     names = [
         'trial',
         'timeMs',
-        'x', 'y', 'z',
+        'x', 'y', 'z',  # [m]
         'angle',
         'vmr',
         'blockN',
         'trialSuccess'
         ]
     df = pd.read_csv(output_file, names=names, index_col=False)
-    df['x'] = -df['x']*100
-    df['y'] = df['y']*100
+    df['x'] = -df['x']*100  # [cm]
+    df['y'] = df['y']*100   # [cm]
 
     # Prepare plots
     block_count = len(df.blockN.unique())
@@ -105,7 +105,12 @@ def plot(output_file):
         plot_area_errors(block_group, blockN, trial_vars, axs, colors)
         plot_curve_distance_and_velocity(block_group, blockN, trial_vars, axs, colors)
 
-    plt.show()
+    if plot_file:
+        print(f"Saving plot to {plot_file}")
+        plt.savefig('books_read.png')
+    else:
+        print("Showing plot")
+        plt.show()
 
 
 if __name__ == "__main__":

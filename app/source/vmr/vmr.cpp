@@ -24,7 +24,7 @@ using namespace std;
 
 // General settings
 cStereoMode stereoMode = C_STEREO_DISABLED;
-bool fullscreen = false; // fullscreen mode
+bool fullscreen = true; // fullscreen mode
 bool mirroredDisplay = false; // mirrored display
 cVector3d hapticDevicePosition; // a global variable to store the position [m] of the haptic device
 bool simulationRunning = false; // a flag to indicate if the haptic simulation currently running
@@ -46,8 +46,13 @@ string resourceRoot; // root resource path
 cAudioDevice* audioDevice; // audio device to play sound
 cAudioBuffer* audioBufferSuccess;
 cAudioBuffer* audioBufferFailure;
+cAudioBuffer* audioBufferFinished;
+cAudioBuffer* audioBufferStop;
+
 cAudioSource* audioSourceSuccess;
 cAudioSource* audioSourceFailure;
+cAudioSource* audioSourceFinished;
+cAudioSource* audioSourceStop;
 
 // Haptic Basics
 cWorld* world; // a world that contains all objects of the virtual environment
@@ -64,6 +69,8 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
 void updateGraphics(void); // this function renders the scene
 void updateHaptics(void); // this function contains the main haptics simulation loop
 void close(void); // this function closes the application
+void setFullscreen(void);
+void endSimulation(void);
 
 // Haptic custom objects
 cShapeBox* base;
@@ -72,7 +79,10 @@ cShapeSphere* center;
 cFontPtr font; // a font for rendering text
 cFontPtr fontBig;  // a font for rendering text
 cLabel* labelMessage; // a label to explain what is happening
-cLabel* labelRates; // a label to display the rate [Hz] at which the simulation is running
+string labelText; // text for labelMessage
+cShapeSphere* blackHole; // blackhole para el descanso entre bloques
+
+// cLabel* labelRates; // a label to display the rate [Hz] at which the simulation is running
 cVector3d firstTargetPosition = cVector3d(-0.5,0.0, 0.0);
 cVector3d centerPostition = cVector3d(0.0, 0.0, 0.0);
 
@@ -140,11 +150,11 @@ void setVariables()
     
 }
 
-void setVrmUpVector()
+void setVrmUpVector(double angle)
 {   
     cMatrix3d vmrRotation;
     vmrRotation.identity();
-    vmrRotation.rotateAboutLocalAxisDeg(0,0,1,60);
+    vmrRotation.rotateAboutLocalAxisDeg(0,0,1, 180 + angle);
     vmrUpVector = vmrRotation * localUp;
 }
 
@@ -152,14 +162,15 @@ void setVrmEnabled(bool vmrEnabled)
 {
     if (vmrEnabled)
     {   
-        setVrmUpVector();
+        setVrmUpVector(60);
         camera -> set(localPosition, localLookAt, vmrUpVector);
         light -> setDir(vmrUpVector);
     }
     else 
     {
-        camera -> set(localPosition, localLookAt, localUp);
-        light -> setDir(localUp);
+        setVrmUpVector(0);
+        camera -> set(localPosition, localLookAt, vmrUpVector);
+        light -> setDir(vmrUpVector);
     }
 }
 
@@ -227,6 +238,7 @@ int main(int argc, char* argv[])
     glfwSetWindowSizeCallback(window, windowSizeCallback); // set resize callback
     glfwMakeContextCurrent(window); // set current display context
     glfwSwapInterval(swapInterval); // sets the swap interval for the current display context
+    setFullscreen();
 
 #ifdef GLEW_VERSION
     // initialize GLEW library
@@ -274,8 +286,6 @@ int main(int argc, char* argv[])
     light -> setEnabled(true); // enable light source
     light -> setDir(localUp); // define direction of light beam
 
-
-
     //--------------------------------------------------------------------------
     // WIDGETS
     //--------------------------------------------------------------------------
@@ -284,12 +294,12 @@ int main(int argc, char* argv[])
     font = NEW_CFONTCALIBRI20();
     fontBig = NEW_CFONTCALIBRI40();
     
-    // create a label to display the haptic and graphic rate of the simulation
-    labelRates = new cLabel(font);
-    camera -> m_frontLayer -> addChild(labelRates);
+    // // create a label to display the haptic and graphic rate of the simulation
+    // labelRates = new cLabel(font);
+    // camera -> m_frontLayer -> addChild(labelRates);
 
-    // set font color
-    labelRates -> m_fontColor.setGrayLevel(0.4);
+    // // set font color
+    // labelRates -> m_fontColor.setGrayLevel(0.4);
 
     // create a label with a small message
     labelMessage = new cLabel(fontBig);
@@ -299,8 +309,13 @@ int main(int argc, char* argv[])
     labelMessage -> m_fontColor.setBlack();
 
     // set text message
-    labelMessage -> setText("Test output message");
+    labelText = "";
 
+    // update position of label
+    labelMessage -> setLocalPos((int)(0.5 * (width - labelMessage -> getWidth())), 40);
+
+    // rotate
+    labelMessage -> rotateWidgetAroundCenterDeg(180);
 
     //--------------------------------------------------------------------------
     // HAPTIC DEVICES / TOOLS
@@ -350,8 +365,14 @@ int main(int argc, char* argv[])
     audioBufferFailure = new cAudioBuffer();
     bool fileload2 = audioBufferFailure -> loadFromFile(RESOURCE_PATH("../resources/sounds/cartoon-bing-low.wav"));
 
+    audioBufferFinished = new cAudioBuffer();
+    bool fileload3 = audioBufferFinished -> loadFromFile(RESOURCE_PATH("../resources/sounds/tada.wav"));
+
+    audioBufferStop = new cAudioBuffer();
+    bool fileload4 = audioBufferStop -> loadFromFile(RESOURCE_PATH("../resources/sounds/stop.wav"));
+
     // check for errors
-    if (!(fileload1 && fileload2))
+    if (!(fileload1 && fileload2 && fileload3 && fileload4))
     {
         cout << "Error - Sound file failed to load or initialize correctly." << endl;
         close();
@@ -365,6 +386,14 @@ int main(int argc, char* argv[])
     audioSourceFailure = new cAudioSource();
     audioSourceFailure -> setAudioBuffer(audioBufferFailure);
     audioSourceFailure -> setGain(4.0);
+
+    audioSourceFinished = new cAudioSource();
+    audioSourceFinished -> setAudioBuffer(audioBufferFinished);
+    audioSourceFinished -> setGain(4.0);
+
+    audioSourceStop = new cAudioSource();
+    audioSourceStop -> setAudioBuffer(audioBufferStop);
+    audioSourceStop -> setGain(4.0);
 
     //--------------------------------------------------------------------------
     // CREATE OBJECTS / SET WORLD PROPERTIES
@@ -395,10 +424,10 @@ int main(int argc, char* argv[])
         maxStiffness,
         maxDamping,
         firstTargetPosition,
-        centerPostition
+        centerPostition,
+        blackHole
         );
 
-    
 
     //--------------------------------------------------------------------------
     // START SIMULATION
@@ -418,6 +447,7 @@ int main(int argc, char* argv[])
 
     // call window size callback at initialization
     windowSizeCallback(window, width, height);
+
 
     // main graphic loop
     while (!glfwWindowShouldClose(window))
@@ -466,6 +496,31 @@ void errorCallback(int a_error, const char* a_description)
 }
 
 //------------------------------------------------------------------------------
+void setFullscreen()
+{
+    // get handle to monitor
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+
+    // get information about monitor
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+    // set fullscreen or window mode
+    if (fullscreen)
+    {
+        glfwSetWindowMonitor(window, monitor, 0, 0, mode -> width, mode -> height, mode -> refreshRate);
+        glfwSwapInterval(swapInterval);
+    }
+    else
+    {
+        int w = 0.8 * mode -> height;
+        int h = 0.5 * mode -> height;
+        int x = 0.5 * (mode -> width - w);
+        int y = 0.5 * (mode -> height - h);
+        glfwSetWindowMonitor(window, NULL, x, y, w, h, mode -> refreshRate);
+        glfwSwapInterval(swapInterval);
+    }
+
+}
 
 void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, int a_mods)
 {
@@ -486,28 +541,7 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
     {
         // toggle state variable
         fullscreen = !fullscreen;
-
-        // get handle to monitor
-        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-
-        // get information about monitor
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-
-        // set fullscreen or window mode
-        if (fullscreen)
-        {
-            glfwSetWindowMonitor(window, monitor, 0, 0, mode -> width, mode -> height, mode -> refreshRate);
-            glfwSwapInterval(swapInterval);
-        }
-        else
-        {
-            int w = 0.8 * mode -> height;
-            int h = 0.5 * mode -> height;
-            int x = 0.5 * (mode -> width - w);
-            int y = 0.5 * (mode -> height - h);
-            glfwSetWindowMonitor(window, NULL, x, y, w, h, mode -> refreshRate);
-            glfwSwapInterval(swapInterval);
-        }
+        setFullscreen();
     }
 
     // option - toggle vertical mirroring
@@ -537,10 +571,17 @@ void close(void)
     delete world;
     delete handler;
     delete audioDevice;
+
     delete audioBufferSuccess;
     delete audioBufferFailure;
+    delete audioBufferFinished;
+    delete audioBufferStop;
+
     delete audioSourceSuccess;
-    delete audioSourceFailure;    
+    delete audioSourceFailure;
+    delete audioSourceFinished;
+    delete audioSourceStop;
+
 }
 
 //------------------------------------------------------------------------------
@@ -551,15 +592,23 @@ void updateGraphics(void)
     // UPDATE WIDGETS
     /////////////////////////////////////////////////////////////////////
 
-    // update haptic and graphic rate data
-    labelRates -> setText(cStr(freqCounterGraphics.getFrequency(), 0) + " Hz / " +
-                        cStr(freqCounterHaptics.getFrequency(), 0) + " Hz");
+    // // update haptic and graphic rate data
+    // labelRates -> setText(cStr(freqCounterGraphics.getFrequency(), 0) + " Hz / " +
+    //                     cStr(freqCounterHaptics.getFrequency(), 0) + " Hz");
 
-    // update position of label
-    labelRates -> setLocalPos((int)(0.5 * (width - labelRates -> getWidth())), 15);
+    // // update position of label
+    // labelRates -> setLocalPos((int)(0.5 * (width - labelRates -> getWidth())), 15);
 
+    // set text for labelMessage
+    labelMessage -> setText(labelText);
+
+    // rotate
+    labelMessage -> rotateWidgetAroundCenterDeg(180);
     // update position of label
     labelMessage -> setLocalPos((int)(0.5 * (width - labelMessage -> getWidth())), 40);
+    // rotate
+    labelMessage -> rotateWidgetAroundCenterDeg(180);
+
 
     /////////////////////////////////////////////////////////////////////
     // RENDER SCENE
@@ -593,6 +642,7 @@ void updateHaptics(void)
     // simulation in now running
     simulationRunning  = true;
     simulationFinished = false;
+
     startTrialPhase(trialPhase);
 
     vector<double> row;
@@ -622,7 +672,7 @@ void updateHaptics(void)
         if (trialOngoing)
         {
             // read position
-            hapticDevice -> getPosition(position);
+            hapticDevice -> getPosition(position); //[m]
 
             // read the clockTrialTime increment in seconds
             timeSinceTrialStartedInMs = clockTrialTime.stop() * 1000; 
@@ -736,10 +786,24 @@ void updateHaptics(void)
     simulationFinished = true;
 }
 
+void endSimulation()
+{
+    cout << "C++: no more trials" << endl;
+    tool -> setShowEnabled(false);
+    center -> setEnabled(false);
+    target -> setEnabled(false);
+    labelText = "Experimento terminado. Gracias!";
+    audioSourceFinished -> play();
+    sleep(10);
+    glfwSetWindowShouldClose(window, GLFW_TRUE);
+}
+
+
 void startTrialPhase(int phase)
 {   
     // clockPhaseTime.reset(); // restart the clock
     bool trialShouldStart;
+    blackHole -> setEnabled(false);
     switch(phase) 
     {   
         case 0: // GO TO CENTER
@@ -748,20 +812,22 @@ void startTrialPhase(int phase)
             tool -> setShowEnabled(true);
             center -> setEnabled(true);
             target -> setEnabled(false);
-            labelMessage -> setText("Ir al centro");
+            labelText = "Ir al centro";
             break;
         case 1: // HOLD CENTER
             clockHoldTime.reset(); // restart the clock
             center -> m_material -> setGreenDark();
-            totalHoldDurationInMs = randNum(700, 1300); // 500ms + random entre 200 y 800ms
-            labelMessage -> setText("Mantener");
+
 
             trialShouldStart = getVariables(input, mod_time, variables); // input file ya no existe (la simulacion termino)
+
             if (!trialShouldStart)
             {   
-                cout << "C++: no more trials" << endl;
-                glfwSetWindowShouldClose(window, GLFW_TRUE);
+                endSimulation();
             }
+
+            totalHoldDurationInMs = randNum(700, 1300); // 500ms + random entre 200 y 800ms
+            labelText = "Mantener";
             setVariables();
             break;
         case 2: // TRIAL ONGOING
@@ -769,12 +835,12 @@ void startTrialPhase(int phase)
             target -> m_material -> setRedDark();
             target -> setEnabled(true);
             totalTrialDurationInMs = 2000; // 900ms es muy poco
-            labelMessage -> setText("Ir al objetivo");
+            labelText = "Ir al objetivo";
             break;
         case 3: // HOLD TARGET
             target -> m_material -> setGreenDark();
             totalHoldDurationInMs = 500;
-            labelMessage -> setText("Mantener");
+            labelText = "Mantener";
             break;
         case 4: // TRIAL ENDED - wait for next trial
             clockWaitTime.reset(); // restart the clock
@@ -790,7 +856,7 @@ void startTrialPhase(int phase)
             blockTrialCounter += 1;
             
             totalWaitDurationInMs = randNum(500, 1500); // deberia ser random entre 500 y 1.5s
-            labelMessage -> setText("");
+            labelText = "";
             break;
         case 5: // BLOCK ENDED - wait some time 
             clockWaitTime.reset(); // restart the clock
@@ -799,7 +865,9 @@ void startTrialPhase(int phase)
             target -> setEnabled(false);
             tool -> setShowEnabled(false);
             totalWaitDurationInMs = blockWaitTimeInMs; // 1 minuto
-            labelMessage -> setText("Tomar un descanso");
+            labelText = "Tomar un descanso.";
+            audioSourceStop -> play();
+            blackHole -> setEnabled(true);
             break;
         default:
             cout << "C++: Invalid phase " << phase << endl;  
