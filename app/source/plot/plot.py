@@ -107,7 +107,7 @@ def plot(output_file, plot_file=None):
 
     if plot_file:
         print(f"Saving plot to {plot_file}")
-        plt.savefig('books_read.png')
+        plt.savefig(f'{plot_file}.png')
     else:
         print("Showing plot")
         plt.show()

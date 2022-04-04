@@ -182,14 +182,14 @@ buscar para nonsimple polygon
 
 ## Por hacer
 * Escala del movimiento (escala real)
- * mi pantalla: 31cm * 18.5
- * en fullscreen width: 1366, height: 768
- * esfera roja: 95px  (=> 2.14 cm)
- * esfera gris: 64px  (=> 1.44 cm)
- * separacion entre esferas: 153px (=> 3.46)
- * de ppo esfera a final de la otra: 312 px (=> 7.05)
- * distancia entre el centro de la esferas 232.5 px (=> 5.259)
- * eDP-1 connected primary 1366x768+288+1080 (normal left inverted right x axis y axis) 309mm x 173mm (xrandr | grep ' connected')
+    * mi pantalla: 31cm * 18.5
+    * en fullscreen width: 1366, height: 768
+    * esfera roja: 95px  (=> 2.14 cm)
+    * esfera gris: 64px  (=> 1.44 cm)
+    * separacion entre esferas: 153px (=> 3.46)
+    * de ppo esfera a final de la otra: 312 px (=> 7.05)
+    * distancia entre el centro de la esferas 232.5 px (=> 5.259)
+    * eDP-1 connected primary 1366x768+288+1080 (normal left inverted right x axis y axis) 309mm x 173mm (xrandr | grep ' connected')
 * Alerta de application not responding al iniciar
 
 ## Por hacer (no tan urgentes)

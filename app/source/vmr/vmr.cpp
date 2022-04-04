@@ -352,6 +352,7 @@ int main(int argc, char* argv[])
 
     // start the haptic tool
     tool -> start();
+    setVrmEnabled(vmrEnabled);
 
     //--------------------------------------------------------------------------
     // SETUP AUDIO MATERIAL
