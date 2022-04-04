@@ -17,7 +17,9 @@ SUBDIRS  = tests_previos/test1 \
 		   tests_previos/test5 \
 		   tests_previos/test6 \
 		   vmr \
+		   vmr_temporal \
 		   force \
+
 
 
 # rules
