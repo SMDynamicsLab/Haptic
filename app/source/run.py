@@ -81,6 +81,16 @@ def vmr_get_variables(type='experiment'):
         for vmr in [0, 1, 0]:
             var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr)
 
+    if type is 'temporal':
+        N = 2
+        position = 0
+        for vmr in [0, 1, 0]:
+            if vmr:
+                positions_arr = [position + 1] # el + 1 es porque vmr gira
+            else:
+                positions_arr = [position] # el + 1 es porque vmr gira
+            var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr)
+
     return var
 
 
@@ -174,27 +184,63 @@ def run(bin_file, input_file, output_file, plot_file=None, type='experiment'):
         raise e
 
 
+def run_vmr_temporal(bin_file, input_file, output_file, plot_file=None, type='experiment'):
+    try:
+        variables = vmr_get_variables(type='temporal')
+        start_simulation(bin_file, input_file, output_file)
+        vmr_start_controller(input_file, output_file, variables, type=type)
+
+        time.sleep(5)
+        # if type == 'experiment':
+        #     try:
+        #         # vmr_plot_trials(output_file, block_count)
+        #         plot(output_file, plot_file)
+        #     except Exception as e:
+        #         print(f"Python: WARNING vmr_plot_trials error: {str(e)}")
+
+        input("Python: Press enter to finish")
+
+    except KeyboardInterrupt:
+        print('\nPython: Stopping due to KeyboardInterrupt')
+    except Exception as e:
+        print(f"Python error: {str(e)}")
+        raise e
+
+
 if __name__ == "__main__":
     run_make()
     subject_name = input("Nombre del sujeto: ")
     exp_choice = None
     type_choice = None
 
+    choices = [
+        "v",
+        "vt",
+        "f",
+        ]
+
     # VMR o Fuerza
-    while exp_choice not in ["V", "v", "vmr", "F", "f", "fuerza"]:
-        print("\nElegir tipo de simulación. (V o F)\nV: vmr\nF: fuerza")
+    while exp_choice not in choices:
+        txt = [
+            "Elegir tipo de simulación. (V, VT o F)",
+            "v: vmr",
+            "vt: vmr temporal",
+            "f: fuerza"
+        ]
+        print("\n".join(txt))
         exp_choice = input()
-    if exp_choice in ["V", "v", "vmr"]:
-        bin_file = os.path.join(sys.path[0], '../bin/lin-x86_64/vmr')
-    else:
-        bin_file = os.path.join(sys.path[0], '../bin/lin-x86_64/force')
-        raise Exception("Experimento de fuerza no esta definido aun")
+
 
     # Demo o Experimento
-    while type_choice not in ["D", "d", "demo", "E", "e", "experimento"]:
-        print("\nElegir tipo de simulación. (E o D)\nD: demo\nE: experimento")
+    while type_choice not in ["d", "e"]:
+        txt = [
+            "Elegir tipo de simulación.(E o D)",
+            "d: demo",
+            "e: experimento"
+        ]
+        print("\n".join(txt))
         type_choice = input()
-    type = 'demo' if type_choice in ['D', 'd', 'demo'] else 'experiment'
+    type = 'demo' if type_choice == "d" else 'experiment'
 
     timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
 
@@ -208,10 +254,29 @@ if __name__ == "__main__":
         plot_file = os.path.join(data_path, f'{filepreffix}_plot.png')
     else:
         plot_file = None
-    run(
-        bin_file=bin_file,
-        input_file=input_file,
-        output_file=output_file,
-        plot_file=plot_file,
-        type=type
-        )
+
+    if exp_choice == "v":
+        bin_file = os.path.join(sys.path[0], '../bin/lin-x86_64/vmr')
+        run(
+            bin_file=bin_file,
+            input_file=input_file,
+            output_file=output_file,
+            plot_file=plot_file,
+            type=type
+            )
+
+    if exp_choice == "vt":
+        bin_file = os.path.join(sys.path[0], '../bin/lin-x86_64/vmr_temporal')
+        run_vmr_temporal(
+            bin_file=bin_file,
+            input_file=input_file,
+            output_file=output_file,
+            plot_file=plot_file,
+            type=type
+            )
+
+    if exp_choice == "f":
+        bin_file = os.path.join(sys.path[0], '../bin/lin-x86_64/force')
+        raise Exception("Experimento de fuerza no esta definido aun")    
+
+        
