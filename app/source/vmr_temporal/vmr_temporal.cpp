@@ -127,6 +127,11 @@ int trialCounter = 0;
 int blockTrialCounter = 0;
 int blockWaitTimeInMs = 60 * 1000;
 
+// Temporal vmr variables
+bool soundShouldPlay = false;
+double holdBeforeSoundDurationInMs;
+double holdAfterSoundDurationInMs;
+
 int randNum(int min, int max)
 {
     int num = rand()%(max-min + 1) + min;
@@ -724,30 +729,44 @@ void updateHaptics(void)
                 clockHoldTime.start();
 
                 // Si se salió del centro:
-                if (centerDistance > 0.03) //Moved outside of center
+                if (centerDistance > 0.03) // Moved outside of center
                 {   
                     trialPhase = 0;
                     startTrialPhase(trialPhase); // GO TO CENTER
                     
                 }
-                // Si ya estuvo el tiempo suficiente:
+
+                // Si tiene que hacer el sonido:
+                else if (soundShouldPlay)
+                {
+                    // Si ya paso el tiempo antes de reproducir el sonido:
+                    if (timeSinceHoldStartedInMs > holdBeforeSoundDurationInMs)
+                    {
+                        audioSourceBeepBeep -> play();
+                        soundShouldPlay = false;
+                    }
+                }
+
+                // Si ya estuvo el tiempo suficiente: (total = before + after)
                 else if (timeSinceHoldStartedInMs > totalHoldDurationInMs) //center hold finished
                 {   
+                    cout << "timeSinceHoldStartedInMs > totalHoldDurationInMs" << endl;
+                    cout << timeSinceHoldStartedInMs<< " > " <<totalHoldDurationInMs << endl;
                     trialPhase = 2;
                     data.clear();
                     clockTrialTime.reset(); // restart the clock
                     trialOngoing = true;
                     startTrialPhase(trialPhase); // TRIAL ONGOING
                 }   
-
             break;
-            case 2: // TRIAL ONGOING
+            case 2: // TRIAL ONGOING (ida)
+
                 // Si entró al target:
                 if (targetDistance < 0.03) //Tool is inside target
                 {   
+                    audioSourceBeep -> play();
                     trialPhase = 3;
-                    clockHoldTime.reset(); // restart the clock
-                    startTrialPhase(trialPhase); // HOLD TARGET
+                    startTrialPhase(trialPhase);
                 }
 
                 // Si se le acabó el tiempo:
@@ -759,29 +778,24 @@ void updateHaptics(void)
                     startTrialPhase(trialPhase); // GO TO CENTER
                     
                 }
-
-
-
             break;
-            case 3: // HOLD TARGET
-                // read the clockHoldTime increment in seconds
-                timeSinceHoldStartedInMs = clockHoldTime.stop() * 1000; 
-                clockHoldTime.start();
-
-                // Si salió del centro: 
-                if (targetDistance > 0.03) //Moved outside of target
+            case 3: // TRIAL ONGOING (vuelta)
+                // Si entró al centro:
+                if (centerDistance < 0.03) //Tool is inside target
                 {
-                    trialPhase = 2;
-                    startTrialPhase(trialPhase); // Trial is still ongoing
+                    audioSourceBeep -> play();
+                    trialSuccess = true;
+                    trialPhase = 4;
+                    startTrialPhase(trialPhase);
                 }
 
-                // Si ya mantuvo suficiente tiempo el target:
-                else if (timeSinceHoldStartedInMs > totalHoldDurationInMs) //Target hold finished
+                // Si se le acabó el tiempo:
+                else if (timeSinceTrialStartedInMs > totalTrialDurationInMs)
                 {   
-                    trialSuccess = true;
-                    audioSourceSuccess -> play();
+                    trialSuccess = false;
+                    audioSourceFailure -> play();
                     trialPhase = 4;
-                    startTrialPhase(trialPhase); // TRIAL ENDED - wait for next trial
+                    startTrialPhase(trialPhase); // GO TO CENTER
                 }
             break;
             case 4: // TRIAL ENDED - wait for next trial 
@@ -845,21 +859,24 @@ void startTrialPhase(int phase)
                 endSimulation();
             }
 
-            totalHoldDurationInMs = randNum(700, 1300); // 500ms + random entre 200 y 800ms
+            soundShouldPlay = true ;
+            holdBeforeSoundDurationInMs = randNum(1000, 2000); //randNum(500, 1000);
+            holdAfterSoundDurationInMs = randNum(1000, 2000); //randNum(500, 1000);
+            totalHoldDurationInMs = holdBeforeSoundDurationInMs + holdAfterSoundDurationInMs;
             labelText = "Mantener";
             setVariables();
             break;
-        case 2: // TRIAL ONGOING
-            center -> setEnabled(false);
-            target -> m_material -> setRedDark();
+        case 2: // TRIAL ONGOING (ida)
+            center -> setEnabled(true);
             target -> setEnabled(true);
-            totalTrialDurationInMs = 2000; // 900ms es muy poco
-            labelText = "Ir al objetivo";
+            target -> m_material -> setRedDark();
+
+            totalTrialDurationInMs = 4000;
+            labelText = "Reproducir sonido esuchado";
             break;
-        case 3: // HOLD TARGET
+        case 3: // TRIAL ONGOING (vuelta)
+            center -> m_material -> setRedDark();
             target -> m_material -> setGreenDark();
-            totalHoldDurationInMs = 500;
-            labelText = "Mantener";
             break;
         case 4: // TRIAL ENDED - wait for next trial
             clockWaitTime.reset(); // restart the clock
@@ -875,7 +892,18 @@ void startTrialPhase(int phase)
             blockTrialCounter += 1;
             
             totalWaitDurationInMs = randNum(500, 1500); // deberia ser random entre 500 y 1.5s
-            labelText = "";
+
+            if (trialSuccess)
+            {
+                // TODO: mostrar comparacion entre esperado y hecho en eje temporal
+                // TODO: mostrar mensaje en labelText con "Bien hecho!" o "Intenta otra vez" segun si el trial fue exitoso o no 
+                labelText = "";
+            }
+            else
+            {
+                labelText = "Se acabó el tiempo, intenta de nuevo";
+            }
+
             break;
         case 5: // BLOCK ENDED - wait some time 
             clockWaitTime.reset(); // restart the clock
