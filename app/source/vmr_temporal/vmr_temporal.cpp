@@ -131,6 +131,9 @@ int blockWaitTimeInMs = 60 * 1000;
 bool soundShouldPlay = false;
 double holdBeforeSoundDurationInMs;
 double holdAfterSoundDurationInMs;
+double timeReachedTargetInMs;
+double timeReachedCenterInMs;
+double expectedPeriod = 626;
 
 int randNum(int min, int max)
 {
@@ -763,7 +766,8 @@ void updateHaptics(void)
 
                 // Si entró al target:
                 if (targetDistance < 0.03) //Tool is inside target
-                {   
+                {
+                    timeReachedTargetInMs = timeSinceTrialStartedInMs;
                     audioSourceBeep -> play();
                     trialPhase = 3;
                     startTrialPhase(trialPhase);
@@ -782,7 +786,8 @@ void updateHaptics(void)
             case 3: // TRIAL ONGOING (vuelta)
                 // Si entró al centro:
                 if (centerDistance < 0.03) //Tool is inside target
-                {
+                {   
+                    timeReachedCenterInMs = timeSinceTrialStartedInMs;
                     audioSourceBeep -> play();
                     trialSuccess = true;
                     trialPhase = 4;
@@ -865,6 +870,8 @@ void startTrialPhase(int phase)
             totalHoldDurationInMs = holdBeforeSoundDurationInMs + holdAfterSoundDurationInMs;
             labelText = "Mantener";
             setVariables();
+            timeReachedTargetInMs = 0;
+            timeReachedCenterInMs = 0;
             break;
         case 2: // TRIAL ONGOING (ida)
             center -> setEnabled(true);
@@ -895,9 +902,21 @@ void startTrialPhase(int phase)
 
             if (trialSuccess)
             {
+                double reproducedPeriod = timeReachedCenterInMs - timeReachedTargetInMs ;
+                int percentMiss = round((reproducedPeriod - expectedPeriod) / expectedPeriod * 100);
+                if (percentMiss > 0)
+                {
+                    labelText = to_string(percentMiss) + "% muy lento";
+                }
+                else if (percentMiss < 0)
+                {
+                    labelText = to_string(-percentMiss) + "% muy rápido";
+                }
+                else if (reproducedPeriod == expectedPeriod)
+                {
+                    labelText = "Perfecto!";
+                }
                 // TODO: mostrar comparacion entre esperado y hecho en eje temporal
-                // TODO: mostrar mensaje en labelText con "Bien hecho!" o "Intenta otra vez" segun si el trial fue exitoso o no 
-                labelText = "";
             }
             else
             {
