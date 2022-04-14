@@ -127,6 +127,9 @@ int trialCounter = 0;
 int blockTrialCounter = 0;
 int blockWaitTimeInMs = 60 * 1000;
 
+// Camera rotation (upside down)
+double cameraRotation = 0; // upside down
+
 // Temporal vmr variables
 bool soundShouldPlay = false;
 double holdBeforeSoundDurationInMs;
@@ -134,6 +137,9 @@ double holdAfterSoundDurationInMs;
 double timeReachedTargetInMs;
 double timeReachedCenterInMs;
 double expectedPeriod = 626;
+string summaryOutputFile; 
+vector<vector<double>> summaryData;
+double maxStiffness;
 
 int randNum(int min, int max)
 {
@@ -166,7 +172,8 @@ void setVrmUpVector(double angle)
 {   
     cMatrix3d vmrRotation;
     vmrRotation.identity();
-    vmrRotation.rotateAboutLocalAxisDeg(0,0,1, 180 + angle);
+    vmrRotation.rotateAboutLocalAxisDeg(0,0,1, cameraRotation + angle);
+    
     vmrUpVector = vmrRotation * localUp;
 }
 
@@ -198,8 +205,10 @@ int main(int argc, char* argv[])
 
     input = argv[1];
     output = argv[2];
+    summaryOutputFile = output+"-times";
     cout << "C++: Input file is "<< input << endl;
     cout << "C++: Output file is "<< output << endl;
+    cout << "C++: Summary Output file is "<< summaryOutputFile << endl;
 
     // OPEN GL - WINDOW DISPLAY
     // initialize GLFW library
@@ -327,7 +336,7 @@ int main(int argc, char* argv[])
     labelMessage -> setLocalPos((int)(0.5 * (width - labelMessage -> getWidth())), 40);
 
     // rotate
-    labelMessage -> rotateWidgetAroundCenterDeg(180);
+    labelMessage -> rotateWidgetAroundCenterDeg(cameraRotation);
 
     //--------------------------------------------------------------------------
     // HAPTIC DEVICES / TOOLS
@@ -431,7 +440,7 @@ int main(int argc, char* argv[])
     double workspaceScaleFactor = tool -> getWorkspaceScaleFactor();
     
     // get properties of haptic device
-    double maxStiffness	= hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor;
+    maxStiffness	= hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor;
     double maxLinearForce = cMin(hapticDeviceInfo.m_maxLinearForce, 7.0);
     maxDamping   = hapticDeviceInfo.m_maxLinearDamping / workspaceScaleFactor;
 
@@ -630,11 +639,11 @@ void updateGraphics(void)
     labelMessage -> setText(labelText);
 
     // rotate
-    labelMessage -> rotateWidgetAroundCenterDeg(180);
+    labelMessage -> rotateWidgetAroundCenterDeg(cameraRotation);  
     // update position of label
     labelMessage -> setLocalPos((int)(0.5 * (width - labelMessage -> getWidth())), 40);
     // rotate
-    labelMessage -> rotateWidgetAroundCenterDeg(180);
+    labelMessage -> rotateWidgetAroundCenterDeg(cameraRotation);
 
 
     /////////////////////////////////////////////////////////////////////
@@ -753,8 +762,6 @@ void updateHaptics(void)
                 // Si ya estuvo el tiempo suficiente: (total = before + after)
                 else if (timeSinceHoldStartedInMs > totalHoldDurationInMs) //center hold finished
                 {   
-                    cout << "timeSinceHoldStartedInMs > totalHoldDurationInMs" << endl;
-                    cout << timeSinceHoldStartedInMs<< " > " <<totalHoldDurationInMs << endl;
                     trialPhase = 2;
                     data.clear();
                     clockTrialTime.reset(); // restart the clock
@@ -765,7 +772,8 @@ void updateHaptics(void)
             case 2: // TRIAL ONGOING (ida)
 
                 // Si entró al target:
-                if (targetDistance < 0.03) //Tool is inside target
+                // if (targetDistance < 0.03) //Tool is inside target
+                if (tool -> isInContact(target)) //Tool is in contact with target
                 {
                     timeReachedTargetInMs = timeSinceTrialStartedInMs;
                     audioSourceBeep -> play();
@@ -785,7 +793,8 @@ void updateHaptics(void)
             break;
             case 3: // TRIAL ONGOING (vuelta)
                 // Si entró al centro:
-                if (centerDistance < 0.03) //Tool is inside target
+                // if (centerDistance < 0.03) //Tool is inside center
+                if (tool -> isInContact(center)) //Tool is in contact with center
                 {   
                     timeReachedCenterInMs = timeSinceTrialStartedInMs;
                     audioSourceBeep -> play();
@@ -850,6 +859,10 @@ void startTrialPhase(int phase)
             tool -> setShowEnabled(true);
             center -> setEnabled(true);
             target -> setEnabled(false);
+
+            target -> deleteEffectSurface();
+            center -> deleteEffectSurface();
+
             labelText = "Ir al centro";
             break;
         case 1: // HOLD CENTER
@@ -877,13 +890,20 @@ void startTrialPhase(int phase)
             center -> setEnabled(true);
             target -> setEnabled(true);
             target -> m_material -> setRedDark();
-
+            
+            target -> createEffectSurface();
+            target -> m_material->setStiffness(0.5 * maxStiffness);
+            
             totalTrialDurationInMs = 4000;
             labelText = "Reproducir sonido esuchado";
             break;
         case 3: // TRIAL ONGOING (vuelta)
             center -> m_material -> setRedDark();
             target -> m_material -> setGreenDark();
+
+            center -> createEffectSurface();
+            center -> m_material->setStiffness(0.5 * maxStiffness);
+
             break;
         case 4: // TRIAL ENDED - wait for next trial
             clockWaitTime.reset(); // restart the clock
@@ -895,6 +915,12 @@ void startTrialPhase(int phase)
             // Save data
             appendToCsv(output, data, trialCounter, variables, trialSuccess);
             data.clear();
+
+            // Save summary data
+            summaryData.push_back({timeReachedTargetInMs, timeReachedCenterInMs}); // aca agrega el tiempo inicial y final
+            appendToCsv(summaryOutputFile, summaryData, trialCounter, variables, trialSuccess);
+            summaryData.clear();
+
             trialCounter += 1;
             blockTrialCounter += 1;
             
