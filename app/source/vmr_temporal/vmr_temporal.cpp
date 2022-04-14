@@ -134,8 +134,8 @@ double cameraRotation = 0; // upside down
 bool soundShouldPlay = false;
 double holdBeforeSoundDurationInMs;
 double holdAfterSoundDurationInMs;
-double timeReachedTargetInMs;
-double timeReachedCenterInMs;
+double timeFirstBeep;
+double timeSecondBeep;
 double expectedPeriod = 626;
 string summaryOutputFile; 
 vector<vector<double>> summaryData;
@@ -769,16 +769,26 @@ void updateHaptics(void)
                     startTrialPhase(trialPhase); // TRIAL ONGOING
                 }   
             break;
-            case 2: // TRIAL ONGOING (ida)
+            case 2: // TRIAL ONGOING 
+                // Si salió del centro:
+                // if (centerDistance > 0.03) //Tool is outside center
+                if (timeFirstBeep == 0 && ! tool -> isInContact(center)) //Tool is not in contact with center
+                {   
+                    timeFirstBeep = timeSinceTrialStartedInMs;
+                    audioSourceBeep -> play();
+                }
+                 
 
                 // Si entró al target:
-                // if (targetDistance < 0.03) //Tool is inside target
-                if (tool -> isInContact(target)) //Tool is in contact with target
+                // else if (targetDistance < 0.03) //Tool is inside target
+                else if (tool -> isInContact(target)) //Tool is in contact with target
                 {
-                    timeReachedTargetInMs = timeSinceTrialStartedInMs;
+                    timeSecondBeep = timeSinceTrialStartedInMs;
                     audioSourceBeep -> play();
+                    trialSuccess = true;
                     trialPhase = 3;
-                    startTrialPhase(trialPhase);
+                    clockHoldTime.reset(); // restart the clock
+                    startTrialPhase(trialPhase); // HOLD TARGET
                 }
 
                 // Si se le acabó el tiempo:
@@ -790,26 +800,28 @@ void updateHaptics(void)
                     startTrialPhase(trialPhase); // GO TO CENTER
                     
                 }
-            break;
-            case 3: // TRIAL ONGOING (vuelta)
-                // Si entró al centro:
-                // if (centerDistance < 0.03) //Tool is inside center
-                if (tool -> isInContact(center)) //Tool is in contact with center
-                {   
-                    timeReachedCenterInMs = timeSinceTrialStartedInMs;
-                    audioSourceBeep -> play();
-                    trialSuccess = true;
-                    trialPhase = 4;
-                    startTrialPhase(trialPhase);
-                }
 
-                // Si se le acabó el tiempo:
-                else if (timeSinceTrialStartedInMs > totalTrialDurationInMs)
+            break;
+            case 3:  // HOLD TARGET
+                // read the clockHoldTime increment in seconds
+                timeSinceHoldStartedInMs = clockHoldTime.stop() * 1000; 
+                clockHoldTime.start();
+
+                // POR AHORA no pasa nada si no mantiene
+                // // Si salió del centro: 
+                // if (targetDistance > 0.03) //Moved outside of target
+                // {
+                //     trialPhase = 3;  
+                //     startTrialPhase(trialPhase); // Trial is still ongoing
+                // }
+
+                // Si ya mantuvo suficiente tiempo el target:
+                // else if 
+                if (timeSinceHoldStartedInMs > totalHoldDurationInMs) //Target hold finished
                 {   
-                    trialSuccess = false;
-                    audioSourceFailure -> play();
+                    audioSourceSuccess -> play();
                     trialPhase = 4;
-                    startTrialPhase(trialPhase); // GO TO CENTER
+                    startTrialPhase(trialPhase); // TRIAL ENDED - wait for next trial
                 }
             break;
             case 4: // TRIAL ENDED - wait for next trial 
@@ -860,9 +872,6 @@ void startTrialPhase(int phase)
             center -> setEnabled(true);
             target -> setEnabled(false);
 
-            target -> deleteEffectSurface();
-            center -> deleteEffectSurface();
-
             labelText = "Ir al centro";
             break;
         case 1: // HOLD CENTER
@@ -883,27 +892,22 @@ void startTrialPhase(int phase)
             totalHoldDurationInMs = holdBeforeSoundDurationInMs + holdAfterSoundDurationInMs;
             labelText = "Mantener";
             setVariables();
-            timeReachedTargetInMs = 0;
-            timeReachedCenterInMs = 0;
+            timeFirstBeep = 0;
+            timeSecondBeep = 0;
             break;
         case 2: // TRIAL ONGOING (ida)
             center -> setEnabled(true);
             target -> setEnabled(true);
             target -> m_material -> setRedDark();
-            
-            target -> createEffectSurface();
-            target -> m_material->setStiffness(0.5 * maxStiffness);
-            
-            totalTrialDurationInMs = 4000;
-            labelText = "Reproducir sonido esuchado";
+
+            totalTrialDurationInMs = 2000;
+            labelText = "Reproducir sonido escuchado";
             break;
-        case 3: // TRIAL ONGOING (vuelta)
-            center -> m_material -> setRedDark();
+        case 3: // HOLD TARGET AFTER TRIAL
+            center -> setEnabled(false);
             target -> m_material -> setGreenDark();
-
-            center -> createEffectSurface();
-            center -> m_material->setStiffness(0.5 * maxStiffness);
-
+            totalHoldDurationInMs = 500;
+            labelText = "Mantener";
             break;
         case 4: // TRIAL ENDED - wait for next trial
             clockWaitTime.reset(); // restart the clock
@@ -917,18 +921,18 @@ void startTrialPhase(int phase)
             data.clear();
 
             // Save summary data
-            summaryData.push_back({timeReachedTargetInMs, timeReachedCenterInMs}); // aca agrega el tiempo inicial y final
+            summaryData.push_back({timeFirstBeep, timeSecondBeep}); // aca agrega el tiempo inicial y final
             appendToCsv(summaryOutputFile, summaryData, trialCounter, variables, trialSuccess);
             summaryData.clear();
 
             trialCounter += 1;
             blockTrialCounter += 1;
             
-            totalWaitDurationInMs = randNum(500, 1500); // deberia ser random entre 500 y 1.5s
+            totalWaitDurationInMs = randNum(1000, 2000); //randNum(500, 1500); // deberia ser random entre 500 y 1.5s
 
             if (trialSuccess)
             {
-                double reproducedPeriod = timeReachedCenterInMs - timeReachedTargetInMs ;
+                double reproducedPeriod = timeSecondBeep - timeFirstBeep ;
                 int percentMiss = round((reproducedPeriod - expectedPeriod) / expectedPeriod * 100);
                 if (percentMiss > 0)
                 {

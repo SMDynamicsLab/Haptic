@@ -200,24 +200,16 @@ buscar para nonsimple polygon
 
 ----------------------
 # Vmr temporal 
-
-Para discutir:
-
-agregar feedback haptico? 
-    con solo visual era muy dificil darse cuenta de cuando "volver" por mas que escucharas el sonido 
-    cambie las bolitas por bolitas rigidas, en lugar de "entrar" se pida que "toque" el objeto
-
-agregar multiples sonidos, previamente generados por python y que lleguen como parametro
-
-achicar la distancia? con la distancia actual es dificil hacer siempre el mismo periodo, con un bloque de N = 12 no llegue a adaptarme (antes teniamos bloques de 12*6 igualmente)
-
-agregar archivo para el output de los tiempos en 
+## HECHO:
+* el primer sonido cuando sale para comparar mejor con la tarea de reaching
+* probar con bloques de N = 12 * 6 
 
 
-=> el primer sonido cuando sale para comparar mejor con la tarea de reaching 
-mueve al centro: mantener 
-llegada (entrar) como en reaching 
-feedback sobre performance en otro label en pantalla que dure mas tiempo 
-armar periodos: 444 666 (python indica cual usar y C++ carga todos al cargar el archivo)
-N = 12 * 6 
-grafico con barrita para arriba/abajo de cada trial individual (tope superior dice demasiado lento y es el timeout, el tope inferior es la mitad del target) mirar los ejemplos de chai3d y sin numeros 
+## POR HACER:
+* agregar multiples sonidos, previamente generados por python y que lleguen como parametro. periodos: 444 666 (python indica cual usar y C++ carga todos al cargar el archivo)
+* agregar archivo para el output de los tiempos en parametros que pasa python
+* feedback sobre performance en otro label/grafico en pantalla que dure mas tiempo 
+* grafico con barrita para arriba/abajo de cada trial individual (tope superior dice demasiado lento y es el timeout, el tope inferior es la mitad del target) mirar los ejemplos de chai3d y sin numeros 
+------------------------
+# Campo de fuerza + perturbacion temporal
+* dependiente de la velocidad (como el de la bibliografia)

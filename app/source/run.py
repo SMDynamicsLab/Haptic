@@ -82,7 +82,7 @@ def vmr_get_variables(type='experiment'):
             var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr)
 
     if type is 'temporal':
-        N = 12
+        N = 12 * 6
         position = 0
         for vmr in [0, 1, 0]:
             if vmr:
