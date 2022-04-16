@@ -203,13 +203,11 @@ buscar para nonsimple polygon
 ## HECHO:
 * el primer sonido cuando sale para comparar mejor con la tarea de reaching
 * probar con bloques de N = 12 * 6 
-
-
-## POR HACER:
 * agregar multiples sonidos, previamente generados por python y que lleguen como parametro. periodos: 444 666 (python indica cual usar y C++ carga todos al cargar el archivo)
-* agregar archivo para el output de los tiempos en parametros que pasa python
-* feedback sobre performance en otro label/grafico en pantalla que dure mas tiempo 
-* grafico con barrita para arriba/abajo de cada trial individual (tope superior dice demasiado lento y es el timeout, el tope inferior es la mitad del target) mirar los ejemplos de chai3d y sin numeros 
+* feedback sobre performance en otro label/grafico en pantalla que dure mas tiempo (usando ejemplo de 03-analytics) grafico con barrita para arriba/abajo de cada trial individual (tope superior dice demasiado lento y es el timeout, el tope inferior es la mitad del target) mirar los ejemplos de chai3d y sin numeros 
+
+
 ------------------------
+## POR HACER:
 # Campo de fuerza + perturbacion temporal
 * dependiente de la velocidad (como el de la bibliografia)
