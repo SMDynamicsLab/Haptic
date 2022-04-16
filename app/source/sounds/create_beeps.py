@@ -84,15 +84,18 @@ def save_wav(file_name):
 # append_sinewave()
 
 beep_duration = 30 #ms 
-beep_separation = 626 #ms (from start to start)
+# beep_separation = 626 #ms (from start to start)
+# beep_separation = 444 #ms (from start to start)
+beep_separation = 666 #ms (from start to start)
+
 silence_duration = beep_separation - beep_duration
 
 
-# # Two beeps separated
-# append_sinewave(duration_milliseconds=beep_duration)
-# append_silence(duration_milliseconds=silence_duration)
-# append_sinewave(duration_milliseconds=beep_duration)
-# save_wav(f"beep_beep_{beep_separation}.wav")
+# Two beeps separated
+append_sinewave(duration_milliseconds=beep_duration)
+append_silence(duration_milliseconds=silence_duration)
+append_sinewave(duration_milliseconds=beep_duration)
+save_wav(f"beep_beep_{beep_separation}.wav")
 
 # # Single beep
 # append_sinewave(duration_milliseconds=beep_duration)

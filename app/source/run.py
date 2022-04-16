@@ -82,19 +82,19 @@ def vmr_get_variables(type='experiment'):
             var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr)
 
     if type is 'temporal':
-        N = 12 * 6
+        N = 3
         position = 0
-        for vmr in [0, 1, 0]:
+        for vmr, sound in [(0,1), (0,2), (1,2), (1,1), (0,1)]:
             if vmr:
                 positions_arr = [position + 1] # el + 1 es porque vmr gira
             else:
                 positions_arr = [position] # el + 1 es porque vmr gira
-            var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr)
+            var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr, sound=sound)
 
     return var
 
 
-def vmr_get_variables_block(N, vmr, positions_arr):
+def vmr_get_variables_block(N, vmr, positions_arr, sound=0):
     block = {}
     positions = positions_arr * N
     angles = [i * 60 for i in positions]
@@ -102,6 +102,7 @@ def vmr_get_variables_block(N, vmr, positions_arr):
     block["vmr"] = vmr
     block["n"] = len(angles)
     block["angles"] = angles
+    block["sound"] = sound
     return block
 
 
@@ -121,11 +122,12 @@ def vmr_start_controller(input_file, output_file, variables, type='experiment'):
         angles = block['angles']
         initial_block_len = block['n']
         vmr = block['vmr']
+        sound = block['sound']
         i = 0
         while i < len(angles):
             print(f'\nPython: blockN: {blockN} trial:{i}')
             angle = angles[i]
-            trial_variables = [angle, vmr, blockN]
+            trial_variables = [angle, vmr, blockN, sound]
             change_variables(input_file, trial_variables)
 
             last_mod_time = waitForFileChange(output_file, last_mod_time)

@@ -49,7 +49,8 @@ cAudioBuffer* audioBufferFailure;
 cAudioBuffer* audioBufferFinished;
 cAudioBuffer* audioBufferStop;
 cAudioBuffer* audioBufferBeep;
-cAudioBuffer* audioBufferBeepBeep;
+cAudioBuffer* audioBufferBeepBeep1;
+cAudioBuffer* audioBufferBeepBeep2;
 
 cAudioSource* audioSourceSuccess;
 cAudioSource* audioSourceFailure;
@@ -57,6 +58,7 @@ cAudioSource* audioSourceFinished;
 cAudioSource* audioSourceStop;
 cAudioSource* audioSourceBeep;
 cAudioSource* audioSourceBeepBeep;
+
 
 // Haptic Basics
 cWorld* world; // a world that contains all objects of the virtual environment
@@ -136,7 +138,7 @@ double holdBeforeSoundDurationInMs;
 double holdAfterSoundDurationInMs;
 double timeFirstBeep;
 double timeSecondBeep;
-double expectedPeriod = 626;
+double expectedPeriod;
 string summaryOutputFile; 
 vector<vector<double>> summaryData;
 double maxStiffness;
@@ -151,6 +153,27 @@ void setVariables()
 {
     double angle = variables[0];
     vmrEnabled = variables[1];
+
+    int sound = variables[3];
+    switch (sound)
+    {
+    case 1:
+        audioSourceBeepBeep = new cAudioSource();
+        audioSourceBeepBeep -> setAudioBuffer(audioBufferBeepBeep1);
+        audioSourceBeepBeep -> setGain(4.0);
+        expectedPeriod = 444;
+        break;
+    case 2:
+        audioSourceBeepBeep = new cAudioSource();
+        audioSourceBeepBeep -> setAudioBuffer(audioBufferBeepBeep2);
+        audioSourceBeepBeep -> setGain(4.0);
+        expectedPeriod = 666;
+        break;
+
+    default:
+        cout << "C++: Sound variable is not in options " << sound << endl;
+        break;
+    }
 
     // Si el bloque dura mas de 10 trials, descansa 
     // (en la demo no descansa)
@@ -396,12 +419,15 @@ int main(int argc, char* argv[])
     audioBufferBeep = new cAudioBuffer();
     bool fileload5 = audioBufferBeep -> loadFromFile(RESOURCE_PATH("../resources/sounds/beep_30.wav"));
 
-    audioBufferBeepBeep = new cAudioBuffer();
-    bool fileload6 = audioBufferBeepBeep -> loadFromFile(RESOURCE_PATH("../resources/sounds/beep_beep_626.wav"));
+    audioBufferBeepBeep1 = new cAudioBuffer();
+    bool fileload6 = audioBufferBeepBeep1 -> loadFromFile(RESOURCE_PATH("../resources/sounds/beep_beep_444.wav"));
+
+    audioBufferBeepBeep2 = new cAudioBuffer();
+    bool fileload7 = audioBufferBeepBeep2 -> loadFromFile(RESOURCE_PATH("../resources/sounds/beep_beep_666.wav"));
 
 
     // check for errors
-    if (!(fileload1 && fileload2 && fileload3 && fileload4 && fileload5 && fileload6))
+    if (!(fileload1 && fileload2 && fileload3 && fileload4 && fileload5 && fileload6 && fileload7))
     {
         cout << "Error - Sound file failed to load or initialize correctly." << endl;
         close();
@@ -428,9 +454,6 @@ int main(int argc, char* argv[])
     audioSourceBeep -> setAudioBuffer(audioBufferBeep);
     audioSourceBeep -> setGain(4.0);
 
-    audioSourceBeepBeep = new cAudioSource();
-    audioSourceBeepBeep -> setAudioBuffer(audioBufferBeepBeep);
-    audioSourceBeepBeep -> setGain(4.0);    
     //--------------------------------------------------------------------------
     // CREATE OBJECTS / SET WORLD PROPERTIES
     //--------------------------------------------------------------------------
