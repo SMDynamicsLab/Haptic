@@ -142,6 +142,9 @@ double expectedPeriod;
 string summaryOutputFile; 
 vector<vector<double>> summaryData;
 double maxStiffness;
+cLevel* levelForFeedback; // a level widget to display feedback
+cLevel* levelForReference; // a level widget to display reference
+
 
 int randNum(int min, int max)
 {
@@ -228,7 +231,7 @@ int main(int argc, char* argv[])
 
     input = argv[1];
     output = argv[2];
-    summaryOutputFile = output+"-times";
+    summaryOutputFile = output + "times-summary" ;
     cout << "C++: Input file is "<< input << endl;
     cout << "C++: Output file is "<< output << endl;
     cout << "C++: Summary Output file is "<< summaryOutputFile << endl;
@@ -360,6 +363,44 @@ int main(int argc, char* argv[])
 
     // rotate
     labelMessage -> rotateWidgetAroundCenterDeg(cameraRotation);
+
+    // Widgets for feedback for the user
+    // create a level to display velocity data
+    levelForFeedback = new cLevel();
+    camera->m_frontLayer->addChild(levelForFeedback);
+    levelForFeedback->setLocalPos(60, 60);
+    levelForFeedback->m_colorActive.setGreenDarkCyan();
+    levelForFeedback->m_colorInactive.setGray();
+    levelForFeedback->setRange(-100.0, 100.0);
+    levelForFeedback->setWidth(40);
+    levelForFeedback->setNumIncrements(46);
+    levelForFeedback->setSingleIncrementDisplay(false);
+    levelForFeedback->setTransparencyLevel(0.5);
+    levelForFeedback->setValue(0);
+
+    // levelForReference = new cLevel();
+    levelForReference = levelForFeedback -> copy();
+    camera->m_frontLayer->addChild(levelForReference);
+    levelForReference->setLocalPos(20, 60);
+    levelForReference->m_colorActive.setBlack();
+    levelForReference->m_colorInactive.setGray();
+    levelForReference->setRange(-100.0, 100.0);
+    levelForReference->setValue(0);
+
+    cLabel* labelSlow = new cLabel(font);
+    camera -> m_frontLayer -> addChild(labelSlow);
+    labelSlow -> m_fontColor.setBlack();
+    labelSlow -> setText("muy lento");
+    labelSlow -> setLocalPos(60 + levelForFeedback -> getWidth(), 60);
+
+    cLabel* labelFast = labelSlow -> copy();
+    camera -> m_frontLayer -> addChild(labelFast);
+    labelFast -> setText("muy rápido");
+    labelFast -> setLocalPos(60 + levelForFeedback -> getWidth(), 60 + levelForFeedback -> getHeight() - labelFast -> getHeight());
+
+    // Rotate levels
+    levelForFeedback -> rotateWidgetAroundCenterDeg(cameraRotation);
+    levelForReference -> rotateWidgetAroundCenterDeg(cameraRotation);
 
     //--------------------------------------------------------------------------
     // HAPTIC DEVICES / TOOLS
@@ -957,6 +998,7 @@ void startTrialPhase(int phase)
             {
                 double reproducedPeriod = timeSecondBeep - timeFirstBeep ;
                 int percentMiss = round((reproducedPeriod - expectedPeriod) / expectedPeriod * 100);
+                levelForFeedback->setValue(-percentMiss); // rapido es un valor > 0
                 if (percentMiss > 0)
                 {
                     labelText = to_string(percentMiss) + "% muy lento";
