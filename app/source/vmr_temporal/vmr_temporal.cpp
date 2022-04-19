@@ -382,7 +382,7 @@ int main(int argc, char* argv[])
     levelForFeedback->setLocalPos(60, 60);
     levelForFeedback->m_colorActive.setGreenDarkCyan();
     levelForFeedback->m_colorInactive.setGray();
-    levelForFeedback->setRange(-100.0, 100.0);
+    levelForFeedback->setRange(-50.0, 50.0);
     levelForFeedback->setWidth(40);
     levelForFeedback->setNumIncrements(46);
     levelForFeedback->setSingleIncrementDisplay(false);
@@ -394,8 +394,6 @@ int main(int argc, char* argv[])
     camera->m_frontLayer->addChild(levelForReference);
     levelForReference->setLocalPos(20, 60);
     levelForReference->m_colorActive.setBlack();
-    levelForReference->m_colorInactive.setGray();
-    levelForReference->setRange(-100.0, 100.0);
     levelForReference->setValue(0);
 
     labelSlow = new cLabel(font);
@@ -412,6 +410,9 @@ int main(int argc, char* argv[])
     // Rotate levels
     levelForFeedback -> rotateWidgetAroundCenterDeg(cameraRotation);
     levelForReference -> rotateWidgetAroundCenterDeg(cameraRotation);
+
+    // Disable Feedback at first
+    showFeedback(false);
 
     //--------------------------------------------------------------------------
     // HAPTIC DEVICES / TOOLS
@@ -894,7 +895,7 @@ void updateHaptics(void)
                 // else if 
                 if (timeSinceHoldStartedInMs > totalHoldDurationInMs) //Target hold finished
                 {   
-                    audioSourceSuccess -> play();
+                    // audioSourceSuccess -> play();
                     trialPhase = 4;
                     startTrialPhase(trialPhase); // TRIAL ENDED - wait for next trial
                 }
@@ -997,7 +998,7 @@ void startTrialPhase(int phase)
             data.clear();
 
             // Save summary data
-            summaryData.push_back({timeFirstBeep, timeSecondBeep}); // aca agrega el tiempo inicial y final
+            summaryData.push_back({timeFirstBeep, timeSecondBeep, expectedPeriod}); // aca agrega el tiempo inicial y final
             appendToCsv(summaryOutputFile, summaryData, trialCounter, variables, trialSuccess);
             summaryData.clear();
 

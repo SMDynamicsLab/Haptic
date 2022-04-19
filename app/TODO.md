@@ -208,7 +208,19 @@ buscar para nonsimple polygon
 * hacer que desaparezca el feedback cuando empieza el "mantener" de la nueva trayectoria Y luego que aparezca al llegar al target
 
 
+
 ------------------------
 ## POR HACER:
-# Campo de fuerza + perturbacion temporal
+* redondear num samples para que abarque un num entero de periodos de la freq en append sinewave
+* graficos para el asunto temporal : error con el periodo y el vmr
+* buffer de la placa de sonido cuando el C reproduce el sonido / chequear chunks 
+# Campo de fuerza + perturbacion temporal (usar test6.cpp)
 * dependiente de la velocidad (como el de la bibliografia)
+* agregar varias matrices:
+    - proporcional a la velocidad pero perpendicular ~ fza magnetica (test6.cpp)
+    - igual a el anteiror pero para el otro lado 
+    - proporcional a la velocidad (y paralelo) ~ fza viscosa
+    - igual anterior pero sentido opuesto
+    - dependiente de la posicion (elastica con x-x0=x-centro)
+
+# lista de pasos a seguir en ambos exp

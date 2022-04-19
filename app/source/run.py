@@ -82,7 +82,7 @@ def vmr_get_variables(type='experiment'):
             var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr)
 
     if type is 'temporal':
-        N = 3
+        N = 20 # ~16 minutos
         position = 0
         for vmr, sound in [(0,1), (0,2), (1,2), (1,1), (0,1)]:
             if vmr:
@@ -175,7 +175,7 @@ def run(bin_file, input_file, output_file, plot_file=None, type='experiment'):
                 # vmr_plot_trials(output_file, block_count)
                 plot(output_file, plot_file)
             except Exception as e:
-                print(f"Python: WARNING vmr_plot_trials error: {str(e)}")
+                print(f"Python: WARNING plot error: {str(e)}")
 
         input("Python: Press enter to finish")
 
@@ -193,12 +193,12 @@ def run_vmr_temporal(bin_file, input_file, output_file, plot_file=None, type='ex
         vmr_start_controller(input_file, output_file, variables, type=type)
 
         time.sleep(5)
-        # if type == 'experiment':
-        #     try:
-        #         # vmr_plot_trials(output_file, block_count)
-        #         plot(output_file, plot_file)
-        #     except Exception as e:
-        #         print(f"Python: WARNING vmr_plot_trials error: {str(e)}")
+        if type == 'experiment':
+            try:
+                # vmr_plot_trials(output_file, block_count)
+                plot(output_file, plot_file)
+            except Exception as e:
+                print(f"Python: WARNING plot error: {str(e)}")
 
         input("Python: Press enter to finish")
 
