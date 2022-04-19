@@ -142,9 +142,13 @@ double expectedPeriod;
 string summaryOutputFile; 
 vector<vector<double>> summaryData;
 double maxStiffness;
+
+// Feedback for vmr temporal
 cLevel* levelForFeedback; // a level widget to display feedback
 cLevel* levelForReference; // a level widget to display reference
-
+cLabel* labelFast;
+cLabel* labelSlow;
+void showFeedback(bool show);
 
 int randNum(int min, int max)
 {
@@ -217,6 +221,13 @@ void setVrmEnabled(bool vmrEnabled)
         camera -> set(localPosition, localLookAt, vmrUpVector);
         light -> setDir(vmrUpVector);
     }
+}
+
+void showFeedback(bool show)
+{
+    levelForFeedback -> setEnabled(show);
+    labelSlow -> setEnabled(show);
+    labelFast -> setEnabled(show);
 }
 
 int main(int argc, char* argv[])
@@ -387,13 +398,13 @@ int main(int argc, char* argv[])
     levelForReference->setRange(-100.0, 100.0);
     levelForReference->setValue(0);
 
-    cLabel* labelSlow = new cLabel(font);
+    labelSlow = new cLabel(font);
     camera -> m_frontLayer -> addChild(labelSlow);
     labelSlow -> m_fontColor.setBlack();
     labelSlow -> setText("muy lento");
     labelSlow -> setLocalPos(60 + levelForFeedback -> getWidth(), 60);
 
-    cLabel* labelFast = labelSlow -> copy();
+    labelFast = labelSlow -> copy();
     camera -> m_frontLayer -> addChild(labelFast);
     labelFast -> setText("muy rápido");
     labelFast -> setLocalPos(60 + levelForFeedback -> getWidth(), 60 + levelForFeedback -> getHeight() - labelFast -> getHeight());
@@ -939,6 +950,7 @@ void startTrialPhase(int phase)
             labelText = "Ir al centro";
             break;
         case 1: // HOLD CENTER
+            showFeedback(false);
             clockHoldTime.reset(); // restart the clock
             center -> m_material -> setGreenDark();
 
@@ -995,10 +1007,11 @@ void startTrialPhase(int phase)
             totalWaitDurationInMs = randNum(1000, 2000); //randNum(500, 1500); // deberia ser random entre 500 y 1.5s
 
             if (trialSuccess)
-            {
+            {   
                 double reproducedPeriod = timeSecondBeep - timeFirstBeep ;
                 int percentMiss = round((reproducedPeriod - expectedPeriod) / expectedPeriod * 100);
                 levelForFeedback->setValue(-percentMiss); // rapido es un valor > 0
+                showFeedback(true);
                 if (percentMiss > 0)
                 {
                     labelText = to_string(percentMiss) + "% muy lento";

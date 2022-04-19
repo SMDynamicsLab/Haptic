@@ -205,6 +205,7 @@ buscar para nonsimple polygon
 * probar con bloques de N = 12 * 6 
 * agregar multiples sonidos, previamente generados por python y que lleguen como parametro. periodos: 444 666 (python indica cual usar y C++ carga todos al cargar el archivo)
 * feedback sobre performance en otro label/grafico en pantalla que dure mas tiempo (usando ejemplo de 03-analytics) grafico con barrita para arriba/abajo de cada trial individual (tope superior dice demasiado lento y es el timeout, el tope inferior es la mitad del target) mirar los ejemplos de chai3d y sin numeros 
+* hacer que desaparezca el feedback cuando empieza el "mantener" de la nueva trayectoria Y luego que aparezca al llegar al target
 
 
 ------------------------
