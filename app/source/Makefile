@@ -19,6 +19,7 @@ SUBDIRS  = tests_previos/test1 \
 		   vmr \
 		   vmr_temporal \
 		   force \
+		   force_temporal \		   
 
 
 
