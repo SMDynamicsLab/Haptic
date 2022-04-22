@@ -17,7 +17,7 @@ void createShapes(
     double& maxStiffness,
     double& maxDamping,
     cVector3d& firstTargetPosition,
-    cVector3d& centerPostition,
+    cVector3d& centerPosition,
     cShapeSphere*& blackHole
     )
 {
@@ -46,7 +46,7 @@ void createShapes(
     // SHAPE - center (start)
     center = new cShapeSphere(0.09);
     world->addChild(center);
-    center->setLocalPos(centerPostition);
+    center->setLocalPos(centerPosition);
     center-> setUseTransparency(true);
     center-> setTransparencyLevel(0.8);
     center->m_material->setViscosity(0.1 * maxDamping);
@@ -67,13 +67,13 @@ void createShapes(
 void changeTargetPosition(
     cShapeSphere*& target,
     cVector3d& firstTargetPosition,
-    cVector3d& centerPostition,
+    cVector3d& centerPosition,
     double& angle
     )
 {
     cMatrix3d rot;
     rot.identity();
     rot.rotateAboutLocalAxisDeg(0,0,1,angle);
-    cVector3d new_pos = rot * (firstTargetPosition - centerPostition);
-    target->setLocalPos(centerPostition + new_pos);
+    cVector3d new_pos = rot * (firstTargetPosition - centerPosition);
+    target->setLocalPos(centerPosition + new_pos);
 }

@@ -40,6 +40,7 @@ def append_sinewave(
     global audio # using global variables isn't cool.
 
     num_samples = duration_milliseconds * (sample_rate / 1000.0)
+    # redondear num samples para que abarque un num entero de periodos de la freq
 
     for x in range(int(num_samples)):
         audio.append(volume * math.sin(2 * math.pi * freq * ( x / sample_rate )))

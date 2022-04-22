@@ -90,7 +90,7 @@ cShapeSphere* blackHole; // blackhole para el descanso entre bloques
 
 // cLabel* labelRates; // a label to display the rate [Hz] at which the simulation is running
 cVector3d firstTargetPosition = cVector3d(-0.5,0.0, 0.0);
-cVector3d centerPostition = cVector3d(0.0, 0.0, 0.0);
+cVector3d centerPosition = cVector3d(0.0, 0.0, 0.0);
 
 // Custom variables
 bool baseEnabled = true;
@@ -107,13 +107,6 @@ cVector3d localPosition = cVector3d(0.0, 0.0, 2.0); // camera position (eye)
 cVector3d localLookAt = cVector3d(0.0, 0.0, 0.0); // lookat position (target)
 cVector3d localUp = cVector3d(-1.0, 0.0, 0.0); // direction of the (up) vector
 
-// VMR
-bool vmrEnabled = false;
-cMatrix3d vmrRotation;
-cVector3d vmrUpVector;
-void setVrmEnabled(bool vmrEnabled); 
-int blockN;
-
 // Trial Phases
 cPrecisionClock clockTrialTime; // precision clock
 cPrecisionClock clockHoldTime; // precision clock
@@ -127,12 +120,13 @@ double totalWaitDurationInMs;
 void startTrialPhase(int phase);
 int trialCounter = 0;
 int blockTrialCounter = 0;
+int blockN;
 int blockWaitTimeInMs = 60 * 1000;
 
 // Camera rotation (upside down)
 double cameraRotation = 0; // upside down
 
-// Temporal vmr variables
+// Temporal variables
 bool soundShouldPlay = false;
 double holdBeforeSoundDurationInMs;
 double holdAfterSoundDurationInMs;
@@ -142,13 +136,20 @@ double expectedPeriod;
 string summaryOutputFile; 
 vector<vector<double>> summaryData;
 double maxStiffness;
+void setSound(int sound);
 
-// Feedback for vmr temporal
+// Feedback for temporal reproduction
 cLevel* levelForFeedback; // a level widget to display feedback
 cLevel* levelForReference; // a level widget to display reference
 cLabel* labelFast;
 cLabel* labelSlow;
 void showFeedback(bool show);
+
+// Force variables
+cVector3d forceField;
+bool forceEnabled = false;
+cVector3d linearVelocity;
+void setForceField(cVector3d position, cVector3d linearVelocity, int forceType);
 
 int randNum(int min, int max)
 {
@@ -159,9 +160,28 @@ int randNum(int min, int max)
 void setVariables()
 {
     double angle = variables[0];
-    vmrEnabled = variables[1];
+    forceEnabled = variables[1];
 
     int sound = variables[3];
+    setSound(sound);
+
+    // Si el bloque dura mas de 10 trials, descansa 
+    // (en la demo no descansa)
+    if (blockN != variables[2]){
+        if (blockTrialCounter > 10){
+            trialPhase = 4;
+            startTrialPhase(5); // BLOCK ENDED - wait for next trial
+        }   
+        blockTrialCounter = 0;
+    }
+
+    blockN = variables[2];
+    changeTargetPosition(target, firstTargetPosition, centerPosition, angle);
+    
+}
+
+void setSound(int sound)
+{
     switch (sound)
     {
     case 1:
@@ -181,46 +201,91 @@ void setVariables()
         cout << "C++: Sound variable is not in options " << sound << endl;
         break;
     }
-
-    // Si el bloque dura mas de 10 trials, descansa 
-    // (en la demo no descansa)
-    if (blockN != variables[2]){
-        if (blockTrialCounter > 10){
-            trialPhase = 4;
-            startTrialPhase(5); // BLOCK ENDED - wait for next trial
-        }   
-        blockTrialCounter = 0;
-    }
-
-    blockN = variables[2];
-    setVrmEnabled(vmrEnabled);
-    changeTargetPosition(target, firstTargetPosition, centerPostition, angle);
-    
 }
 
-void setVrmUpVector(double angle)
-{   
-    cMatrix3d vmrRotation;
-    vmrRotation.identity();
-    vmrRotation.rotateAboutLocalAxisDeg(0,0,1, cameraRotation + angle);
-    
-    vmrUpVector = vmrRotation * localUp;
-}
-
-void setVrmEnabled(bool vmrEnabled)
+void addForce(cVector3d position, cVector3d linearVelocity)
 {
-    if (vmrEnabled)
-    {   
-        setVrmUpVector(60);
-        camera -> set(localPosition, localLookAt, vmrUpVector);
-        light -> setDir(vmrUpVector);
-    }
-    else 
+    // variables for forces
+    cVector3d force (0,0,0); 
+    int forceType = 1;
+    setForceField(position, linearVelocity, forceType);
+
+    force.add(forceField);
+    tool->addDeviceGlobalForce(force);
+
+}
+
+
+void setForceField(cVector3d position, cVector3d linearVelocity, int forceType)
+{   
+    double scaleFactor;
+    double Kp;
+    cMatrix3d B;
+    cVector3d r0;
+    switch (forceType)
     {
-        setVrmUpVector(0);
-        camera -> set(localPosition, localLookAt, vmrUpVector);
-        light -> setDir(vmrUpVector);
+    case 1: // proporcional a v pero perpendicular
+        B = cMatrix3d(
+                cVector3d(-10.1, -11.2,    0),     // col1
+                cVector3d(-11.2,  11.1,    0),     // col2
+                cVector3d(    0,     0,    0)      // col3
+            ); // [N.sec/m]
+    
+        // compute linear force
+        scaleFactor = 0.5;
+        forceField = B * linearVelocity * scaleFactor;
+        break;
+    case 2: // proporcional a v y F paralelo a V
+        scaleFactor = 0.5; // > 0
+        forceField = linearVelocity * scaleFactor;
+        break;
+    case 3: // proporcional a v  y F paralelo a -V
+        scaleFactor = -0.5; // < 0
+        forceField = linearVelocity * scaleFactor;
+        break;
+    case 4: // fuerza elastica con x0 = centro y F en X
+        r0 = centerPosition;
+        Kp = 2; // [N/m]
+        forceField = Kp * (position - r0); // < 0 en x porque el target esta en (-0.5,0.0, 0.0)
+        forceField.set(forceField.x(),0,0);
+        scaleFactor = 1; //FIX
+        forceField = forceField * scaleFactor;
+        break;
+    case 5: // fuerza elastica con x0 = centro y F en -Y (izquierda)
+        r0 = centerPosition;
+        Kp = 2; // [N/m]
+        forceField = Kp * (position - r0);
+        forceField.set(0,forceField.x(),0);
+        scaleFactor = 1; //FIX
+        forceField = forceField * scaleFactor;
+        break;
+    default:
+        break;
     }
+}
+
+
+
+void setForceField3(cVector3d linearVelocity) // proporcional a -v paralelo
+{
+    cMatrix3d B = cMatrix3d(
+                cVector3d(-10.1, -11.2,    0),     // col1
+                cVector3d(-11.2,  11.1,    0),     // col2
+                cVector3d(    0,     0,    0)      // col3
+            ); // [N.sec/m]
+    
+    // compute linear force
+    double scaleFactor = 0.5;
+    forceField = B * linearVelocity * scaleFactor;
+}
+void setForceField4(cVector3d position)  // fuerza elastica con x0 = centro
+{   
+    cVector3d r0 = centerPosition;
+    double Kp = 2; // [N/m] 
+    forceField = Kp * (position - r0);
+    forceField.set(0,forceField.x(),0);
+    double scaleFactor = 1; //FIX
+    forceField = forceField * scaleFactor;
 }
 
 void showFeedback(bool show)
@@ -449,7 +514,6 @@ int main(int argc, char* argv[])
 
     // start the haptic tool
     tool -> start();
-    setVrmEnabled(vmrEnabled);
 
     //--------------------------------------------------------------------------
     // SETUP AUDIO MATERIAL
@@ -536,7 +600,7 @@ int main(int argc, char* argv[])
         maxStiffness,
         maxDamping,
         firstTargetPosition,
-        centerPostition,
+        centerPosition,
         blackHole
         );
 
@@ -779,12 +843,21 @@ void updateHaptics(void)
         world -> computeGlobalPositions(true); // compute global reference frames for each object
         tool -> updateFromDevice(); // update position and orientation of tool
         tool -> computeInteractionForces(); // compute interaction forces
+                    
+        hapticDevice->getPosition(position); // read position [m]
+        hapticDevice->getLinearVelocity(linearVelocity); // read linear velocity [m/s]
+
+        if (forceEnabled)
+        {
+            addForce(position, linearVelocity);
+        }
+        
         tool -> applyToDevice(); // send forces to haptic device
         
         if (trialOngoing)
         {
             // read position
-            hapticDevice -> getPosition(position); //[m]
+            // hapticDevice -> getPosition(position); //[m]
 
             // read the clockTrialTime increment in seconds
             timeSinceTrialStartedInMs = clockTrialTime.stop() * 1000; 

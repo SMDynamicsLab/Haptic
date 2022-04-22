@@ -90,7 +90,7 @@ cShapeSphere* blackHole; // blackhole para el descanso entre bloques
 
 // cLabel* labelRates; // a label to display the rate [Hz] at which the simulation is running
 cVector3d firstTargetPosition = cVector3d(-0.5,0.0, 0.0);
-cVector3d centerPostition = cVector3d(0.0, 0.0, 0.0);
+cVector3d centerPosition = cVector3d(0.0, 0.0, 0.0);
 
 // Custom variables
 bool baseEnabled = true;
@@ -112,7 +112,7 @@ bool vmrEnabled = false;
 cMatrix3d vmrRotation;
 cVector3d vmrUpVector;
 void setVrmEnabled(bool vmrEnabled); 
-int blockN;
+
 
 // Trial Phases
 cPrecisionClock clockTrialTime; // precision clock
@@ -127,12 +127,13 @@ double totalWaitDurationInMs;
 void startTrialPhase(int phase);
 int trialCounter = 0;
 int blockTrialCounter = 0;
+int blockN;
 int blockWaitTimeInMs = 60 * 1000;
 
 // Camera rotation (upside down)
 double cameraRotation = 0; // upside down
 
-// Temporal vmr variables
+// Temporal variables
 bool soundShouldPlay = false;
 double holdBeforeSoundDurationInMs;
 double holdAfterSoundDurationInMs;
@@ -142,8 +143,9 @@ double expectedPeriod;
 string summaryOutputFile; 
 vector<vector<double>> summaryData;
 double maxStiffness;
+void setSound(int sound);
 
-// Feedback for vmr temporal
+// Feedback for temporal reproduction
 cLevel* levelForFeedback; // a level widget to display feedback
 cLevel* levelForReference; // a level widget to display reference
 cLabel* labelFast;
@@ -162,6 +164,26 @@ void setVariables()
     vmrEnabled = variables[1];
 
     int sound = variables[3];
+    setSound(sound);
+
+    // Si el bloque dura mas de 10 trials, descansa 
+    // (en la demo no descansa)
+    if (blockN != variables[2]){
+        if (blockTrialCounter > 10){
+            trialPhase = 4;
+            startTrialPhase(5); // BLOCK ENDED - wait for next trial
+        }   
+        blockTrialCounter = 0;
+    }
+
+    blockN = variables[2];
+    setVrmEnabled(vmrEnabled);
+    changeTargetPosition(target, firstTargetPosition, centerPosition, angle);
+    
+}
+
+void setSound(int sound)
+{
     switch (sound)
     {
     case 1:
@@ -181,21 +203,6 @@ void setVariables()
         cout << "C++: Sound variable is not in options " << sound << endl;
         break;
     }
-
-    // Si el bloque dura mas de 10 trials, descansa 
-    // (en la demo no descansa)
-    if (blockN != variables[2]){
-        if (blockTrialCounter > 10){
-            trialPhase = 4;
-            startTrialPhase(5); // BLOCK ENDED - wait for next trial
-        }   
-        blockTrialCounter = 0;
-    }
-
-    blockN = variables[2];
-    setVrmEnabled(vmrEnabled);
-    changeTargetPosition(target, firstTargetPosition, centerPostition, angle);
-    
 }
 
 void setVrmUpVector(double angle)
@@ -536,7 +543,7 @@ int main(int argc, char* argv[])
         maxStiffness,
         maxDamping,
         firstTargetPosition,
-        centerPostition,
+        centerPosition,
         blackHole
         );
 
