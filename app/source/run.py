@@ -68,28 +68,55 @@ def change_variables(input_file, variables_for_trial):
     return
 
 
-def vmr_get_variables(type='experiment'):
+def vmr_get_variables(type='experiment', exp_choice=None):
     var = {}
     positions_arr = [0, 1, 2, 3, 4, 5]
-    if type is 'demo':
-        for i in positions_arr:
-            var[len(var)] = vmr_get_variables_block(N=1, vmr=0, positions_arr=[i])
-            var[len(var)] = vmr_get_variables_block(N=2, vmr=1, positions_arr=[i+1])  # el +1 es porque vmr gira
 
-    if type is 'experiment':
-        N = 12
-        for vmr in [0, 1, 0]:
-            var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr)
+    if exp_choice == None:
+        if type is 'demo':
+            for i in positions_arr:
+                var[len(var)] = vmr_get_variables_block(N=1, vmr=0, positions_arr=[i])
+                var[len(var)] = vmr_get_variables_block(N=2, vmr=1, positions_arr=[i+1])  # el +1 es porque vmr gira
 
-    if type is 'temporal':
-        N = 20 # ~16 minutos
-        position = 0
-        for vmr, sound in [(0,1), (0,2), (1,2), (1,1), (0,1)]:
-            if vmr:
-                positions_arr = [position + 1] # el + 1 es porque vmr gira
-            else:
-                positions_arr = [position] # el + 1 es porque vmr gira
-            var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr, sound=sound)
+        elif type is 'experiment':
+            N = 12
+            for vmr in [0, 1, 0]:
+                var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr)
+
+    elif exp_choice == 'vt':
+        if type is 'demo':
+            N = 2 #
+            position = 0
+            for vmr, sound in [(0,1), (0,2), (1,2), (1,1), (0,1)]:
+                if vmr:
+                    positions_arr = [position + 1] # el + 1 es porque vmr gira
+                else:
+                    positions_arr = [position] # el + 1 es porque vmr gira
+                var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr, sound=sound)
+
+        elif type is 'experiment':
+            N = 20 # ~16 minutos
+            position = 0
+            for vmr, sound in [(0,1), (0,2), (1,2), (1,1), (0,1)]:
+                if vmr:
+                    positions_arr = [position + 1] # el + 1 es porque vmr gira
+                else:
+                    positions_arr = [position] # el + 1 es porque vmr gira
+                var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr, sound=sound)
+
+
+    elif exp_choice == 'ft':
+        if type is 'demo':
+            N = 1 #
+            positions_arr = [0]
+            for vmr, sound in [(1,1), (0,1), (1,1), (0,1)]:
+                var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr, sound=sound)
+
+        elif type is 'experiment':
+            N = 20 # ~16 minutos
+            positions_arr = [0]
+            for vmr, sound in [(0,1), (0,2), (1,2), (1,1), (0,1)]:
+                var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr, sound=sound)
 
     return var
 
@@ -188,7 +215,7 @@ def run(bin_file, input_file, output_file, plot_file=None, type='experiment'):
 
 def run_vmr_temporal(bin_file, input_file, output_file, plot_file=None, type='experiment'):
     try:
-        variables = vmr_get_variables(type='temporal')
+        variables = vmr_get_variables(type=type, exp_choice='ft')
         start_simulation(bin_file, input_file, output_file)
         vmr_start_controller(input_file, output_file, variables, type=type)
 
@@ -219,6 +246,7 @@ if __name__ == "__main__":
         "v",
         "vt",
         "f",
+        "ft"
         ]
 
     # VMR o Fuerza
@@ -226,8 +254,9 @@ if __name__ == "__main__":
         txt = [
             "Elegir tipo de simulación. (V, VT o F)",
             "v: vmr",
-            "vt: vmr temporal",
-            "f: fuerza"
+            "vt: vmr + temporal",
+            "f: fuerza",
+            "ft: fuerza + temporal"
         ]
         print("\n".join(txt))
         exp_choice = input()
@@ -267,7 +296,7 @@ if __name__ == "__main__":
             type=type
             )
 
-    if exp_choice == "vt":
+    elif exp_choice == "vt":
         bin_file = os.path.join(sys.path[0], '../bin/lin-x86_64/vmr_temporal')
         run_vmr_temporal(
             bin_file=bin_file,
@@ -277,8 +306,18 @@ if __name__ == "__main__":
             type=type
             )
 
-    if exp_choice == "f":
+    elif exp_choice == "f":
         bin_file = os.path.join(sys.path[0], '../bin/lin-x86_64/force')
-        raise Exception("Experimento de fuerza no esta definido aun")    
+        raise Exception("Experimento de fuerza no esta definido aun")   
+
+    elif exp_choice == "ft":
+        bin_file = os.path.join(sys.path[0], '../bin/lin-x86_64/force_temporal')
+        run_vmr_temporal(
+            bin_file=bin_file,
+            input_file=input_file,
+            output_file=output_file,
+            plot_file=plot_file,
+            type=type
+            ) 
 
         

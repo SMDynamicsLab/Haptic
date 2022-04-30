@@ -150,6 +150,7 @@ cVector3d forceField;
 bool forceEnabled = false;
 cVector3d linearVelocity;
 void setForceField(cVector3d position, cVector3d linearVelocity, int forceType);
+double maxLinearForce;
 
 int randNum(int min, int max)
 {
@@ -206,12 +207,9 @@ void setSound(int sound)
 void addForce(cVector3d position, cVector3d linearVelocity)
 {
     // variables for forces
-    cVector3d force (0,0,0); 
-    int forceType = 1;
+    int forceType = 6;
     setForceField(position, linearVelocity, forceType);
-
-    force.add(forceField);
-    tool->addDeviceGlobalForce(force);
+    tool->addDeviceGlobalForce(forceField);
 
 }
 
@@ -222,9 +220,10 @@ void setForceField(cVector3d position, cVector3d linearVelocity, int forceType)
     double Kp;
     cMatrix3d B;
     cVector3d r0;
+    double theta;
     switch (forceType)
     {
-    case 1: // proporcional a v pero perpendicular
+    case 1: // proporcional a una comb. lin. de las componentes de v
         B = cMatrix3d(
                 cVector3d(-10.1, -11.2,    0),     // col1
                 cVector3d(-11.2,  11.1,    0),     // col2
@@ -232,60 +231,45 @@ void setForceField(cVector3d position, cVector3d linearVelocity, int forceType)
             ); // [N.sec/m]
     
         // compute linear force
-        scaleFactor = 0.5;
+        scaleFactor = (maxLinearForce) / 7;   // [N/m]
         forceField = B * linearVelocity * scaleFactor;
         break;
     case 2: // proporcional a v y F paralelo a V
-        scaleFactor = 0.5; // > 0
-        forceField = linearVelocity * scaleFactor;
+        scaleFactor = (maxLinearForce) * 2; // [N/m]
+        forceField = linearVelocity * scaleFactor; // > 0
         break;
     case 3: // proporcional a v  y F paralelo a -V
-        scaleFactor = -0.5; // < 0
-        forceField = linearVelocity * scaleFactor;
+        scaleFactor = (maxLinearForce) * 2; // [N/m]
+        forceField = - linearVelocity * scaleFactor; // < 0
         break;
     case 4: // fuerza elastica con x0 = centro y F en X
         r0 = centerPosition;
-        Kp = 2; // [N/m]
-        forceField = Kp * (position - r0); // < 0 en x porque el target esta en (-0.5,0.0, 0.0)
+        //r0 = center->getPosition()
+        Kp = 1; // [N/m]
+        forceField = - Kp * (position - r0); // < 0 en x porque el target esta en (-0.5,0.0, 0.0)
         forceField.set(forceField.x(),0,0);
-        scaleFactor = 1; //FIX
+        scaleFactor = (maxLinearForce)  / (0.05) ;   // [N/m]
         forceField = forceField * scaleFactor;
         break;
     case 5: // fuerza elastica con x0 = centro y F en -Y (izquierda)
         r0 = centerPosition;
-        Kp = 2; // [N/m]
-        forceField = Kp * (position - r0);
+        Kp = 1; // [N/m]
+        forceField = - Kp * (position - r0);
         forceField.set(0,forceField.x(),0);
-        scaleFactor = 1; //FIX
+        scaleFactor = (maxLinearForce)  / (0.05) ;// [N/m]
         forceField = forceField * scaleFactor;
+        break;
+    case 6: // matriz de rotacion a 90
+        theta = 90;
+        B.identity();
+        B.rotateAboutLocalAxisDeg(0,0,1,theta); // [N.sec/m]
+        scaleFactor = (maxLinearForce) * 2;
+        forceField =  B * linearVelocity * scaleFactor;
         break;
     default:
         break;
     }
-}
-
-
-
-void setForceField3(cVector3d linearVelocity) // proporcional a -v paralelo
-{
-    cMatrix3d B = cMatrix3d(
-                cVector3d(-10.1, -11.2,    0),     // col1
-                cVector3d(-11.2,  11.1,    0),     // col2
-                cVector3d(    0,     0,    0)      // col3
-            ); // [N.sec/m]
-    
-    // compute linear force
-    double scaleFactor = 0.5;
-    forceField = B * linearVelocity * scaleFactor;
-}
-void setForceField4(cVector3d position)  // fuerza elastica con x0 = centro
-{   
-    cVector3d r0 = centerPosition;
-    double Kp = 2; // [N/m] 
-    forceField = Kp * (position - r0);
-    forceField.set(0,forceField.x(),0);
-    double scaleFactor = 1; //FIX
-    forceField = forceField * scaleFactor;
+    forceField.set(forceField.x(), forceField.y(), 0);
 }
 
 void showFeedback(bool show)
@@ -581,7 +565,7 @@ int main(int argc, char* argv[])
     
     // get properties of haptic device
     maxStiffness	= hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor;
-    double maxLinearForce = cMin(hapticDeviceInfo.m_maxLinearForce, 7.0);
+    maxLinearForce = cMin(hapticDeviceInfo.m_maxLinearForce, 7.0);
     maxDamping   = hapticDeviceInfo.m_maxLinearDamping / workspaceScaleFactor;
 
     // Damping of the world
@@ -864,7 +848,7 @@ void updateHaptics(void)
             clockTrialTime.start();
 
             //save position
-            row = {timeSinceTrialStartedInMs, position.x(), position.y(), position.z()}; // aca agregar el tiempo {t, x, y , z}
+            row = {timeSinceTrialStartedInMs, position.x(), position.y(), position.z(), forceField.x(), forceField.y(), forceField.z()}; // aca agregar el tiempo {t, x, y , z}
             data.push_back(row);
         }
 
@@ -1050,7 +1034,7 @@ void startTrialPhase(int phase)
             target -> setEnabled(true);
             target -> m_material -> setRedDark();
 
-            totalTrialDurationInMs = 2000;
+            totalTrialDurationInMs = 2000; 
             labelText = "Reproducir sonido escuchado";
             break;
         case 3: // HOLD TARGET AFTER TRIAL
