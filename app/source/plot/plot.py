@@ -112,7 +112,62 @@ def plot(output_file, plot_file=None):
         print("Showing plot")
         plt.show()
 
+''' TO DO
+# Periods
+def plot_periods(df, vmr, blockN, trial_vars, axs, colors):
+    # Plot aspect
+    for ax in axs[0]:
+        ax.axis('equal')
+        ax.set_box_aspect(1)
 
+    grouped_trial = df.groupby(trial_vars)
+    for (trial, angle, trialSuccess), group in grouped_trial:
+        group = filter_hold_time(group)
+        group.plot(x='trial', y='x', ax=axs[0][blockN], legend=False)
+
+    trial_count = len(df.trial.unique())
+    axs[0][blockN].set_title(f'vmr: {vmr} trials: {trial_count}', fontsize=8)
+
+    # Line colors for trayectory
+    for i, j in enumerate(axs[0][blockN].lines):
+        j.set_color(colors[i])
+
+def plot_temporal(output_file, plot_file=None):
+    names = [
+        'trial',
+        'timeFirstBeep', 'timeSecondBeep', 'expectedPeriod',
+        'angle',
+        'vmr',
+        'blockN',
+        'trialSuccess'
+        ]
+    df = pd.read_csv(output_file+"times-summary", names=names, index_col=False)
+    # Prepare plots
+    block_count = len(df.blockN.unique())
+    fig, axs = plt.subplots(5, block_count, sharey='row')
+    fig.tight_layout()
+
+    for ax in axs.flat:
+        plt.setp(ax.get_xticklabels(), fontsize=8)
+        plt.setp(ax.get_yticklabels(), fontsize=8)
+
+    # Prepare data
+    trial_vars = ['trial', 'angle', 'trialSuccess']
+    block_vars = ['vmr', 'blockN']
+    grouped_block = df.groupby(block_vars)
+
+    for (vmr, blockN), block_group in grouped_block:
+        colors = [colormap(i) for i in np.linspace(0, 1, len(block_group.trial.unique()))]
+        block_group = block_group[block_group.trialSuccess == 1]
+        plot_trajectory(block_group, vmr, blockN, trial_vars, axs, colors)
+
+    if plot_file:
+        print(f"Saving plot to {plot_file}")
+        plt.savefig(f'{plot_file}.png')
+    else:
+        print("Showing plot")
+        plt.show()
+ '''       
 if __name__ == "__main__":
     # Read file
     output_file = '/home/Carolina/Documents/Personal/Tesis/Haptic/app/source/vmr_test1/resultados/vmr_Nico_2021_11_09_22_07_35_out.csv'

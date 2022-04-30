@@ -85,7 +85,7 @@ def vmr_get_variables(type='experiment', exp_choice=None):
 
     elif exp_choice == 'vt':
         if type is 'demo':
-            N = 2 #
+            N = 5 #
             position = 0
             for vmr, sound in [(0,1), (0,2), (1,2), (1,1), (0,1)]:
                 if vmr:
@@ -107,9 +107,9 @@ def vmr_get_variables(type='experiment', exp_choice=None):
 
     elif exp_choice == 'ft':
         if type is 'demo':
-            N = 1 #
+            N = 10 #
             positions_arr = [0]
-            for vmr, sound in [(1,1), (0,1), (1,1), (0,1)]:
+            for vmr, sound in [(1,1)]:
                 var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr, sound=sound)
 
         elif type is 'experiment':

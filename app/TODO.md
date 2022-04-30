@@ -223,4 +223,19 @@ buscar para nonsimple polygon
     - igual anterior pero sentido opuesto
     - dependiente de la posicion (elastica con x-x0=x-centro)
 
+
+limite para que arranque (2s ) y despues un limite desde el primer sonido (2s)
+girar indicador de tiempos (rapido mas corto y lento mas largo)
+al final del trial que vaya al centro 
+que la fuerza se apague fuera del trial 
+codigo para probar el campo unicamente (test 5 parecido)
+si llega al borde que apague el campo y marque trial invalido y terminado
+trial invalido si la fuerza sobrepasa el valor max del aparato (12) esto es en el analisis post
+alargar la distancia (mover el centro hacia abajo)
+exp piloto de normal - f1 - normal -f2 ... - f6 - normal (todo con el mismo periodo ) -> probar cuanto tardaria
+tener en cuenta q pasa si pasas el piso 
+ver si cambiamos los valores estos a 1 *
+    base->m_material->setMagnetMaxForce(0.8 * maxLinearForce);   
+    base->m_material->setStiffness(0.5 * maxStiffness);
 # lista de pasos a seguir en ambos exp
+que el sujeto no lo suelte

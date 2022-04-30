@@ -231,15 +231,15 @@ void setForceField(cVector3d position, cVector3d linearVelocity, int forceType)
             ); // [N.sec/m]
     
         // compute linear force
-        scaleFactor = (maxLinearForce) / 7;   // [N/m]
+        scaleFactor = (maxLinearForce) / 5;   // [N/m]
         forceField = B * linearVelocity * scaleFactor;
         break;
     case 2: // proporcional a v y F paralelo a V
-        scaleFactor = (maxLinearForce) * 2; // [N/m]
+        scaleFactor = (maxLinearForce) * 3; // [N/m]
         forceField = linearVelocity * scaleFactor; // > 0
         break;
     case 3: // proporcional a v  y F paralelo a -V
-        scaleFactor = (maxLinearForce) * 2; // [N/m]
+        scaleFactor = (maxLinearForce) * 3; // [N/m]
         forceField = - linearVelocity * scaleFactor; // < 0
         break;
     case 4: // fuerza elastica con x0 = centro y F en X
@@ -263,7 +263,7 @@ void setForceField(cVector3d position, cVector3d linearVelocity, int forceType)
         theta = 90;
         B.identity();
         B.rotateAboutLocalAxisDeg(0,0,1,theta); // [N.sec/m]
-        scaleFactor = (maxLinearForce) * 2;
+        scaleFactor = (maxLinearForce) * 3;
         forceField =  B * linearVelocity * scaleFactor;
         break;
     default:
@@ -566,6 +566,7 @@ int main(int argc, char* argv[])
     // get properties of haptic device
     maxStiffness	= hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor;
     maxLinearForce = cMin(hapticDeviceInfo.m_maxLinearForce, 7.0);
+    cout << "hapticDeviceInfo.m_maxLinearForce" << hapticDeviceInfo.m_maxLinearForce << endl;
     maxDamping   = hapticDeviceInfo.m_maxLinearDamping / workspaceScaleFactor;
 
     // Damping of the world
@@ -1034,7 +1035,7 @@ void startTrialPhase(int phase)
             target -> setEnabled(true);
             target -> m_material -> setRedDark();
 
-            totalTrialDurationInMs = 2000; 
+            totalTrialDurationInMs = 200000; 
             labelText = "Reproducir sonido escuchado";
             break;
         case 3: // HOLD TARGET AFTER TRIAL
