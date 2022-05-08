@@ -18,7 +18,11 @@ void createShapes(
     double& maxDamping,
     cVector3d& firstTargetPosition,
     cVector3d& centerPosition,
-    cShapeSphere*& blackHole
+    cShapeSphere*& blackHole,
+    cShapeLine*& delimiterLine1,
+    cShapeLine*& delimiterLine2,
+    cShapeLine*& delimiterLine3,
+    cShapeLine*& delimiterLine4
     )
 {
     // SHAPE - BASE
@@ -62,6 +66,36 @@ void createShapes(
     blackHole->m_material->setMagnetMaxForce(0.2 * maxLinearForce);
     blackHole->m_material->setStiffness(0.5 * maxStiffness);
     blackHole -> setEnabled(false);
+
+
+    // SHAPE - DELIMITER
+    double x1 = 0.75;
+    double y1 = 1.0;
+    cVector3d arriba_izquierda = cVector3d(-x1,-y1,0);
+    cVector3d arriba_derecha = cVector3d(-x1, y1,0);
+    cVector3d abajo_izquierda = cVector3d(x1,-y1,0);
+    cVector3d abajo_derecha = cVector3d(x1,y1,0);
+    
+    delimiterLine1 = new cShapeLine(arriba_izquierda, abajo_izquierda);
+    delimiterLine2 = new cShapeLine(arriba_derecha, abajo_derecha);
+    delimiterLine3 = new cShapeLine(arriba_izquierda, arriba_derecha);
+    delimiterLine4 = new cShapeLine(abajo_izquierda, abajo_derecha);
+
+    world->addChild(delimiterLine1);
+    world->addChild(delimiterLine2);
+    world->addChild(delimiterLine3);
+    world->addChild(delimiterLine4);
+
+    delimiterLine1->createEffectSurface();
+    delimiterLine2->createEffectSurface();
+    delimiterLine3->createEffectSurface();
+    delimiterLine4->createEffectSurface();
+    
+    delimiterLine1->m_material->setStiffness(0.5 * maxStiffness);
+    delimiterLine2->m_material->setStiffness(0.5 * maxStiffness);
+    delimiterLine3->m_material->setStiffness(0.5 * maxStiffness);
+    delimiterLine4->m_material->setStiffness(0.5 * maxStiffness);
+    
 }
 
 void changeTargetPosition(

@@ -90,7 +90,7 @@ cShapeSphere* blackHole; // blackhole para el descanso entre bloques
 
 // cLabel* labelRates; // a label to display the rate [Hz] at which the simulation is running
 cVector3d firstTargetPosition = cVector3d(-0.5,0.0, 0.0);
-cVector3d centerPosition = cVector3d(0.0, 0.0, 0.0);
+cVector3d centerPosition = cVector3d(0.5, 0.0, 0.0);
 
 // Custom variables
 bool baseEnabled = true;
@@ -152,6 +152,12 @@ cVector3d linearVelocity;
 void setForceField(cVector3d position, cVector3d linearVelocity, int forceType);
 double maxLinearForce;
 
+// Delimiter lines
+cShapeLine* delimiterLine1;
+cShapeLine* delimiterLine2;
+cShapeLine* delimiterLine3;
+cShapeLine* delimiterLine4;
+
 int randNum(int min, int max)
 {
     int num = rand()%(max-min + 1) + min;
@@ -160,7 +166,7 @@ int randNum(int min, int max)
 
 void setVariables()
 {
-    double angle = variables[0];
+    // double angle = variables[0];
     forceEnabled = variables[1];
 
     int sound = variables[3];
@@ -177,7 +183,7 @@ void setVariables()
     }
 
     blockN = variables[2];
-    changeTargetPosition(target, firstTargetPosition, centerPosition, angle);
+    // changeTargetPosition(target, firstTargetPosition, centerPosition, angle);
     
 }
 
@@ -448,12 +454,12 @@ int main(int argc, char* argv[])
     labelSlow = new cLabel(font);
     camera -> m_frontLayer -> addChild(labelSlow);
     labelSlow -> m_fontColor.setBlack();
-    labelSlow -> setText("muy lento");
+    labelSlow -> setText("muy rápido");
     labelSlow -> setLocalPos(60 + levelForFeedback -> getWidth(), 60);
 
     labelFast = labelSlow -> copy();
     camera -> m_frontLayer -> addChild(labelFast);
-    labelFast -> setText("muy rápido");
+    labelFast -> setText("muy lento");
     labelFast -> setLocalPos(60 + levelForFeedback -> getWidth(), 60 + levelForFeedback -> getHeight() - labelFast -> getHeight());
 
     // Rotate levels
@@ -586,9 +592,13 @@ int main(int argc, char* argv[])
         maxDamping,
         firstTargetPosition,
         centerPosition,
-        blackHole
+        blackHole,
+        delimiterLine1,
+        delimiterLine2,
+        delimiterLine3,
+        delimiterLine4
         );
-
+   
 
     //--------------------------------------------------------------------------
     // START SIMULATION
@@ -911,8 +921,6 @@ void updateHaptics(void)
                     timeFirstBeep = timeSinceTrialStartedInMs;
                     audioSourceBeep -> play();
                 }
-                 
-
                 // Si entró al target:
                 // else if (targetDistance < 0.03) //Tool is inside target
                 else if (tool -> isInContact(target)) //Tool is in contact with target
@@ -924,15 +932,23 @@ void updateHaptics(void)
                     clockHoldTime.reset(); // restart the clock
                     startTrialPhase(trialPhase); // HOLD TARGET
                 }
-
                 // Si se le acabó el tiempo:
-                else if (timeSinceTrialStartedInMs > totalTrialDurationInMs)
+                else if ((timeSinceTrialStartedInMs - timeFirstBeep) > totalTrialDurationInMs)
                 {   
+                    trialSuccess = false;
+                    audioSourceFailure -> play();
+                    labelText = "Se acabó el tiempo, intenta de nuevo";
+                    trialPhase = 4;
+                    startTrialPhase(trialPhase); // GO TO CENTER
+                    
+                }
+                else if (tool -> isInContact(delimiterLine1) ||tool -> isInContact(delimiterLine2) ||tool -> isInContact(delimiterLine3) ||tool -> isInContact(delimiterLine4))
+                {   
+                    labelText = "Fuera de zona, intenta de nuevo";
                     trialSuccess = false;
                     audioSourceFailure -> play();
                     trialPhase = 4;
                     startTrialPhase(trialPhase); // GO TO CENTER
-                    
                 }
 
             break;
@@ -1006,7 +1022,7 @@ void startTrialPhase(int phase)
             center -> setEnabled(true);
             target -> setEnabled(false);
 
-            labelText = "Ir al centro";
+            labelText = "Ir al inicio";
             break;
         case 1: // HOLD CENTER
             showFeedback(false);
@@ -1030,21 +1046,23 @@ void startTrialPhase(int phase)
             timeFirstBeep = 0;
             timeSecondBeep = 0;
             break;
-        case 2: // TRIAL ONGOING (ida)
+        case 2: // TRIAL ONGOING
             center -> setEnabled(true);
             target -> setEnabled(true);
             target -> m_material -> setRedDark();
 
-            totalTrialDurationInMs = 200000; 
+            totalTrialDurationInMs = 2000; 
             labelText = "Reproducir sonido escuchado";
             break;
         case 3: // HOLD TARGET AFTER TRIAL
+            forceEnabled = false;
             center -> setEnabled(false);
             target -> m_material -> setGreenDark();
             totalHoldDurationInMs = 500;
             labelText = "Mantener";
             break;
         case 4: // TRIAL ENDED - wait for next trial
+            forceEnabled = false;
             clockWaitTime.reset(); // restart the clock
 
             trialOngoing = false;
@@ -1069,25 +1087,9 @@ void startTrialPhase(int phase)
             {   
                 double reproducedPeriod = timeSecondBeep - timeFirstBeep ;
                 int percentMiss = round((reproducedPeriod - expectedPeriod) / expectedPeriod * 100);
-                levelForFeedback->setValue(-percentMiss); // rapido es un valor > 0
+                levelForFeedback->setValue(percentMiss); // rapido es un valor < 0
                 showFeedback(true);
-                if (percentMiss > 0)
-                {
-                    labelText = to_string(percentMiss) + "% muy lento";
-                }
-                else if (percentMiss < 0)
-                {
-                    labelText = to_string(-percentMiss) + "% muy rápido";
-                }
-                else if (reproducedPeriod == expectedPeriod)
-                {
-                    labelText = "Perfecto!";
-                }
-                // TODO: mostrar comparacion entre esperado y hecho en eje temporal
-            }
-            else
-            {
-                labelText = "Se acabó el tiempo, intenta de nuevo";
+                labelText = "";
             }
 
             break;

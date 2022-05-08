@@ -406,12 +406,12 @@ int main(int argc, char* argv[])
     labelSlow = new cLabel(font);
     camera -> m_frontLayer -> addChild(labelSlow);
     labelSlow -> m_fontColor.setBlack();
-    labelSlow -> setText("muy lento");
+    labelSlow -> setText("muy rápido");
     labelSlow -> setLocalPos(60 + levelForFeedback -> getWidth(), 60);
 
     labelFast = labelSlow -> copy();
     camera -> m_frontLayer -> addChild(labelFast);
-    labelFast -> setText("muy rápido");
+    labelFast -> setText("muy lento");
     labelFast -> setLocalPos(60 + levelForFeedback -> getWidth(), 60 + levelForFeedback -> getHeight() - labelFast -> getHeight());
 
     // Rotate levels
@@ -875,7 +875,7 @@ void updateHaptics(void)
                 }
 
                 // Si se le acabó el tiempo:
-                else if (timeSinceTrialStartedInMs > totalTrialDurationInMs)
+                else if ((timeSinceTrialStartedInMs - timeFirstBeep) > totalTrialDurationInMs)
                 {   
                     trialSuccess = false;
                     audioSourceFailure -> play();
@@ -979,7 +979,7 @@ void startTrialPhase(int phase)
             timeFirstBeep = 0;
             timeSecondBeep = 0;
             break;
-        case 2: // TRIAL ONGOING (ida)
+        case 2: // TRIAL ONGOING
             center -> setEnabled(true);
             target -> setEnabled(true);
             target -> m_material -> setRedDark();
@@ -1018,7 +1018,7 @@ void startTrialPhase(int phase)
             {   
                 double reproducedPeriod = timeSecondBeep - timeFirstBeep ;
                 int percentMiss = round((reproducedPeriod - expectedPeriod) / expectedPeriod * 100);
-                levelForFeedback->setValue(-percentMiss); // rapido es un valor > 0
+                levelForFeedback->setValue(percentMiss); // rapido es un valor < 0
                 showFeedback(true);
                 if (percentMiss > 0)
                 {

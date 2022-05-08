@@ -207,31 +207,35 @@ buscar para nonsimple polygon
 * feedback sobre performance en otro label/grafico en pantalla que dure mas tiempo (usando ejemplo de 03-analytics) grafico con barrita para arriba/abajo de cada trial individual (tope superior dice demasiado lento y es el timeout, el tope inferior es la mitad del target) mirar los ejemplos de chai3d y sin numeros 
 * hacer que desaparezca el feedback cuando empieza el "mantener" de la nueva trayectoria Y luego que aparezca al llegar al target
 
+# Fuerza + temporal
+* dependiente de la velocidad (como el de la bibliografia)
+* agregar varias fuerzas:
+    - proporcional a la velocidad pero perpendicular ~ fza magnetica (test6.cpp)
+    - igual a el anteiror pero para el otro lado 
+    - proporcional a la velocidad (y paralelo) ~ fza viscosa
+    - igual anterior pero sentido opuesto
+    - dependiente de la posicion (elastica con x-x0=x-centro)
+* *Campo de fuerza + perturbacion temporal (usar test6.cpp)
 
+# Detalles reproduccion temporal 
+## Generales
+* limite para que arranque (2s ) y despues un limite desde el primer sonido (2s)
+* girar indicador de tiempos (rapido mas corto y lento mas largo)
+
+## Exp Fuerza unicamente
+* que la fuerza se apague fuera del trial
+* si llega al borde que apague el campo y marque trial invalido y terminado
+* alargar la distancia (mover el centro hacia abajo) 
 
 ------------------------
 ## POR HACER:
 * redondear num samples para que abarque un num entero de periodos de la freq en append sinewave
 * graficos para el asunto temporal : error con el periodo y el vmr
 * buffer de la placa de sonido cuando el C reproduce el sonido / chequear chunks 
-# Campo de fuerza + perturbacion temporal (usar test6.cpp)
-* dependiente de la velocidad (como el de la bibliografia)
-* agregar varias matrices:
-    - proporcional a la velocidad pero perpendicular ~ fza magnetica (test6.cpp)
-    - igual a el anteiror pero para el otro lado 
-    - proporcional a la velocidad (y paralelo) ~ fza viscosa
-    - igual anterior pero sentido opuesto
-    - dependiente de la posicion (elastica con x-x0=x-centro)
 
 
-limite para que arranque (2s ) y despues un limite desde el primer sonido (2s)
-girar indicador de tiempos (rapido mas corto y lento mas largo)
 al final del trial que vaya al centro 
-que la fuerza se apague fuera del trial 
-codigo para probar el campo unicamente (test 5 parecido)
-si llega al borde que apague el campo y marque trial invalido y terminado
 trial invalido si la fuerza sobrepasa el valor max del aparato (12) esto es en el analisis post
-alargar la distancia (mover el centro hacia abajo)
 exp piloto de normal - f1 - normal -f2 ... - f6 - normal (todo con el mismo periodo ) -> probar cuanto tardaria
 tener en cuenta q pasa si pasas el piso 
 ver si cambiamos los valores estos a 1 *
