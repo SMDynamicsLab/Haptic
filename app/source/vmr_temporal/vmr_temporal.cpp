@@ -879,6 +879,7 @@ void updateHaptics(void)
                 {   
                     trialSuccess = false;
                     audioSourceFailure -> play();
+                    labelText = "Se acabó el tiempo, intenta de nuevo";
                     trialPhase = 4;
                     startTrialPhase(trialPhase); // GO TO CENTER
                     
@@ -1020,23 +1021,7 @@ void startTrialPhase(int phase)
                 int percentMiss = round((reproducedPeriod - expectedPeriod) / expectedPeriod * 100);
                 levelForFeedback->setValue(percentMiss); // rapido es un valor < 0
                 showFeedback(true);
-                if (percentMiss > 0)
-                {
-                    labelText = to_string(percentMiss) + "% muy lento";
-                }
-                else if (percentMiss < 0)
-                {
-                    labelText = to_string(-percentMiss) + "% muy rápido";
-                }
-                else if (reproducedPeriod == expectedPeriod)
-                {
-                    labelText = "Perfecto!";
-                }
-                // TODO: mostrar comparacion entre esperado y hecho en eje temporal
-            }
-            else
-            {
-                labelText = "Se acabó el tiempo, intenta de nuevo";
+                labelText = "";
             }
 
             break;
