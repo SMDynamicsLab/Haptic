@@ -226,6 +226,7 @@ buscar para nonsimple polygon
 * que la fuerza se apague fuera del trial
 * si llega al borde que apague el campo y marque trial invalido y terminado
 * alargar la distancia (mover el centro hacia abajo) 
+* que la fuerza (el tipo) se pueda manejar desde python
 
 ------------------------
 ## POR HACER:

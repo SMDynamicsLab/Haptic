@@ -151,6 +151,8 @@ bool forceEnabled = false;
 cVector3d linearVelocity;
 void setForceField(cVector3d position, cVector3d linearVelocity, int forceType);
 double maxLinearForce;
+int forceType;
+
 
 // Delimiter lines
 cShapeLine* delimiterLine1;
@@ -171,6 +173,9 @@ void setVariables()
 
     int sound = variables[3];
     setSound(sound);
+
+    forceType = variables[4];
+
 
     // Si el bloque dura mas de 10 trials, descansa 
     // (en la demo no descansa)
@@ -211,12 +216,10 @@ void setSound(int sound)
 }
 
 void addForce(cVector3d position, cVector3d linearVelocity)
-{
+{   
     // variables for forces
-    int forceType = 6;
     setForceField(position, linearVelocity, forceType);
     tool->addDeviceGlobalForce(forceField);
-
 }
 
 
@@ -273,6 +276,8 @@ void setForceField(cVector3d position, cVector3d linearVelocity, int forceType)
         forceField =  B * linearVelocity * scaleFactor;
         break;
     default:
+        cout << "C++: Unknown force type: " << forceType << endl;
+        forceField = cVector3d(0, 0, 0);
         break;
     }
     forceField.set(forceField.x(), forceField.y(), 0);

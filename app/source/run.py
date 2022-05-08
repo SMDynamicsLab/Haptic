@@ -77,21 +77,31 @@ def vmr_get_variables(type='experiment', exp_choice=None):
 
     elif exp_choice == 'ft':
         if type is 'demo':
-            N = 10 #
+            N = 1 #
             positions_arr = [0]
-            for vmr, sound in [(1,1)]:
-                var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr, sound=sound)
+            sound = 1
+            for force_type in [0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0]:
+                force = int(force_type > 0)
+                var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
 
-        elif type is 'experiment':
-            N = 20 # ~16 minutos
+        elif type is 'experiment': # exp piloto de todas las fuerzas
+            N = 10
             positions_arr = [0]
-            for vmr, sound in [(0,1), (0,2), (1,2), (1,1), (0,1)]:
-                var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr, sound=sound)
+            sound = 1
+            for force_type in [0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0]:
+                force = int(force_type > 0)
+                var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
+
+        # elif type is 'experiment':
+        #     N = 20 # ~16 minutos
+        #     positions_arr = [0]
+        #     for force, sound, force_type in [(0,1), (0,2), (1,2), (1,1), (0,1)]:
+        #         var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
 
     return var
 
 
-def vmr_get_variables_block(N, vmr, positions_arr, sound=0):
+def vmr_get_variables_block(N, vmr, positions_arr, sound=0, force_type=0):
     block = {}
     positions = positions_arr * N
     angles = [i * 60 for i in positions]
@@ -100,6 +110,7 @@ def vmr_get_variables_block(N, vmr, positions_arr, sound=0):
     block["n"] = len(angles)
     block["angles"] = angles
     block["sound"] = sound
+    block["force_type"] = force_type
     return block
 
 
@@ -120,11 +131,12 @@ def vmr_start_controller(input_file, output_file, variables, type='experiment'):
         initial_block_len = block['n']
         vmr = block['vmr']
         sound = block['sound']
+        force_type = block['force_type']
         i = 0
         while i < len(angles):
             print(f'\nPython: blockN: {blockN} trial:{i}')
             angle = angles[i]
-            trial_variables = [angle, vmr, blockN, sound]
+            trial_variables = [angle, vmr, blockN, sound, force_type]
             change_variables(input_file, trial_variables)
 
             last_mod_time = waitForFileChange(output_file, last_mod_time)
