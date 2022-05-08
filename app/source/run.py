@@ -29,36 +29,6 @@ def start_simulation(bin_file, input_file, output_file):
         # , stdout=subprocess.DEVNULL #para evitar que salga a consola
         )
 
-
-def vmr_plot_trials(output_file, block_count):
-    plt.close('all')
-    plt.ion()
-    plt.show()
-    names = ['trial', 'timeMs', 'x', 'y', 'z']
-    var_names = ['angle', 'vmr', 'blockN', 'trialSuccess']
-    # TO DO: filtrar trialSuccess = 0
-    names += var_names
-    df = pd.read_csv(output_file, names=names, index_col=False)
-    df['x'] = -df['x']*100
-    df['y'] = df['y']*100
-    fig, axs = plt.subplots(1, block_count, sharey=True)
-    grouped = df.groupby(['trial', 'blockN', 'vmr'])
-    for ax in axs:
-        ax.axis('equal')
-        ax.set_box_aspect(1)
-
-    for (trial, blockN, vmr), group in grouped:
-        group.plot(x='y', y='x', ax=axs[blockN], label=f'trial {trial}', legend=False)
-
-    for (blockN, vmr), group in df.groupby(['blockN', 'vmr']):
-        trial_count = len(group.trial.unique())
-        axs[blockN].set_title(f'vmr: {vmr} trials: {trial_count}')
-
-    plt.draw()
-    plt.pause(1)
-    return
-
-
 def change_variables(input_file, variables_for_trial):
     f = open(input_file, "w")
     variables_str = " ".join([str(i) for i in variables_for_trial])
@@ -199,7 +169,6 @@ def run(bin_file, input_file, output_file, plot_file=None, type='experiment'):
         time.sleep(5)
         if type == 'experiment':
             try:
-                # vmr_plot_trials(output_file, block_count)
                 plot(output_file, plot_file)
             except Exception as e:
                 print(f"Python: WARNING plot error: {str(e)}")
@@ -222,7 +191,6 @@ def run_vmr_temporal(bin_file, input_file, output_file, plot_file=None, type='ex
         time.sleep(5)
         if type == 'experiment':
             try:
-                # vmr_plot_trials(output_file, block_count)
                 plot(output_file, plot_file)
             except Exception as e:
                 print(f"Python: WARNING plot error: {str(e)}")
