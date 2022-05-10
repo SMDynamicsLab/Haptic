@@ -76,7 +76,6 @@ void updateGraphics(void); // this function renders the scene
 void updateHaptics(void); // this function contains the main haptics simulation loop
 void close(void); // this function closes the application
 void setFullscreen(void);
-void endSimulation(void);
 
 // Haptic custom objects
 cShapeBox* base;
@@ -989,7 +988,17 @@ void updateHaptics(void)
                     trialPhase = 0;
                     startTrialPhase(trialPhase);
                 }
-            break;   
+            break;
+            case 6: // END SIMULATION 
+                // read the clockWaitTime increment in seconds
+                timeSinceWaitStartedInMs = clockWaitTime.stop() * 1000; 
+                clockWaitTime.start();
+                // Si ya pasó el tiempo de espera:
+                if (timeSinceWaitStartedInMs > totalWaitDurationInMs) // TRIAL SUCCESFUL / WAITING FOR NEXT TRIAL
+                {
+                    glfwSetWindowShouldClose(window, GLFW_TRUE);
+                }
+            break;
             default:
                 cout << "C++: Invalid phase" << trialPhase << endl;  
         }
@@ -997,18 +1006,6 @@ void updateHaptics(void)
     
     // exit haptics thread
     simulationFinished = true;
-}
-
-void endSimulation()
-{
-    cout << "C++: no more trials" << endl;
-    tool -> setShowEnabled(false);
-    center -> setEnabled(false);
-    target -> setEnabled(false);
-    labelText = "Experimento terminado. Gracias!";
-    audioSourceFinished -> play();
-    sleep(10);
-    glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
 
@@ -1038,7 +1035,9 @@ void startTrialPhase(int phase)
 
             if (!trialShouldStart)
             {   
-                endSimulation();
+                trialPhase = 6; // END SIMULATION 
+                startTrialPhase(trialPhase);
+                break;
             }
 
             soundShouldPlay = true ;
@@ -1108,6 +1107,16 @@ void startTrialPhase(int phase)
             audioSourceStop -> play();
             blackHole -> setEnabled(true);
             break;
+        case 6: // END SIMULATION 
+            clockWaitTime.reset();
+            totalWaitDurationInMs = 10000; // 10s
+            cout << "C++: no more trials" << endl;
+            tool -> setShowEnabled(false);
+            center -> setEnabled(false);
+            target -> setEnabled(false);
+            labelText = "Experimento terminado. Gracias!";
+            audioSourceFinished -> play();
+        break;
         default:
             cout << "C++: Invalid phase " << phase << endl;  
     }
