@@ -152,6 +152,7 @@ cVector3d linearVelocity;
 void setForceField(cVector3d position, cVector3d linearVelocity, int forceType);
 double maxLinearForce;
 int forceType;
+cVector3d graphic_position;
 
 
 // Delimiter lines
@@ -218,12 +219,13 @@ void setSound(int sound)
 void addForce(cVector3d position, cVector3d linearVelocity)
 {   
     // variables for forces
-    setForceField(position, linearVelocity, forceType);
+    graphic_position = tool->getDeviceGlobalPos(); // not in meters, in world coordinates
+    setForceField(graphic_position, linearVelocity, forceType);
     tool->addDeviceGlobalForce(forceField);
 }
 
 
-void setForceField(cVector3d position, cVector3d linearVelocity, int forceType)
+void setForceField(cVector3d graphic_position, cVector3d linearVelocity, int forceType)
 {   
     double scaleFactor;
     double Kp;
@@ -252,20 +254,17 @@ void setForceField(cVector3d position, cVector3d linearVelocity, int forceType)
         forceField = - linearVelocity * scaleFactor; // < 0
         break;
     case 4: // fuerza elastica con x0 = centro y F en X
-        r0 = centerPosition;
-        //r0 = center->getPosition()
-        Kp = 1; // [N/m]
-        forceField = - Kp * (position - r0); // < 0 en x porque el target esta en (-0.5,0.0, 0.0)
-        forceField.set(forceField.x(),0,0);
-        scaleFactor = (maxLinearForce)  / (0.05) ;   // [N/m]
+        Kp = -1.0 / (firstTargetPosition.x() - centerPosition.x()); // [N/m]
+        forceField = - Kp * (graphic_position - centerPosition); // < 0 en x porque el target esta en (-0.5,0.0, 0.0)
+        forceField.set(forceField.x(), 0, 0);
+        scaleFactor = maxLinearForce * 0.3;   // [N/m]
         forceField = forceField * scaleFactor;
         break;
     case 5: // fuerza elastica con x0 = centro y F en -Y (izquierda)
-        r0 = centerPosition;
-        Kp = 1; // [N/m]
-        forceField = - Kp * (position - r0);
-        forceField.set(0,forceField.x(),0);
-        scaleFactor = (maxLinearForce)  / (0.05) ;// [N/m]
+        Kp = -1.0 / (firstTargetPosition.x() - centerPosition.x()); // [N/m]
+        forceField = Kp * (graphic_position - centerPosition);
+        forceField.set(0, forceField.x(), 0);
+        scaleFactor = maxLinearForce * 0.3;// [N/m]
         forceField = forceField * scaleFactor;
         break;
     case 6: // matriz de rotacion a 90
@@ -847,7 +846,7 @@ void updateHaptics(void)
         hapticDevice->getPosition(position); // read position [m]
         hapticDevice->getLinearVelocity(linearVelocity); // read linear velocity [m/s]
 
-        if (forceEnabled)
+        if (trialOngoing && forceEnabled)
         {
             addForce(position, linearVelocity);
         }
