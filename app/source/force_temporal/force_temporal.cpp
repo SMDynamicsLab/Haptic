@@ -155,10 +155,10 @@ cVector3d graphic_position;
 
 
 // Delimiter lines
-cShapeLine* delimiterLine1;
-cShapeLine* delimiterLine2;
-cShapeLine* delimiterLine3;
-cShapeLine* delimiterLine4;
+cShapeBox* delimiterBox1;
+cShapeBox* delimiterBox2;
+cShapeBox* delimiterBox3;
+cShapeBox* delimiterBox4;
 
 int randNum(int min, int max)
 {
@@ -596,10 +596,10 @@ int main(int argc, char* argv[])
         firstTargetPosition,
         centerPosition,
         blackHole,
-        delimiterLine1,
-        delimiterLine2,
-        delimiterLine3,
-        delimiterLine4
+        delimiterBox1,
+        delimiterBox2,
+        delimiterBox3,
+        delimiterBox4
         );
    
 
@@ -945,7 +945,7 @@ void updateHaptics(void)
                     startTrialPhase(trialPhase); // GO TO CENTER
                     
                 }
-                else if (tool -> isInContact(delimiterLine1) ||tool -> isInContact(delimiterLine2) ||tool -> isInContact(delimiterLine3) ||tool -> isInContact(delimiterLine4))
+                else if (tool -> isInContact(delimiterBox1) ||tool -> isInContact(delimiterBox2) ||tool -> isInContact(delimiterBox3) ||tool -> isInContact(delimiterBox4))
                 {   
                     labelText = "Fuera de zona, intenta de nuevo";
                     trialSuccess = false;

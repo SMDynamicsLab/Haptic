@@ -19,10 +19,10 @@ void createShapes(
     cVector3d& firstTargetPosition,
     cVector3d& centerPosition,
     cShapeSphere*& blackHole,
-    cShapeLine*& delimiterLine1,
-    cShapeLine*& delimiterLine2,
-    cShapeLine*& delimiterLine3,
-    cShapeLine*& delimiterLine4
+    cShapeBox*& delimiterBox1,
+    cShapeBox*& delimiterBox2,
+    cShapeBox*& delimiterBox3,
+    cShapeBox*& delimiterBox4
     )
 {
     // SHAPE - BASE
@@ -69,33 +69,35 @@ void createShapes(
 
 
     // SHAPE - DELIMITER
-    double x1 = 0.75;
-    double y1 = 1.0;
-    cVector3d arriba_izquierda = cVector3d(-x1,-y1,0);
-    cVector3d arriba_derecha = cVector3d(-x1, y1,0);
-    cVector3d abajo_izquierda = cVector3d(x1,-y1,0);
-    cVector3d abajo_derecha = cVector3d(x1,y1,0);
-    
-    delimiterLine1 = new cShapeLine(arriba_izquierda, abajo_izquierda);
-    delimiterLine2 = new cShapeLine(arriba_derecha, abajo_derecha);
-    delimiterLine3 = new cShapeLine(arriba_izquierda, arriba_derecha);
-    delimiterLine4 = new cShapeLine(abajo_izquierda, abajo_derecha);
+    double x = 0.7;
+    double y = 1.0;
+    double z = 1;
 
-    world->addChild(delimiterLine1);
-    world->addChild(delimiterLine2);
-    world->addChild(delimiterLine3);
-    world->addChild(delimiterLine4);
+    
+    delimiterBox1 = new cShapeBox(2*x, 0.05, 0.1);//izquierda
+    delimiterBox1 -> setLocalPos(0, -y, 0);
+    delimiterBox2 = new cShapeBox(2*x, 0.05, 0.1);//derecha
+    delimiterBox2 -> setLocalPos(0, y, 0);
+    delimiterBox3 = new cShapeBox(0.05, 2*y, 0.1);//arriba
+    delimiterBox3 -> setLocalPos(-x, 0, 0);
+    delimiterBox4 = new cShapeBox(0.05, 2*y, 0.1);//abajo
+    delimiterBox4 -> setLocalPos(x, 0, 0);
 
-    delimiterLine1->createEffectSurface();
-    delimiterLine2->createEffectSurface();
-    delimiterLine3->createEffectSurface();
-    delimiterLine4->createEffectSurface();
+    world->addChild(delimiterBox1);
+    world->addChild(delimiterBox2);
+    world->addChild(delimiterBox3);
+    world->addChild(delimiterBox4);
+
+    delimiterBox1->createEffectSurface();
+    delimiterBox2->createEffectSurface();
+    delimiterBox3->createEffectSurface();
+    delimiterBox4->createEffectSurface();
     
-    delimiterLine1->m_material->setStiffness(0.5 * maxStiffness);
-    delimiterLine2->m_material->setStiffness(0.5 * maxStiffness);
-    delimiterLine3->m_material->setStiffness(0.5 * maxStiffness);
-    delimiterLine4->m_material->setStiffness(0.5 * maxStiffness);
-    
+    delimiterBox1->m_material->setStiffness(0.5 * maxStiffness);
+    delimiterBox2->m_material->setStiffness(0.5 * maxStiffness);
+    delimiterBox3->m_material->setStiffness(0.5 * maxStiffness);
+    delimiterBox4->m_material->setStiffness(0.5 * maxStiffness);
+   
 }
 
 void changeTargetPosition(

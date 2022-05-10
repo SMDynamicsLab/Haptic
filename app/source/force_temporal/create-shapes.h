@@ -12,10 +12,10 @@ void createShapes(
     chai3d::cVector3d& firstTargetPosition,
     chai3d::cVector3d& centerPosition,
     chai3d::cShapeSphere*& blackHole,
-    chai3d::cShapeLine*& delimiterLine1,
-    chai3d::cShapeLine*& delimiterLine2,
-    chai3d::cShapeLine*& delimiterLine3,
-    chai3d::cShapeLine*& delimiterLine4
+    chai3d::cShapeBox*& delimiterBox1,
+    chai3d::cShapeBox*& delimiterBox2,
+    chai3d::cShapeBox*& delimiterBox3,
+    chai3d::cShapeBox*& delimiterBox4
     );
 void changeTargetPosition(
     chai3d::cShapeSphere*& target, 
