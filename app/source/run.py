@@ -235,7 +235,6 @@ if __name__ == "__main__":
             "Elegir tipo de simulación. (V, VT o F)",
             "v: vmr",
             "vt: vmr + temporal",
-            "f: fuerza",
             "ft: fuerza + temporal"
         ]
         print("\n".join(txt))
@@ -285,10 +284,6 @@ if __name__ == "__main__":
             plot_file=plot_file,
             type=type
             )
-
-    elif exp_choice == "f":
-        bin_file = os.path.join(sys.path[0], '../bin/lin-x86_64/force')
-        raise Exception("Experimento de fuerza no esta definido aun")   
 
     elif exp_choice == "ft":
         bin_file = os.path.join(sys.path[0], '../bin/lin-x86_64/force_temporal')
