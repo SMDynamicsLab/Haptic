@@ -67,22 +67,40 @@ def filter_hold_time(df, hold_time=500):
     return filtered_df
 
 
-def plot(output_file, plot_file=None):
-    names = [
-        'trial',
-        'timeMs',
-        'x', 'y', 'z',  # [m]
-        'angle',
-        'vmr',
-        'blockN',
-        'trialSuccess'
-        ]
+def plot(output_file, plot_file=None, names=None):
+    if not names:
+        if len(pd.read_csv(output_file).columns) == 9:
+            names = [
+                'trial',
+                'timeMs',
+                'x', 'y', 'z',  # [m]
+                'angle',
+                'vmr',
+                'blockN',
+                'trialSuccess'
+            ]
+        elif len(pd.read_csv(output_file).columns) == 14:
+            names = [
+                'trial',
+                'timeMs',
+                'x', 'y', 'z',  # [m]
+                'fx', 'fy', 'fz',  
+                'angle',
+                'vmr',
+                'blockN',
+                'sound', 
+                'force_type',
+                'trialSuccess'
+            ]
+        else:
+            raise Exception('Columns in plot are not well defined')
     df = pd.read_csv(output_file, names=names, index_col=False)
     df['x'] = -df['x']*100  # [cm]
     df['y'] = df['y']*100   # [cm]
 
     # Prepare plots
     block_count = len(df.blockN.unique())
+    print('block_count', block_count)
     fig, axs = plt.subplots(5, block_count, sharey='row')
     fig.tight_layout()
 
@@ -107,7 +125,7 @@ def plot(output_file, plot_file=None):
 
     if plot_file:
         print(f"Saving plot to {plot_file}")
-        plt.savefig(f'{plot_file}.png')
+        plt.savefig(f'{plot_file}')
     else:
         print("Showing plot")
         plt.show()

@@ -244,3 +244,6 @@ ver si cambiamos los valores estos a 1 *
     base->m_material->setStiffness(0.5 * maxStiffness);
 # lista de pasos a seguir en ambos exp
 que el sujeto no lo suelte
+
+-----------------
+Probar sin feedback 
