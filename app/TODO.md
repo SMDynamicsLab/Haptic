@@ -246,4 +246,6 @@ ver si cambiamos los valores estos a 1 *
 que el sujeto no lo suelte
 
 -----------------
-Probar sin feedback 
+Probar sin feedback y con descanso entre bloques
+    - 15 trials 
+    - fuerzas 1, 2, 3 y 6 

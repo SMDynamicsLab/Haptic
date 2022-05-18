@@ -180,7 +180,7 @@ void setVariables()
     // Si el bloque dura mas de 10 trials, descansa 
     // (en la demo no descansa)
     if (blockN != variables[2]){
-        if (blockTrialCounter > 10){
+        if (blockTrialCounter > 9){
             trialPhase = 4;
             startTrialPhase(5); // BLOCK ENDED - wait for next trial
         }   
@@ -1091,7 +1091,8 @@ void startTrialPhase(int phase)
                 double reproducedPeriod = timeSecondBeep - timeFirstBeep ;
                 int percentMiss = round((reproducedPeriod - expectedPeriod) / expectedPeriod * 100);
                 levelForFeedback->setValue(percentMiss); // rapido es un valor < 0
-                showFeedback(true);
+                // showFeedback(true);
+                showFeedback(false);
                 labelText = "";
             }
 

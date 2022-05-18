@@ -76,21 +76,37 @@ def vmr_get_variables(type='experiment', exp_choice=None):
 
 
     elif exp_choice == 'ft':
-        if type is 'demo':
-            N = 1 #
-            positions_arr = [0]
-            sound = 1
-            for force_type in [0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0]:
-                force = int(force_type > 0)
-                var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
+        # if type is 'demo':
+        #     N = 1 #
+        #     positions_arr = [0]
+        #     sound = 1
+        #     for force_type in [0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0]:
+        #         force = int(force_type > 0)
+        #         var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
 
-        elif type is 'experiment': # exp piloto de todas las fuerzas
-            N = 10
+        # elif type is 'experiment': # exp piloto de todas las fuerzas
+        #     N = 10
+        #     positions_arr = [0]
+        #     sound = 1
+        #     for force_type in [0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0]:
+        #         force = int(force_type > 0)
+        #         var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
+
+        if type is 'demo': # demo de las fuerzas 1, 2, 3 y 6
+                    N = 1 #
+                    positions_arr = [0]
+                    sound = 1
+                    for force_type in [0, 1, 0, 2, 0, 3, 0, 6, 0]:
+                        force = int(force_type > 0)
+                        var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
+
+        elif type is 'experiment': # exp piloto de las fuerzas 1, 2, 3 y 6
+            N = 15
             positions_arr = [0]
             sound = 1
-            for force_type in [0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0]:
+            for force_type in [0, 1, 0, 2, 0, 3, 0, 6, 0]:
                 force = int(force_type > 0)
-                var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
+                var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)        
 
         # elif type is 'experiment':
         #     N = 20 # ~16 minutos
