@@ -269,4 +269,12 @@ Probar sin feedback vmr y fuerza
 mas adelante, contrabalnceado:
     [periodo2 + sin vmr , periodo2 + vmr, periodo2 + sin vmr, periodo1 + sin vmr , periodo1 + vmr, periodo1 + sin vmr]
 
+------------
+* la adaptacion espacial parece mas rapida que la temporal en el primer vmr 
+* las dos adaptaciones son mas sutiles en los segundos y terceros bloques de vmr (generalizacion)
+* para ver la adaptacion temporal completa harian falta mas trials (30 aprox)
+* la adaptacion temporal en el cambio de periodo es clara por mas que haya fluctuaciones
+* para saber si la adptacion depende del periodo, deberiamos usar diferentes grupos de sujetos para cada periodo
 
+=> hacer mismo exp con la del paper (periodo corto y largo, 30 trials)
+=> anotar bien trials que fuimos haciendo y snippets de codigo de los bloques 
