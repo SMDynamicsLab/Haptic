@@ -51,6 +51,7 @@ cAudioBuffer* audioBufferStop;
 cAudioBuffer* audioBufferBeep;
 cAudioBuffer* audioBufferBeepBeep1;
 cAudioBuffer* audioBufferBeepBeep2;
+cAudioBuffer* audioBufferBeepBeep3;
 
 cAudioSource* audioSourceSuccess;
 cAudioSource* audioSourceFailure;
@@ -127,7 +128,7 @@ void startTrialPhase(int phase);
 int trialCounter = 0;
 int blockTrialCounter = 0;
 int blockN;
-int blockWaitTimeInMs = 60 * 1000;
+int blockWaitTimeInMs = 30 * 1000;
 
 // Camera rotation (upside down)
 double cameraRotation = 0; // upside down
@@ -168,7 +169,7 @@ void setVariables()
     // Si el bloque dura mas de 10 trials, descansa 
     // (en la demo no descansa)
     if (blockN != variables[2]){
-        if (blockTrialCounter > 10){
+        if (blockTrialCounter > 9){
             trialPhase = 4;
             startTrialPhase(5); // BLOCK ENDED - wait for next trial
         }   
@@ -189,15 +190,20 @@ void setSound(int sound)
         audioSourceBeepBeep = new cAudioSource();
         audioSourceBeepBeep -> setAudioBuffer(audioBufferBeepBeep1);
         audioSourceBeepBeep -> setGain(4.0);
-        expectedPeriod = 444;
+        expectedPeriod = 333;
         break;
     case 2:
         audioSourceBeepBeep = new cAudioSource();
         audioSourceBeepBeep -> setAudioBuffer(audioBufferBeepBeep2);
         audioSourceBeepBeep -> setGain(4.0);
+        expectedPeriod = 444;
+        break;
+    case 3:
+        audioSourceBeepBeep = new cAudioSource();
+        audioSourceBeepBeep -> setAudioBuffer(audioBufferBeepBeep3);
+        audioSourceBeepBeep -> setGain(4.0);
         expectedPeriod = 666;
         break;
-
     default:
         cout << "C++: Sound variable is not in options " << sound << endl;
         break;
@@ -248,7 +254,8 @@ int main(int argc, char* argv[])
 
     input = argv[1];
     output = argv[2];
-    summaryOutputFile = output + "times-summary" ;
+    summaryOutputFile = output.substr(0, output.find_last_of(".")) + "-times-summary.csv";
+
     cout << "C++: Input file is "<< input << endl;
     cout << "C++: Output file is "<< output << endl;
     cout << "C++: Summary Output file is "<< summaryOutputFile << endl;
@@ -479,14 +486,17 @@ int main(int argc, char* argv[])
     bool fileload5 = audioBufferBeep -> loadFromFile(RESOURCE_PATH("../resources/sounds/beep_30.wav"));
 
     audioBufferBeepBeep1 = new cAudioBuffer();
-    bool fileload6 = audioBufferBeepBeep1 -> loadFromFile(RESOURCE_PATH("../resources/sounds/beep_beep_444.wav"));
+    bool fileload6 = audioBufferBeepBeep1 -> loadFromFile(RESOURCE_PATH("../resources/sounds/beep_beep_333.wav"));
 
     audioBufferBeepBeep2 = new cAudioBuffer();
-    bool fileload7 = audioBufferBeepBeep2 -> loadFromFile(RESOURCE_PATH("../resources/sounds/beep_beep_666.wav"));
+    bool fileload7 = audioBufferBeepBeep2 -> loadFromFile(RESOURCE_PATH("../resources/sounds/beep_beep_444.wav"));
+
+    audioBufferBeepBeep3 = new cAudioBuffer();
+    bool fileload8 = audioBufferBeepBeep3 -> loadFromFile(RESOURCE_PATH("../resources/sounds/beep_beep_666.wav"));
 
 
     // check for errors
-    if (!(fileload1 && fileload2 && fileload3 && fileload4 && fileload5 && fileload6 && fileload7))
+    if (!(fileload1 && fileload2 && fileload3 && fileload4 && fileload5 && fileload6 && fileload7 && fileload8))
     {
         cout << "Error - Sound file failed to load or initialize correctly." << endl;
         close();
@@ -1018,7 +1028,8 @@ void startTrialPhase(int phase)
                 double reproducedPeriod = timeSecondBeep - timeFirstBeep ;
                 int percentMiss = round((reproducedPeriod - expectedPeriod) / expectedPeriod * 100);
                 levelForFeedback->setValue(percentMiss); // rapido es un valor < 0
-                showFeedback(true);
+                // showFeedback(true);
+                showFeedback(false);
                 labelText = "";
             }
 

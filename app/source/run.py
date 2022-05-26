@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import random
 from datetime import datetime
 from plot.plot import plot
+from zipfile import ZipFile
 
 
 def run_make():
@@ -55,19 +56,20 @@ def vmr_get_variables(type='experiment', exp_choice=None):
 
     elif exp_choice == 'vt':
         if type is 'demo':
-            N = 5 #
+            N = 1 #
             position = 0
-            for vmr, sound in [(0,1), (0,2), (1,2), (1,1), (0,1)]:
+            for vmr, sound in [(0,1), (0,2), (0,3), (1,3), (1,2), (1,1)]:
                 if vmr:
                     positions_arr = [position + 1] # el + 1 es porque vmr gira
                 else:
                     positions_arr = [position] # el + 1 es porque vmr gira
+                print(f"vmr: {vmr}, positions arr = {positions_arr}")
                 var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr, sound=sound)
 
         elif type is 'experiment':
-            N = 20 # ~16 minutos
+            N = 20 
             position = 0
-            for vmr, sound in [(0,1), (0,2), (1,2), (1,1), (0,1)]:
+            for vmr, sound in [(0,1),(1,1),(0,1),(0,2),(1,2),(0,2),(0,3),(1,3),(0,3)]:
                 if vmr:
                     positions_arr = [position + 1] # el + 1 es porque vmr gira
                 else:
@@ -76,14 +78,14 @@ def vmr_get_variables(type='experiment', exp_choice=None):
 
 
     elif exp_choice == 'ft':
-        # if type is 'demo':
+        # if type is 'demo': # demo de todas las fuerzas
         #     N = 1 #
         #     positions_arr = [0]
         #     sound = 1
         #     for force_type in [0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0]:
         #         force = int(force_type > 0)
         #         var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
-
+        
         # elif type is 'experiment': # exp piloto de todas las fuerzas
         #     N = 10
         #     positions_arr = [0]
@@ -92,27 +94,40 @@ def vmr_get_variables(type='experiment', exp_choice=None):
         #         force = int(force_type > 0)
         #         var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
 
-        if type is 'demo': # demo de las fuerzas 1, 2, 3 y 6
-                    N = 1 #
-                    positions_arr = [0]
-                    sound = 1
-                    for force_type in [0, 1, 0, 2, 0, 3, 0, 6, 0]:
-                        force = int(force_type > 0)
-                        var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
+        #-------------------
 
-        elif type is 'experiment': # exp piloto de las fuerzas 1, 2, 3 y 6
-            N = 15
+        # if type is 'demo': # demo de las fuerzas 1, 2, 3 y 6
+        #             N = 1 #
+        #             positions_arr = [0]
+        #             sound = 1
+        #             for force_type in [0, 1, 0, 2, 0, 3, 0, 6, 0]:
+        #                 force = int(force_type > 0)
+        #                 var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
+
+        # elif type is 'experiment': # exp piloto de las fuerzas 1, 2, 3 y 6
+        #     N = 15
+        #     positions_arr = [0]
+        #     sound = 1
+        #     for force_type in [0, 1, 0, 2, 0, 3, 0, 6, 0]:
+        #         force = int(force_type > 0)
+        #         var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)        
+
+        #-------------------
+
+        if type is 'demo': # demo de los tres periodos y la fuerza 1 (del paper)
+            N = 1 #
+            positions_arr = [0]
+            for force_type, sound in [(0,1), (0,2), (0,3), (1,3), (1,2), (1,1)]:
+                force = int(force_type > 0)
+                var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
+
+        elif type is 'experiment': # exp piloto de los tres periodos y la fuerza 1 (del paper)
+            N = 20
             positions_arr = [0]
             sound = 1
-            for force_type in [0, 1, 0, 2, 0, 3, 0, 6, 0]:
+            for force_type, sound in [(0,1),(1,1),(0,1),(0,2),(1,2),(0,2),(0,3),(1,3),(0,3)]:
                 force = int(force_type > 0)
-                var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)        
-
-        # elif type is 'experiment':
-        #     N = 20 # ~16 minutos
-        #     positions_arr = [0]
-        #     for force, sound, force_type in [(0,1), (0,2), (1,2), (1,1), (0,1)]:
-        #         var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
+                var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)   
 
     return var
 
@@ -210,9 +225,9 @@ def run(bin_file, input_file, output_file, plot_file=None, type='experiment'):
         raise e
 
 
-def run_vmr_temporal(bin_file, input_file, output_file, plot_file=None, type='experiment'):
+def run_vmr_temporal(bin_file, input_file, output_file, plot_file=None, exp_choice=None, type='experiment'):
     try:
-        variables = vmr_get_variables(type=type, exp_choice='ft')
+        variables = vmr_get_variables(type=type, exp_choice=exp_choice)
         start_simulation(bin_file, input_file, output_file)
         vmr_start_controller(input_file, output_file, variables, type=type)
 
@@ -224,6 +239,8 @@ def run_vmr_temporal(bin_file, input_file, output_file, plot_file=None, type='ex
                 print(f"Python: WARNING plot error: {str(e)}")
 
         input("Python: Press enter to finish")
+        
+
 
     except KeyboardInterrupt:
         print('\nPython: Stopping due to KeyboardInterrupt')
@@ -298,6 +315,7 @@ if __name__ == "__main__":
             input_file=input_file,
             output_file=output_file,
             plot_file=plot_file,
+            exp_choice=exp_choice,
             type=type
             )
 
@@ -308,7 +326,17 @@ if __name__ == "__main__":
             input_file=input_file,
             output_file=output_file,
             plot_file=plot_file,
+            exp_choice=exp_choice,
             type=type
             ) 
 
-        
+    zip_file = os.path.join(data_path, f"{filepreffix}.zip")
+    print(f"Python: compressing files into {zip_file}")
+    zipObj = ZipFile(zip_file, 'w')
+    for file in [input_file, output_file]:
+        if os.path.exists(file, os.path.basename(file)):
+            zipObj.write(file, os.path.basename(file))
+    zipObj.close()
+    for file in [input_file, output_file]:
+        if os.path.exists(file):
+            os.remove(file) 

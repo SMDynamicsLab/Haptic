@@ -79,6 +79,18 @@ def plot(output_file, plot_file=None, names=None):
                 'blockN',
                 'trialSuccess'
             ]
+        elif len(pd.read_csv(output_file).columns) == 11:
+            names = [
+                'trial',
+                'timeMs',
+                'x', 'y', 'z',  # [m]
+                'angle',
+                'vmr',
+                'blockN',
+                'sound', 
+                'force_type',
+                'trialSuccess'
+            ]
         elif len(pd.read_csv(output_file).columns) == 14:
             names = [
                 'trial',

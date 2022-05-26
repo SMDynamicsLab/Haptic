@@ -249,3 +249,24 @@ que el sujeto no lo suelte
 Probar sin feedback y con descanso entre bloques
     - 15 trials 
     - fuerzas 1, 2, 3 y 6 
+    - 60 s espera entre bloques
+-----------------
+chequear error de area signado => esta OK
+
+Probar sin feedback vmr y fuerza
+    - 20 trials
+    - 1 solo angulo
+    - usar tiempos 333, 444 y 666 
+    - bajar tiempo espera entre bloques (30s)
+    - 6 bloques:
+    distinto para los sujetos
+    [
+        periodo1 + sin vmr , periodo1 + vmr, periodo1 + sin vmr, 
+        periodo2 + sin vmr , periodo2 + vmr, periodo2 + sin vmr, 
+        periodo3 + sin vmr , periodo3 + vmr, periodo3 + sin vmr
+    ]
+    
+mas adelante, contrabalnceado:
+    [periodo2 + sin vmr , periodo2 + vmr, periodo2 + sin vmr, periodo1 + sin vmr , periodo1 + vmr, periodo1 + sin vmr]
+
+

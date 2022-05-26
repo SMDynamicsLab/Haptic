@@ -87,7 +87,10 @@ def save_wav(file_name):
 beep_duration = 30 #ms 
 # beep_separation = 626 #ms (from start to start)
 # beep_separation = 444 #ms (from start to start)
-beep_separation = 666 #ms (from start to start)
+# beep_separation = 666 #ms (from start to start)
+beep_separation = 333 #ms (from start to start)
+
+
 
 silence_duration = beep_separation - beep_duration
 
