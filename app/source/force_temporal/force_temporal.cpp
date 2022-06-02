@@ -124,7 +124,7 @@ int blockN;
 int blockWaitTimeInMs = 30 * 1000;
 
 // Camera rotation (upside down)
-double cameraRotation = 0; // upside down
+double cameraRotation = 180; // 0: normal, 180: upside down
 
 // Temporal variables
 bool soundShouldPlay = false;
@@ -154,6 +154,11 @@ double maxLinearForce;
 int forceType;
 cVector3d graphic_position;
 
+// VMR
+bool vmrEnabled = false;
+cMatrix3d vmrRotation;
+cVector3d vmrUpVector;
+void setVrmEnabled(bool vmrEnabled); 
 
 // Delimiter lines
 cShapeBox* delimiterBox1;
@@ -288,6 +293,32 @@ void setForceField(cVector3d graphic_position, cVector3d linearVelocity, int for
     }
     forceField.set(forceField.x(), forceField.y(), 0);
 }
+
+void setVrmUpVector(double angle)
+{   
+    cMatrix3d vmrRotation;
+    vmrRotation.identity();
+    vmrRotation.rotateAboutLocalAxisDeg(0,0,1, cameraRotation + angle);
+    
+    vmrUpVector = vmrRotation * localUp;
+}
+
+void setVrmEnabled(bool vmrEnabled)
+{
+    if (vmrEnabled)
+    {   
+        setVrmUpVector(60);
+        camera -> set(localPosition, localLookAt, vmrUpVector);
+        light -> setDir(vmrUpVector);
+    }
+    else 
+    {
+        setVrmUpVector(0);
+        camera -> set(localPosition, localLookAt, vmrUpVector);
+        light -> setDir(vmrUpVector);
+    }
+}
+
 
 void showFeedback(bool show)
 {
@@ -516,6 +547,7 @@ int main(int argc, char* argv[])
 
     // start the haptic tool
     tool -> start();
+    setVrmEnabled(vmrEnabled);
 
     //--------------------------------------------------------------------------
     // SETUP AUDIO MATERIAL

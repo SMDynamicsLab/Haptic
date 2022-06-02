@@ -278,3 +278,7 @@ mas adelante, contrabalnceado:
 
 => hacer mismo exp con la del paper (periodo corto y largo, 30 trials)
 => anotar bien trials que fuimos haciendo y snippets de codigo de los bloques 
+
+-----------
+=> mismo sujeto con periodo corto con campo y vmr (5 bloques total), 30 trials
+el contrabalanceo va a ser en la presentacion de los campos
