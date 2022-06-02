@@ -114,18 +114,18 @@ def vmr_get_variables(type='experiment', exp_choice=None):
 
         #-------------------
 
-        if type is 'demo': # demo de los tres periodos y la fuerza 1 (del paper)
+        if type is 'demo': # demo de dos periodos y la fuerza 1 (del paper)
             N = 1 #
             positions_arr = [0]
-            for force_type, sound in [(0,1), (0,2), (0,3), (1,3), (1,2), (1,1)]:
+            for force_type, sound in [(0,1), (0,3), (1,3), (1,1)]:
                 force = int(force_type > 0)
                 var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)
 
-        elif type is 'experiment': # exp piloto de los tres periodos y la fuerza 1 (del paper)
-            N = 20
+        elif type is 'experiment': # exp piloto de dos periodos, 30 trials y la fuerza 1 (del paper)
+            N = 30
             positions_arr = [0]
             sound = 1
-            for force_type, sound in [(0,1),(1,1),(0,1),(0,2),(1,2),(0,2),(0,3),(1,3),(0,3)]:
+            for force_type, sound in [(0,1),(1,1),(0,1),(0,3),(1,3),(0,3)]:
                 force = int(force_type > 0)
                 var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)   
 
@@ -330,13 +330,13 @@ if __name__ == "__main__":
             type=type
             ) 
 
-    zip_file = os.path.join(data_path, f"{filepreffix}.zip")
-    print(f"Python: compressing files into {zip_file}")
-    zipObj = ZipFile(zip_file, 'w')
-    for file in [input_file, output_file]:
-        if os.path.exists(file, os.path.basename(file)):
-            zipObj.write(file, os.path.basename(file))
-    zipObj.close()
-    for file in [input_file, output_file]:
-        if os.path.exists(file):
-            os.remove(file) 
+    # zip_file = os.path.join(data_path, f"{filepreffix}.zip")
+    # print(f"Python: compressing files into {zip_file}")
+    # zipObj = ZipFile(zip_file, 'w')
+    # for file in [input_file, output_file]:
+    #     if os.path.exists(file, os.path.basename(file)):
+    #         zipObj.write(file, os.path.basename(file))
+    # zipObj.close()
+    # for file in [input_file, output_file]:
+    #     if os.path.exists(file):
+    #         os.remove(file) 

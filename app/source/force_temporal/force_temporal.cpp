@@ -241,7 +241,7 @@ void setForceField(cVector3d graphic_position, cVector3d linearVelocity, int for
     double theta;
     switch (forceType)
     {
-    case 1: // proporcional a una comb. lin. de las componentes de v
+    case 1: // proporcional a una comb. lin. de las componentes de v - "el del paper"
         B = cMatrix3d(
                 cVector3d(-10.1, -11.2,    0),     // col1
                 cVector3d(-11.2,  11.1,    0),     // col2
