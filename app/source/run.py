@@ -136,6 +136,22 @@ def vmr_get_variables(type='experiment', exp_choice=None):
                 force = int(force_type > 0)
                 var[len(var)] = vmr_get_variables_block(N=N, vmr=force, positions_arr=positions_arr, sound=sound, force_type=force_type)   
 
+        elif exp_choice == 'vft':
+            sound = 1
+            position = 0
+            if type is 'demo':
+                N = 2
+
+            elif type is 'experiment':
+                N = 30
+
+            for vmr, force_type in [(0,0),(0,1),(0,0),(1,0),(0,0)]:
+                if vmr:
+                    positions_arr = [position + 1] # el + 1 es porque vmr gira
+                else:
+                    positions_arr = [position] # el + 1 es porque vmr gira
+                var[len(var)] = vmr_get_variables_block(N=N, vmr=vmr, positions_arr=positions_arr, sound=sound, force_type=force_type)
+
     return var
 
 
@@ -186,8 +202,6 @@ def vmr_start_controller(input_file, output_file, variables, type='experiment'):
                     print(f"Python: Adding new trial for block {blockN} with angle {angle}.")
             i += 1
     print("Python: Trials done. Closing simulation and removing input file")
-    os.remove(input_file)
-
 
 def lastTrialSuccess(output_file):
     f = open(output_file, "r")
@@ -266,7 +280,8 @@ if __name__ == "__main__":
         "v",
         "vt",
         "f",
-        "ft"
+        "ft",
+        "vft"
         ]
 
     # VMR o Fuerza
@@ -275,7 +290,8 @@ if __name__ == "__main__":
             "Elegir tipo de simulación. (V, VT o F)",
             "v: vmr",
             "vt: vmr + temporal",
-            "ft: fuerza + temporal"
+            "ft: fuerza + temporal",
+            "vft: fuerza, vmr + temporal"
         ]
         print("\n".join(txt))
         exp_choice = input()
@@ -337,13 +353,26 @@ if __name__ == "__main__":
             type=type
             ) 
 
-    # zip_file = os.path.join(data_path, f"{filepreffix}.zip")
-    # print(f"Python: compressing files into {zip_file}")
-    # zipObj = ZipFile(zip_file, 'w')
-    # for file in [input_file, output_file]:
-    #     if os.path.exists(file):
-    #         zipObj.write(file, os.path.basename(file))
-    # zipObj.close()
+    elif exp_choice == "vft":
+        bin_file = os.path.join(sys.path[0], '../bin/lin-x86_64/vmr_force_temporal')
+        run_vmr_temporal(
+            bin_file=bin_file,
+            input_file=input_file,
+            output_file=output_file,
+            plot_file=plot_file,
+            exp_choice=exp_choice,
+            type=type
+            ) 
+
+    
+
+    zip_file = os.path.join(data_path, f"{filepreffix}.zip")
+    print(f"Python: compressing files into {zip_file}")
+    zipObj = ZipFile(zip_file, 'w')
+    for file in [input_file, output_file]:
+        if os.path.exists(file):
+            zipObj.write(file, os.path.basename(file))
+    zipObj.close()
     # for file in [input_file, output_file]:
     #     if os.path.exists(file):
     #         os.remove(file) 
