@@ -140,7 +140,7 @@ def vmr_get_variables(type='experiment', exp_choice=None):
         sound = 1
         position = 0
         if type is 'demo':
-            N = 2
+            N = 1
 
         elif type is 'experiment':
             N = 30
@@ -202,6 +202,9 @@ def vmr_start_controller(input_file, output_file, variables, type='experiment'):
                     print(f"Python: Adding new trial for block {blockN} with angle {angle}.")
             i += 1
     print("Python: Trials done. Closing simulation and removing input file")
+    for file in [input_file]:
+        if os.path.exists(file):
+            os.remove(file) 
 
 def lastTrialSuccess(output_file):
     f = open(output_file, "r")
@@ -372,4 +375,5 @@ if __name__ == "__main__":
             zipObj.write(file, os.path.basename(file))
     zipObj.close()
     for file in [input_file]:
+        if os.path.exists(file):
             os.remove(file) 
