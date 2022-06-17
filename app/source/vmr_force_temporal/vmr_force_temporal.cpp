@@ -124,7 +124,7 @@ int blockN;
 int blockWaitTimeInMs = 30 * 1000;
 
 // Camera rotation (upside down)
-double cameraRotation = 180; // 0: normal, 180: upside down
+double cameraRotation = 0; // 0: normal, 180: upside down
 
 // Temporal variables
 bool soundShouldPlay = false;
@@ -799,22 +799,22 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
         camera -> setMirrorVertical(mirroredDisplay);
     }
 
-    // // option - enable vmr
-    // else if (a_key == GLFW_KEY_V)
-    // {
-    //     vmrEnabled = !vmrEnabled;
-    //     setVrmEnabled(vmrEnabled);
-    // }
+    // option - enable vmr
+    else if (a_key == GLFW_KEY_V)
+    {
+        vmrEnabled = !vmrEnabled;
+        setVrmEnabled(vmrEnabled);
+    }
 
-    // // option - read & set variables
-    // else if (a_key == GLFW_KEY_S)
-    // {
-    //     getVariables(input, mod_time, variables);
-    //     setVariables();
-    //     center -> setEnabled(true);
-    //     target -> m_material -> setRedDark();
-    //     target -> setEnabled(true);
-    // }
+    // option - read & set variables
+    else if (a_key == GLFW_KEY_S)
+    {
+        getVariables(input, mod_time, variables);
+        setVariables();
+        center -> setEnabled(true);
+        target -> m_material -> setRedDark();
+        target -> setEnabled(true);
+    }
 
 }
 
