@@ -282,3 +282,17 @@ mas adelante, contrabalnceado:
 -----------
 => mismo sujeto con periodo corto con campo y vmr (5 bloques total), 30 trials
 el contrabalanceo va a ser en la presentacion de los campos
+
+* unir codigos de fuerza y vmr
+
+Por hacer:
+* Tiempo entre llegar al inicio y que se escucha el primer beep, es al azar?
+* Decile al sujeto que lo haga lo mas parejo, sin frenar y sin desviarse en lo posible
+*
+* tiempo al azar entre el estímulo y que te habilita que sea mayor que el periodo
+* reproducir intervalo
+* sugerencia al sujeto durante la demo de poner el volumen mas bajo de lo que le sea cómodo
+En el msj de la pantalla
+* Marcar lugar de los pies del sujeto durante la demo
+* graficar posición en función del tiempo
+* revisar vel media sabrina y nico/rodri

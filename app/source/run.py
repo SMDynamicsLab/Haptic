@@ -368,11 +368,11 @@ if __name__ == "__main__":
             ) 
 
     zip_file = os.path.join(data_path, f"{filepreffix}.zip")
-    print(f"Python: compressing files into {zip_file}")
-    zipObj = ZipFile(zip_file, 'w')
-    for file in [input_file, output_file]:
-        if os.path.exists(file):
-            zipObj.write(file, os.path.basename(file))
+    # print(f"Python: compressing files into {zip_file}")
+    # zipObj = ZipFile(zip_file, 'w')
+    # for file in [input_file, output_file]:
+    #     if os.path.exists(file):
+    #         zipObj.write(file, os.path.basename(file))
     zipObj.close()
     for file in [input_file]:
         if os.path.exists(file):
