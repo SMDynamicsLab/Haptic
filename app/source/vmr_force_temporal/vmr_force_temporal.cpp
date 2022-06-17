@@ -779,6 +779,23 @@ void keyCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, 
         camera -> setMirrorVertical(mirroredDisplay);
     }
 
+    // // option - enable vmr
+    // else if (a_key == GLFW_KEY_V)
+    // {
+    //     vmrEnabled = !vmrEnabled;
+    //     setVrmEnabled(vmrEnabled);
+    // }
+
+    // // option - read & set variables
+    // else if (a_key == GLFW_KEY_S)
+    // {
+    //     getVariables(input, mod_time, variables);
+    //     setVariables();
+    //     center -> setEnabled(true);
+    //     target -> m_material -> setRedDark();
+    //     target -> setEnabled(true);
+    // }
+
 }
 
 //------------------------------------------------------------------------------
