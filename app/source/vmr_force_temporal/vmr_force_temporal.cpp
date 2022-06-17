@@ -320,6 +320,16 @@ void setVrmEnabled(bool vmrEnabled)
         vmrCameraPosition = vmrLookAt + localCameraPosition;
         camera -> set(vmrCameraPosition, vmrLookAt, vmrUpVector);
         light -> setDir(vmrUpVector);
+        createDelimiterBox(
+            world,
+            maxStiffness,
+            centerPosition,
+            delimiterBox1,
+            delimiterBox2,
+            delimiterBox3,
+            delimiterBox4,
+            60.0
+        );
     }
     else 
     {
@@ -328,6 +338,16 @@ void setVrmEnabled(bool vmrEnabled)
         vmrCameraPosition = vmrLookAt + localCameraPosition;
         camera -> set(vmrCameraPosition, vmrLookAt, vmrUpVector);
         light -> setDir(vmrUpVector);
+        createDelimiterBox(
+            world,
+            maxStiffness,
+            centerPosition,
+            delimiterBox1,
+            delimiterBox2,
+            delimiterBox3,
+            delimiterBox4,
+            0.0
+        );
     }
 }
 

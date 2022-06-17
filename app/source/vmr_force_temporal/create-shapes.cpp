@@ -67,26 +67,69 @@ void createShapes(
     blackHole->m_material->setStiffness(0.5 * maxStiffness);
     blackHole -> setEnabled(false);
 
+    createDelimiterBox(
+        world,
+        maxStiffness,
+        centerPosition,
+        delimiterBox1,
+        delimiterBox2,
+        delimiterBox3,
+        delimiterBox4,
+        0.0
+    );
+}
 
+void createDelimiterBox(
+    cWorld*& world,
+    double& maxStiffness,
+    cVector3d& centerPosition,
+    cShapeBox*& delimiterBox1,
+    cShapeBox*& delimiterBox2,
+    cShapeBox*& delimiterBox3,
+    cShapeBox*& delimiterBox4,
+    double rotation
+    )
+{
     // SHAPE - DELIMITER
     double x = 0.7;
     double y = 1.0;
     double z = 1;
+    world->removeChild(delimiterBox1);
+    world->removeChild(delimiterBox2);
+    world->removeChild(delimiterBox3);
+    world->removeChild(delimiterBox4);
 
-    
     delimiterBox1 = new cShapeBox(2*x, 0.05, 0.1);//izquierda
-    delimiterBox1 -> setLocalPos(0, -y, 0);
     delimiterBox2 = new cShapeBox(2*x, 0.05, 0.1);//derecha
-    delimiterBox2 -> setLocalPos(0, y, 0);
     delimiterBox3 = new cShapeBox(0.05, 2*y, 0.1);//arriba
-    delimiterBox3 -> setLocalPos(-x, 0, 0);
     delimiterBox4 = new cShapeBox(0.05, 2*y, 0.1);//abajo
-    delimiterBox4 -> setLocalPos(x, 0, 0);
 
     world->addChild(delimiterBox1);
     world->addChild(delimiterBox2);
     world->addChild(delimiterBox3);
     world->addChild(delimiterBox4);
+
+    cVector3d pos1 = cVector3d(0, -y, 0);
+    cVector3d pos2 = cVector3d(0, y, 0);
+    cVector3d pos3 = cVector3d(-x, 0, 0);
+    cVector3d pos4 = cVector3d(x, 0, 0);
+    if (rotation != 0.0)
+    {
+        pos1 = rotateVectorAroundCenter(pos1, centerPosition, rotation);
+        pos2 = rotateVectorAroundCenter(pos2, centerPosition, rotation);
+        pos3 = rotateVectorAroundCenter(pos3, centerPosition, rotation);
+        pos4 = rotateVectorAroundCenter(pos4, centerPosition, rotation);
+
+        delimiterBox1 -> rotateAboutGlobalAxisDeg(0, 0, 1, rotation);
+        delimiterBox2 -> rotateAboutGlobalAxisDeg(0, 0, 1, rotation);
+        delimiterBox3 -> rotateAboutGlobalAxisDeg(0, 0, 1, rotation);
+        delimiterBox4 -> rotateAboutGlobalAxisDeg(0, 0, 1, rotation);
+    }
+
+    delimiterBox1 -> setLocalPos(pos1);
+    delimiterBox2 -> setLocalPos(pos2);
+    delimiterBox3 -> setLocalPos(pos3);
+    delimiterBox4 -> setLocalPos(pos4);
 
     delimiterBox1->createEffectSurface();
     delimiterBox2->createEffectSurface();
@@ -97,7 +140,6 @@ void createShapes(
     delimiterBox2->m_material->setStiffness(0.5 * maxStiffness);
     delimiterBox3->m_material->setStiffness(0.5 * maxStiffness);
     delimiterBox4->m_material->setStiffness(0.5 * maxStiffness);
-   
 }
 
 void changeTargetPosition(
@@ -107,9 +149,20 @@ void changeTargetPosition(
     double& angle
     )
 {
+    target->setLocalPos(
+        rotateVectorAroundCenter(firstTargetPosition, centerPosition, angle)
+        );
+}
+
+cVector3d rotateVectorAroundCenter(
+    cVector3d vector,
+    cVector3d centerPosition,
+    double angle
+)
+{
     cMatrix3d rot;
     rot.identity();
     rot.rotateAboutLocalAxisDeg(0,0,1,angle);
-    cVector3d new_pos = rot * (firstTargetPosition - centerPosition);
-    target->setLocalPos(centerPosition + new_pos);
+    cVector3d new_pos = rot * (vector - centerPosition) + centerPosition;
+    return new_pos;
 }

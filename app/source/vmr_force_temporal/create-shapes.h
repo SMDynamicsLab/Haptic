@@ -17,10 +17,25 @@ void createShapes(
     chai3d::cShapeBox*& delimiterBox3,
     chai3d::cShapeBox*& delimiterBox4
     );
+void createDelimiterBox(
+    chai3d::cWorld*& world,
+    double& maxStiffness,
+    chai3d::cVector3d& centerPosition,
+    chai3d::cShapeBox*& delimiterBox1,
+    chai3d::cShapeBox*& delimiterBox2,
+    chai3d::cShapeBox*& delimiterBox3,
+    chai3d::cShapeBox*& delimiterBox4,
+    double angle
+    );
 void changeTargetPosition(
     chai3d::cShapeSphere*& target, 
     chai3d::cVector3d& firstTargetPosition,
     chai3d::cVector3d& centerPosition,
     double& angle
+    );
+chai3d::cVector3d rotateVectorAroundCenter(
+    chai3d::cVector3d vector,
+    chai3d::cVector3d centerPosition,
+    double angle
     );
 #endif 
