@@ -181,7 +181,7 @@ void setVariables()
     setSound(sound);
 
     forceType = variables[4];
-    if (forceType == 0)
+    if (forceType != 0)
     {
         forceEnabled = true;
     }
