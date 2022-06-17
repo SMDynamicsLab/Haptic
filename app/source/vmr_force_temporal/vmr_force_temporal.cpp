@@ -103,7 +103,7 @@ string input;
 string output;
 
 // Camera Settings
-cVector3d localPosition = cVector3d(0.0, 0.0, 2.0); // camera position (eye)
+cVector3d localCameraPosition = cVector3d(0.0, 0.0, 2.0); // camera position (eye)
 cVector3d localLookAt = cVector3d(0.0, 0.0, 0.0); // lookat position (target)
 cVector3d localUp = cVector3d(-1.0, 0.0, 0.0); // direction of the (up) vector
 
@@ -158,6 +158,10 @@ cVector3d graphic_position;
 bool vmrEnabled = false;
 cMatrix3d vmrRotation;
 cVector3d vmrUpVector;
+cVector3d vmrLookAt;
+cVector3d vmrCameraPosition;
+
+
 void setVrmEnabled(bool vmrEnabled); 
 
 // Delimiter lines
@@ -312,13 +316,17 @@ void setVrmEnabled(bool vmrEnabled)
     if (vmrEnabled)
     {   
         setVrmUpVector(60);
-        camera -> set(localPosition, localLookAt, vmrUpVector);
+        vmrLookAt = rotateVectorAroundCenter(localLookAt, centerPosition, 60);
+        vmrCameraPosition = vmrLookAt + localCameraPosition;
+        camera -> set(vmrCameraPosition, vmrLookAt, vmrUpVector);
         light -> setDir(vmrUpVector);
     }
     else 
     {
         setVrmUpVector(0);
-        camera -> set(localPosition, localLookAt, vmrUpVector);
+        vmrLookAt = rotateVectorAroundCenter(localLookAt, centerPosition, 0);
+        vmrCameraPosition = vmrLookAt + localCameraPosition;
+        camera -> set(vmrCameraPosition, vmrLookAt, vmrUpVector);
         light -> setDir(vmrUpVector);
     }
 }
@@ -426,7 +434,7 @@ int main(int argc, char* argv[])
     world -> addChild(camera);
     
     // position and orient the camera
-    camera -> set(localPosition, localLookAt, localUp);
+    camera -> set(localCameraPosition, localLookAt, localUp);
 
     camera -> setUseMultipassTransparency(true);
 
@@ -551,7 +559,6 @@ int main(int argc, char* argv[])
 
     // start the haptic tool
     tool -> start();
-    setVrmEnabled(vmrEnabled);
 
     //--------------------------------------------------------------------------
     // SETUP AUDIO MATERIAL
@@ -649,7 +656,7 @@ int main(int argc, char* argv[])
         delimiterBox4
         );
    
-
+    setVrmEnabled(vmrEnabled);
     //--------------------------------------------------------------------------
     // START SIMULATION
     //--------------------------------------------------------------------------
