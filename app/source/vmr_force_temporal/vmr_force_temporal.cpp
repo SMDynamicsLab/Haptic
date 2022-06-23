@@ -124,7 +124,7 @@ int blockN;
 int blockWaitTimeInMs = 30 * 1000;
 
 // Camera rotation (upside down)
-double cameraRotation = 0; // 0: normal, 180: upside down
+double cameraRotation = 180; // 0: normal, 180: upside down
 
 // Temporal variables
 bool soundShouldPlay = false;
