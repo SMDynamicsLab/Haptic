@@ -296,3 +296,11 @@ En el msj de la pantalla
 * Marcar lugar de los pies del sujeto durante la demo
 * graficar posición en función del tiempo
 * revisar vel media sabrina y nico/rodri
+
+
+demo: que sea con todos los objetos prendidos y que hagan beep al tocarlos y demas  y cuando el sujeto este listo para arrancar el mini exp que apriete el click del aparato y ahi entra en modo normal 
+- que demo sea un parametro del ejecutable? o que lo identifique segun el nombre del archivo 
+- los objetos prendidos, si pasas mucho rato en el centro hace beep beep, si salis del centro hace beep, si entras al target hace beep, si tocas el borde hace sonido de error 
+- que al clickear en el boton del aparato termine la demo 
+
+- probar con y sin la fza viscosa del mundo

@@ -170,6 +170,11 @@ cShapeBox* delimiterBox2;
 cShapeBox* delimiterBox3;
 cShapeBox* delimiterBox4;
 
+// DEMO
+bool demoEnabled = false;
+bool userSwitch;
+bool isDemo = false;
+
 int randNum(int min, int max)
 {
     int num = rand()%(max-min + 1) + min;
@@ -372,6 +377,13 @@ int main(int argc, char* argv[])
     input = argv[1];
     output = argv[2];
     summaryOutputFile = output.substr(0, output.find_last_of(".")) + "-times-summary.csv";
+
+    if (input.find("_d_") != string::npos) {
+        cout << "This is a DEMO" << endl;
+        demoEnabled = true;
+        isDemo = true;
+        trialPhase = 7; // DEMO PLAYGROUND
+    }
 
     cout << "C++: Input file is "<< input << endl;
     cout << "C++: Output file is "<< output << endl;
@@ -656,8 +668,8 @@ int main(int argc, char* argv[])
     // create some viscous environment
     cEffectViscosity* viscosity = new cEffectViscosity(world);
     world -> addEffect(viscosity);
-
     world -> m_material -> setViscosity(0.5 * maxDamping);
+
     createShapes(
         world, 
         base, 
@@ -1036,7 +1048,7 @@ void updateHaptics(void)
                     startTrialPhase(trialPhase); // GO TO CENTER
                     
                 }
-                else if (tool -> isInContact(delimiterBox1) ||tool -> isInContact(delimiterBox2) ||tool -> isInContact(delimiterBox3) ||tool -> isInContact(delimiterBox4))
+                else if (tool -> isInContact(delimiterBox1) || tool -> isInContact(delimiterBox2) || tool -> isInContact(delimiterBox3) || tool -> isInContact(delimiterBox4))
                 {   
                     labelText = "Fuera de zona, intenta de nuevo";
                     trialSuccess = false;
@@ -1088,6 +1100,59 @@ void updateHaptics(void)
                 if (timeSinceWaitStartedInMs > totalWaitDurationInMs) // TRIAL SUCCESFUL / WAITING FOR NEXT TRIAL
                 {
                     glfwSetWindowShouldClose(window, GLFW_TRUE);
+                }
+            break;
+            case 7: // DEMO
+                if (demoEnabled)
+                {
+                    if (tool -> isInContact(target)) //Tool is in contact with target
+                    {
+                        target -> m_material -> setGreenDark();
+                        center -> m_material -> setBlueAqua();
+                    }
+                    else if (tool -> isInContact(center)) //Tool is in contact with center
+                    {
+                        center -> m_material -> setGreenDark();
+                        target -> m_material -> setRedDark();
+                    }
+                    else
+                    {
+                        target -> m_material -> setRedDark();
+                        center -> m_material -> setBlueAqua();
+                    }
+
+                    timeSinceWaitStartedInMs = clockWaitTime.stop() * 1000;
+                    clockWaitTime.start();
+
+                    if (timeSinceWaitStartedInMs > totalWaitDurationInMs)
+                    {
+                        if (tool -> isInContact(delimiterBox1) || tool -> isInContact(delimiterBox2) || tool -> isInContact(delimiterBox3) || tool -> isInContact(delimiterBox4))
+                        {
+                            clockWaitTime.reset(); // restart the clock
+                            audioSourceFailure -> play();
+                        }
+                        else if (tool -> isInContact(target)) //Tool is in contact with target
+                        {
+                            clockWaitTime.reset(); // restart the clock
+                            audioSourceBeep -> play();
+                        }
+                        else if (tool -> isInContact(center)) //Tool is in contact with center
+                        {
+                            clockWaitTime.reset(); // restart the clock
+                            audioSourceBeepBeep -> play();
+                        }
+                    }
+                    bool userSwitch = tool->getUserSwitch(0);
+                    if (userSwitch) // Click del usuario en el boton del aparato
+                    {
+                        cout << "userSwitch " << userSwitch << endl;
+                        demoEnabled = false;
+                    }
+                }
+                else
+                {
+                    trialPhase = 0;
+                    startTrialPhase(trialPhase);
                 }
             break;
             default:
@@ -1146,7 +1211,7 @@ void startTrialPhase(int phase)
             target -> m_material -> setRedDark();
 
             totalTrialDurationInMs = 2000; 
-            labelText = "Reproducir sonido escuchado";
+            labelText = "Reproducir intervalo escuchado";
             break;
         case 3: // HOLD TARGET AFTER TRIAL
             forceEnabled = false;
@@ -1206,9 +1271,25 @@ void startTrialPhase(int phase)
             tool -> setShowEnabled(false);
             center -> setEnabled(false);
             target -> setEnabled(false);
-            labelText = "Experimento terminado. Gracias!";
+            if (!isDemo)
+            {
+                labelText = "Experimento terminado. Gracias!";
+            }
+            else
+            {
+                labelText = "Demo terminada. Gracias!";
+            }
             audioSourceFinished -> play();
-        break;
+            break;
+        case 7: // DEMO PLAYGROUND
+            clockWaitTime.reset(); // restart the clock
+            totalWaitDurationInMs = 1000; // 1s
+            demoEnabled = true;
+            center -> setEnabled(true);
+            target -> setEnabled(true);
+            setSound(1); // sonido del beep beep
+            labelText = "Mover el cursor e interactuar con objetos.";
+            break;
         default:
             cout << "C++: Invalid phase " << phase << endl;  
     }
