@@ -81,34 +81,50 @@ def analisis_datos():
         file = files_dict[sujeto]["file"]
         file_summary = file.replace(".csv", "-times-summary.csv")
         files_dict[sujeto]["file_summary"] = files_dict[sujeto]["file"].replace(".csv", "-times-summary.csv")
+        
         # Create paths
         file_path = os.path.join(path, files_dict[sujeto]["path"])
         files_dict[sujeto]["file_path"] = file_path
         file = os.path.join(file_path, file)
         file_summary = os.path.join(file_path, file_summary)
+        
         # Read csvs
         df = pd.read_csv(file, names=columns, index_col=False)
         df_summary = pd.read_csv(file_summary, names=columns_summary, index_col=False)
+        
         # Add metadata about subject
         df["sujeto"] = sujeto
         df_summary["sujeto"] = sujeto
+
+        # Add successful trial number to df_summary
+        df_summary.sort_values(by=['trial'], inplace=True)
+        df_summary.loc[df_summary.trialSuccess == 1, 'trialSuccessN'] = [i+1 for i in range(len(df_summary[df_summary.trialSuccess == 1]))]
+        df_summary.loc[df_summary.trialSuccess == 0, 'trialSuccessN'] = 0
+        df_summary.trialSuccessN = df_summary.trialSuccessN.astype(int)
+
         # Calculate metrics
         grouped_block = df.groupby(block_vars)
         for (vmr, blockN, sound, force_type), block_group in grouped_block:
             block_group = block_group[block_group.trialSuccess == 1]
             grouped_trial = block_group.groupby(trial_vars)
             for (trial, angle, trialSuccess), group in grouped_trial:
-                print(f"sujeto {sujeto}, block {blockN}, trial {trial}")
+                print(f"sujeto {sujeto}, block {blockN}, trial {trial}, trialSuccessN {df_summary[df_summary.trial == trial].trialSuccessN.values[0]}")
+
+                # Keep only time between beeps
+                first_beep = float(df_summary.loc[df_summary.trial == trial, "first_beep"])
+                second_beep = float(df_summary.loc[df_summary.trial == trial, "second_beep"])
+                group.drop(group[group['timeMs'] < first_beep].index, inplace = True)
+                group.drop(group[group['timeMs'] > second_beep].index, inplace = True)
+                
                 # Calculate area errors
                 area_error, area_error_abs = calculate_error_area(group, angle)
                 df_summary.loc[df_summary.trial == trial, "area_error"] = area_error
                 df_summary.loc[df_summary.trial == trial, "area_error_abs"] = area_error_abs
+                
                 # Calculate distance
                 d = distance(group)
                 df_summary.loc[df_summary.trial == trial, "d"] = d
-                # Calculate time
-                dt = (group.timeMs.max() - group.timeMs.min())/1000
-                df_summary.loc[df_summary.trial == trial, "dt"] = dt
+                
                 # Calculate temporal metrics
                 first_beep = df_summary[df_summary.trial == trial]['first_beep']
                 second_beep = df_summary[df_summary.trial == trial]['second_beep']
@@ -128,11 +144,6 @@ if __name__ == "__main__":
     vertical_concat = pd.DataFrame()
     
     for sujeto in files_dict:
-        print(
-            sujeto,
-            len(files_dict[sujeto]["file_df"].trialSuccess == 1),
-            len(files_dict[sujeto]["file_summary_df"].trialSuccess == 1),
-            )
         file_path = files_dict[sujeto]["file_path"]
         file_analisis = files_dict[sujeto]["file"].replace(".csv", "-analisis.csv")
         file_analisis = os.path.join(file_path, file_analisis)
@@ -142,57 +153,3 @@ if __name__ == "__main__":
 
     vertical_concat.to_csv(os.path.join(path, "Merge_analisis.csv"),index=False)  
 
-import matplotlib.pyplot as plt
-
-file= os.path.join(path, "Merge_analisis.csv")
-df = pd.read_csv(file, index_col=False)
-# block_count = 5
-
-# fig, axs = plt.subplots(6, block_count, sharey='row')
-# fig.tight_layout()
-# from cycler import cycler
-# for ax in axs.flat:
-#     plt.setp(ax.get_xticklabels(), fontsize=8)
-#     plt.setp(ax.get_yticklabels(), fontsize=8)
-#     # ax.set_color_cycle([cm(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
-#     ax.set_prop_cycle(cycler(color=plt.get_cmap('tab20c').colors))
-
-
-# NUM_COLORS = 20
-# cm = plt.get_cmap('gist_rainbow')
-
-colors = ['pink',"b","g","r","c","m","y","k","w", "brown"]
-i = 0
-grouped_sujeto = df.groupby("sujeto")
-for sujeto, group_sujeto in grouped_sujeto:
-    
-    grouped_block = group_sujeto.groupby(block_vars)
-    for (vmr, blockN, sound, force_type), block_group in grouped_block:
-        # axs[0][blockN].plot(block_group.trial, block_group.area_error,label=sujeto)
-        # axs[1][blockN].plot(block_group.trial, block_group.area_error_abs,label=sujeto)
-        # axs[2][blockN].plot(block_group.trial, block_group.d,label=sujeto)
-        # axs[3][blockN].plot(block_group.trial, block_group.dt,label=sujeto)
-        # axs[4][blockN].plot(block_group.trial, block_group.reproduced_period,label=sujeto)
-        # axs[5][blockN].plot(block_group.trial, block_group.temporal_error,label=sujeto)
-
-        plt.plot(block_group.trial, block_group.temporal_error,color=colors[i])
-        plt.title("temporal_error")
-        plt.legend()
-    i+=1
-
-
-
-
-        
-
-plt.show()
-
-
-
-    
-    
-    
-
-# merge de todos los datos summary en un csv?
-# graficos de promedio
-# graficos de todos los sujetos juntos, cada uno en color distinto

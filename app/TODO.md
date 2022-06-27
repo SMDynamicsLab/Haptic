@@ -304,11 +304,12 @@ demo: que sea con todos los objetos prendidos y que hagan beep al tocarlos y dem
 - que al clickear en el boton del aparato termine la demo 
 
 - probar con y sin la fza viscosa del mundo
-
+---------------------
 
 !! revisar codido de erro de area absoluto 
-cortar los datos apenas "entra" en el target!! y recortar antes de que salga tambien (usando datos de summary first beep y second beep, chequear)
-grafico promedio + bandas std
-grafico promedio + sujetos grisados (+ bandas si es legible)
+cortar los datos apenas "entra" en el target!! y recortar antes de que salga tambien (usando datos de summary first beep y second beep, chequear) - ok
+grafico promedio + bandas std - ok
+grafico promedio + sujetos grisados (+ bandas si es legible) - ok
 para un unico sujeto (armar para todos) todas las metricas en calidad alta + promedio en metricas (y banda)
 en todos los graficos, agregar el intervalo reproducido
+----------------------
