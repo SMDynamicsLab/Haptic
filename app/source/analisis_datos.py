@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from plot.plot_error import calculate_error_area
 from plot.distance import distance
+
 path = "/home/Carolina/Documents/Personal/Tesis/Haptic/app/data/Datos vft"
 files_dict = {
     "vft_agusbarreto": {
@@ -79,6 +80,7 @@ def analisis_datos():
     for sujeto in files_dict:
         # Add files info to dict
         file = files_dict[sujeto]["file"]
+
         file_summary = file.replace(".csv", "-times-summary.csv")
         files_dict[sujeto]["file_summary"] = files_dict[sujeto]["file"].replace(".csv", "-times-summary.csv")
         
@@ -134,7 +136,7 @@ def analisis_datos():
                 second_beep = df_summary[df_summary.trial == trial]['second_beep']
                 period = df_summary[df_summary.trial == trial]['period']
                 reproduced_period = second_beep - first_beep
-                temporal_error = period - reproduced_period
+                temporal_error = reproduced_period - period
                 df_summary.loc[df_summary.trial == trial, "reproduced_period"] = reproduced_period
                 df_summary.loc[df_summary.trial == trial, "temporal_error"] = temporal_error
 
@@ -144,6 +146,7 @@ def analisis_datos():
 
 
 if __name__ == "__main__":
+    # Datos analizados en -analisis.csv
     analisis_datos()
     vertical_concat = pd.DataFrame()
     
@@ -154,6 +157,8 @@ if __name__ == "__main__":
         print(f"Output file is {file_analisis}")
         files_dict[sujeto]["file_summary_df"].to_csv(file_analisis,index=False)
         vertical_concat = pd.concat([vertical_concat, files_dict[sujeto]["file_summary_df"]], axis=0)
+    
+    vertical_concat.to_csv(os.path.join(path, "Merge_analisis.csv"),index=False) 
 
-    vertical_concat.to_csv(os.path.join(path, "Merge_analisis.csv"),index=False)  
+# from plot_analisis_datos import *
 

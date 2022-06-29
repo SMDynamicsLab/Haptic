@@ -36,13 +36,7 @@ def rotate_trial_data(trial_data, angle):
 
 
 def calculate_error_area(trial_data, angle):
-    print("PRE X ", [trial_data.iloc[0].x, trial_data.iloc[-1].x])
-    print("PRE Y ", [trial_data.iloc[0].y, trial_data.iloc[-1].y])
-    
     trial_data = rotate_trial_data(trial_data, angle)
-    
-    print("POST X ", [trial_data.iloc[0].x, trial_data.iloc[-1].x])
-    print("POST Y", [trial_data.iloc[0].y, trial_data.iloc[-1].y])
     x = [trial_data.iloc[0].x, trial_data.iloc[-1].x]
     y = [trial_data.iloc[0].y, trial_data.iloc[-1].y]
     coefficients = np.polyfit(x, y, 1)
