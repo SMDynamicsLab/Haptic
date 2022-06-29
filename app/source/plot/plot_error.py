@@ -6,20 +6,43 @@ from numpy.linalg import norm
 
 
 def rotate_trial_data(trial_data, angle):
+    if angle is 0:
+        return trial_data
+    elif angle is 180:
+        trial_data['x'] = -trial_data['x']
+        trial_data['y'] = -trial_data['y']
+        return trial_data
+
+    # Resto posicion del centro antes de rotarlo (alrededor del centro)
+    center_position = trial_data.iloc[0][['x', 'y', 'z']]
+    trial_data['x'] = trial_data['x'] - center_position['x']
+    trial_data['y'] = trial_data['y'] - center_position['y']
+    trial_data['z'] = trial_data['y'] - center_position['z']    
+    # Rotacion
     theta = math.radians(angle)  # 0 es arriba en la sim
     axis = [0, 0, 1]  # z
     axis = axis / norm(axis)
     rot = Rotation.from_rotvec(theta * axis)
     trial_data['pos_rot'] = [rot.apply([x, y, z]) for x, y, z in zip(trial_data.x, trial_data.y, trial_data.z)]
+    # Sumo el centro nuevamente
     trial_data['x'] = [x for [x, y, z] in trial_data.pos_rot]
     trial_data['y'] = [y for [x, y, z] in trial_data.pos_rot]
     trial_data['z'] = [z for [x, y, z] in trial_data.pos_rot]
+    trial_data['x'] = trial_data['x'] + center_position['x']
+    trial_data['y'] = trial_data['y'] + center_position['y'] 
+    trial_data['z'] = trial_data['y'] + center_position['z']
     trial_data.drop('pos_rot', axis=1, inplace=True)
     return trial_data
 
 
 def calculate_error_area(trial_data, angle):
+    print("PRE X ", [trial_data.iloc[0].x, trial_data.iloc[-1].x])
+    print("PRE Y ", [trial_data.iloc[0].y, trial_data.iloc[-1].y])
+    
     trial_data = rotate_trial_data(trial_data, angle)
+    
+    print("POST X ", [trial_data.iloc[0].x, trial_data.iloc[-1].x])
+    print("POST Y", [trial_data.iloc[0].y, trial_data.iloc[-1].y])
     x = [trial_data.iloc[0].x, trial_data.iloc[-1].x]
     y = [trial_data.iloc[0].y, trial_data.iloc[-1].y]
     coefficients = np.polyfit(x, y, 1)

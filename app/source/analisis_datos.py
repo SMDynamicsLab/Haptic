@@ -102,6 +102,10 @@ def analisis_datos():
         df_summary.loc[df_summary.trialSuccess == 0, 'trialSuccessN'] = 0
         df_summary.trialSuccessN = df_summary.trialSuccessN.astype(int)
 
+        # Fix coordinates (x to -x & *100)
+        df['x'] = -df['x']*100  # [cm]
+        df['y'] = df['y']*100   # [cm]
+
         # Calculate metrics
         grouped_block = df.groupby(block_vars)
         for (vmr, blockN, sound, force_type), block_group in grouped_block:
