@@ -312,4 +312,22 @@ grafico promedio + bandas std - ok
 grafico promedio + sujetos grisados (+ bandas si es legible) - ok
 para un unico sujeto (armar para todos) todas las metricas en calidad alta + promedio en metricas (y banda)
 en todos los graficos, agregar el intervalo reproducido
-----------------------
+
+---------------------- Reunion 29/6 -----------
+armar bandas con promedio + error standard en lugar de std
+armar un criterio uniforme de outlier sobre criterios de adaptacion (si adapta o no) => tirar todo el sujeto y rearmar el grafico de promedios 
+separar las trazas en el promedio o cambiar el color (label)
+otro dia de experimentos -> todo contrabalnceado primero vmr despues fuerza (demo en el mismo orden)
+repetir lo mismo con las medianas en lugar de los promedios
+
+
+Armar resumen: 5x1 achatadas 
+error signado espacial 
+error espacial abs
+distancia 
+error temporal 
+velocidad 
+- promedio + sujetos grisados
+- promedio + banda de error estandard
+- mediana + sujetos
+- version mediana + banda MAD
