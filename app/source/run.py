@@ -145,7 +145,8 @@ def vmr_get_variables(type='experiment', exp_choice=None):
         elif type is 'experiment':
             N = 30
 
-        for vmr, force_type in [(0,0),(0,1),(0,0),(1,0),(0,0)]:
+        # for vmr, force_type in [(0,0),(0,1),(0,0),(1,0),(0,0)]:
+        for vmr, force_type in [(0,0),(1,0),(0,0),(0,1),(0,0)]:
             if vmr:
                 positions_arr = [position + 1] # el + 1 es porque vmr gira
             else:

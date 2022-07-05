@@ -316,7 +316,6 @@ en todos los graficos, agregar el intervalo reproducido
 ---------------------- Reunion 29/6 -----------
 armar bandas con promedio + error standard en lugar de std
 armar un criterio uniforme de outlier sobre criterios de adaptacion (si adapta o no) => tirar todo el sujeto y rearmar el grafico de promedios 
-separar las trazas en el promedio o cambiar el color (label)
 otro dia de experimentos -> todo contrabalnceado primero vmr despues fuerza (demo en el mismo orden)
 repetir lo mismo con las medianas en lugar de los promedios
 
@@ -331,3 +330,12 @@ velocidad
 - promedio + banda de error estandard
 - mediana + sujetos
 - version mediana + banda MAD
+
+-------- Reunion 1/7
+- martes experimento contrabalanceado desde 9:30
+- graficar la rapidez media a lo largo del tiempo en un trial por milisegundo, para un sujeto usando colormap - 
+    - imagen para cada sujeto 
+    - uno para todos juntos en subplots 
+- arreglar lo del index que mean arranca en cero 
+- separar las trazas en el promedio o cambiar el color (label)
+- pensar en el codigo para reordenar cuando tengamos los sujetos contrabalanceados

@@ -1,1 +1,3 @@
 *.~lock*
+*/*/*out.csv
+*/*/*out-times-summary.csv

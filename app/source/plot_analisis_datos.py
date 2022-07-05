@@ -130,6 +130,7 @@ def axs_plot_sujetos(fig, axs, df, metrics, title="", color_choice = None, alpha
                 axs[subplot_i].plot(block_group.trialSuccessN, block_group[metric],color=color, alpha=alpha)
                 axs[subplot_i].set_title(metric, fontsize=5)
                 subplot_i += 1
+                
         color_i+=1
     plt.savefig(os.path.join(path, f"{title}.png") , dpi = 500)
 
@@ -139,9 +140,10 @@ def axs_plot_promedio(fig, axs, df, metrics, title="promedio"):
     subplot_i = 0
     for metric in metrics:
         avg_series = mean_df[metric]
-        axs[subplot_i].plot(np.arange(len(avg_series)), avg_series)
+        axs[subplot_i].plot((mean_df.index), avg_series)
         axs[subplot_i].set_title(metric, fontsize=5)
         subplot_i += 1     
+        
     plt.savefig(os.path.join(path, f"{title}.png") , dpi = 500)
 
 def axs_plot_bandas_std(fig, axs, df, metrics, title ="bandas_std"):
@@ -186,6 +188,7 @@ def axs_plot_mediana(fig, axs, df, metrics, title="mediana"):
         avg_series = median_df[metric]
         axs[subplot_i].plot(np.arange(len(avg_series)), avg_series)
         axs[subplot_i].set_title(metric, fontsize=5)
+        # axs[subplot_i].semilogy(base=10)
         subplot_i += 1     
     plt.savefig(os.path.join(path, f"{title}.png") , dpi = 500)
 
@@ -286,5 +289,10 @@ title = "Summary_mediana_banda_mad"
 fig, axs = create_axs(metrics)
 axs_plot_mediana(fig, axs, df, metrics, title=title)
 axs_plot_bandas_mad(fig, axs, df, metrics, title=title)
+print(f"Listo {title}")
+
+title = "Summary_mediana"
+fig, axs = create_axs(metrics)
+axs_plot_mediana(fig, axs, df, metrics, title=title)
 print(f"Listo {title}")
 # plt.show()
