@@ -5,6 +5,7 @@ from plot.distance import distance
 
 path = "/home/Carolina/Documents/Personal/Tesis/Haptic/app/data/Datos vft"
 files_dict = {
+    # DATOS 23/6/22
     "vft_agusbarreto": {
         "path": "vft_agusbarreto_",
         "file": "vft_agusbarreto_e_2022_06_23_09_33_48_out.csv"
@@ -44,6 +45,51 @@ files_dict = {
     "vft_yamila": {
         "path": "vft_yamila_",
         "file": "vft_yamila_e_2022_06_23_11_02_47_out.csv"
+        },
+    # DATOS 5/7/22
+    "vft_andy": {
+        "path": "vft_andy_",
+        "file": "vft_andy_e_2022_07_05_14_40_17_out.csv"
+        },
+    "vft_enzo": {
+        "path": "vft_enzo_",
+        "file": "vft_enzo_e_2022_07_05_11_42_33_out.csv"
+        },
+    "vft_gianni": {
+        "path": "vft_gianni_",
+        "file": "vft_gianni_e_2022_07_05_11_14_04_out.csv"
+        },
+    "vft_joaquin": {
+        "path": "vft_joaquin_",
+        "file": "vft_joaquin_e_2022_07_05_15_10_15_out.csv"
+        },
+    "vft_lucasg": {
+        "path": "vft_lucasg_",
+        "file": "vft_lucasg_e_2022_07_05_10_38_13_out.csv"
+        },
+    "vft_lucianagallo": {
+        "path": "vft_lucianagallo_",
+        "file": "vft_lucianagallo_e_2022_07_05_10_11_03_out.csv"
+        },
+    "vft_majo": {
+        "path": "vft_majo_",
+        "file": "vft_majo_e_2022_07_05_13_40_32_out.csv"
+        },
+    "vft_mariano": {
+        "path": "vft_mariano_",
+        "file": "vft_mariano_e_2022_07_05_13_09_19_out.csv"
+        },
+    "vft_martin": {
+        "path": "vft_martin_",
+        "file": "vft_martin_e_2022_07_05_14_09_05_out.csv"
+        },
+    "vft_rominadalessandro": {
+        "path": "vft_rominadalessandro_",
+        "file": "vft_rominadalessandro_e_2022_07_05_09_35_53_out.csv"
+        },
+    "vft_sebastian": {
+        "path": "vft_sebastian_",
+        "file": "vft_sebastian_e_2022_07_05_12_11_56_out.csv"
         },
 }
 
@@ -103,6 +149,30 @@ def analisis_datos():
         df_summary.loc[df_summary.trialSuccess == 1, 'trialSuccessN'] = [i+1 for i in range(len(df_summary[df_summary.trialSuccess == 1]))]
         df_summary.loc[df_summary.trialSuccess == 0, 'trialSuccessN'] = 0
         df_summary.trialSuccessN = df_summary.trialSuccessN.astype(int)
+
+        # Add successful trial number per block to df_summary
+        df_summary.sort_values(by=['trial'], inplace=True)
+        for blockN in df_summary.blockN.unique():
+            df_summary.loc[(df_summary.trialSuccess == 1) & (df_summary.blockN == blockN), 'blockTrialSuccessN'] = [i+1 for i in range(len(df_summary.loc[(df_summary.trialSuccess == 1) & (df_summary.blockN == blockN)]))]
+        df_summary.loc[df_summary.trialSuccess == 0, 'blockTrialSuccessN'] = 0
+        df_summary.blockTrialSuccessN = df_summary.blockTrialSuccessN.astype(int)
+
+        # Add trial label
+        df_summary.loc[df_summary.blockN == 0, 'blockName'] = "Adaptacion"
+        
+        if (df_summary.loc[df_summary.blockN == 1, "vmr"] == 1).all(axis=0):
+            df_summary.loc[df_summary.blockN == 1, 'blockName'] = "VMR"
+            df_summary.loc[df_summary.blockN == 2, 'blockName'] = "VMR-AfterEffects"
+        elif ((df_summary.loc[df_summary.blockN == 1, "force_type"] == 1).all(axis=0)):
+            df_summary.loc[df_summary.blockN == 1, 'blockName'] = "Force"
+            df_summary.loc[df_summary.blockN == 2, 'blockName'] = "Force-AfterEffects"
+            
+        if (df_summary.loc[df_summary.blockN == 3, "vmr"] == 1).all(axis=0):
+            df_summary.loc[df_summary.blockN == 3, 'blockName'] = "VMR"
+            df_summary.loc[df_summary.blockN == 4, 'blockName'] = "VMR-AfterEffects"
+        elif ((df_summary.loc[df_summary.blockN == 3, "force_type"] == 1).all(axis=0)):
+            df_summary.loc[df_summary.blockN == 3, 'blockName'] = "Force"
+            df_summary.loc[df_summary.blockN == 4, 'blockName'] = "Force-AfterEffects"
 
         # Fix coordinates (x to -x & *100)
         df['x'] = -df['x']*100  # [cm]

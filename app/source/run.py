@@ -259,6 +259,8 @@ def run_vmr_temporal(bin_file, input_file, output_file, plot_file=None, exp_choi
         time.sleep(5)
         if type == 'experiment':
             try:
+                # file_summary = output_file.replace(".csv", "-times-summary.csv")
+                # plot(output_file, plot_file, file_summary=file_summary)
                 plot(output_file, plot_file)
             except Exception as e:
                 print(f"Python: WARNING plot error: {str(e)}")

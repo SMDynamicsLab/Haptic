@@ -82,7 +82,30 @@ def plot_temporal_error(df_summary, df, blockN, trial_vars, axs, colors):
         axs[5][blockN].scatter(trial, temp_error, s=2, color=colors[trial - min_trial])
     axs[5][blockN].set_title('Error temporal [ms]', fontsize=5)
 
+def plot_rapidez(df_summary, df, blockN, trial_vars, axs, fig, colors):
+    fig.suptitle('Rapidez (por ms) [cm/s]')
+    print(f"plot_rapidez({blockN}, {trial_vars})")
+    # For line colors
+    min_trial = df.trial.min()
 
+    grouped_trial = df.groupby(trial_vars)
+    for (trial, angle, trialSuccess), group in grouped_trial:
+        group = filter_outside_beeps(group, df_summary, trial)
+        group["timeMsAbs"] = group.timeMs - group.timeMs.min()
+        bucket_size = 5 # ms
+        group["timeMsAbsBucket"] = (group.timeMsAbs // bucket_size).astype(int)
+        grouped_ms = group.groupby("timeMsAbsBucket")
+        time = []
+        v = []
+        for (timeMsAbsBucket), group_ms in grouped_ms:
+            d = distance(group_ms)
+            dt = (group_ms.timeMsAbs.max() - group_ms.timeMsAbs.min())/1000
+            if dt != 0:
+                time += [timeMsAbsBucket * bucket_size]
+                v += [d/dt]
+        axs[blockN].scatter(time, v, s=1, color=colors[trial - min_trial], alpha=0.25)
+    # axs[blockN].set_title('Rapidez (por ms) [cm/s]', fontsize=5)
+     
 
 def filter_hold_time(df, hold_time=500):
     filtered_df = df.copy()
@@ -163,9 +186,10 @@ def plot(output_file, plot_file=None, names=None, file_summary=None):
 
     if file_summary: 
         metrics_count = 6
+        fig2, axs2 = plt.subplots(block_count, 1, sharex='col', sharey='col')
     else:
         metrics_count = 5
-
+    
     fig, axs = plt.subplots(metrics_count, block_count, sharey='row')
     fig.tight_layout()
 
@@ -188,14 +212,21 @@ def plot(output_file, plot_file=None, names=None, file_summary=None):
         plot_area_errors(block_group, blockN, trial_vars, axs, colors, df_summary)
         plot_curve_distance_and_velocity(block_group, blockN, trial_vars, axs, colors, df_summary)
         if file_summary: 
-            plot_temporal_error(df_summary, block_group, blockN, trial_vars, axs, colors, )
+            plot_temporal_error(df_summary, block_group, blockN, trial_vars, axs, colors)
+            print("Start plot_rapidez")
+            plot_rapidez(df_summary, block_group, blockN, trial_vars, axs2, fig2, colors)
+            fig2.savefig(plot_file.replace(".png", "-rapidez.png"), dpi=500)
+
 
     if plot_file:
         print(f"Saving plot to {plot_file}")
-        plt.savefig(f'{plot_file}', dpi=500)
+        fig.savefig(f'{plot_file}', dpi=500)
+        if file_summary:
+            fig2.savefig(plot_file.replace(".png", "-rapidez.png"), dpi=500)
     else:
         print("Showing plot")
-        plt.show()
+        fig.show()
+        
 
 
    
