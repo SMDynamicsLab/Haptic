@@ -259,41 +259,54 @@ def axs_plot_bandas_mad(fig, axs, df, metrics, title ="bandas_mad"):
     plt.savefig(os.path.join(path, f"{title}.png") , dpi = 500)
 
 figure_offset = 0
+'''
 title = "sujetos"
 plot_sujetos(df, metrics, figure_offset, title=title, showLabel=True)
 print(f"Listo {title}")
 
-figure_offset = len(metrics)
-title = "promedio_y_bandas_std"
-plot_promedio(df, metrics, figure_offset, title=title)
-plot_bandas_std(df, metrics, figure_offset, title=title)
-print(f"Listo {title}")
-
-figure_offset = len(metrics) * 2
+figure_offset += len(metrics)
 title = "promedio_y_sujetos"
-plot_promedio(df, metrics, figure_offset, title=title)
 plot_sujetos(df, metrics, figure_offset, title=title, color_choice = 'grey', alpha=0.25)
+plot_promedio(df, metrics, figure_offset, title=title)
 print(f"Listo {title}")
 
-figure_offset = len(metrics) * 3
-title = "promedio_sujetos_y_bandas_std"
+figure_offset += len(metrics)
+title = "promedio_y_bandas_std"
+plot_bandas_std(df, metrics, figure_offset, title=title)
 plot_promedio(df, metrics, figure_offset, title=title)
+print(f"Listo {title}")
+
+figure_offset += len(metrics)
+title = "promedio_y_bandas_sem"
+plot_bandas_sem(df, metrics, figure_offset, title=title)
+plot_promedio(df, metrics, figure_offset, title=title)
+print(f"Listo {title}")
+
+figure_offset += len(metrics)
+title = "mediana_y_bandas_mad"
+plot_bandas_mad(df, metrics, figure_offset, title=title)
+plot_mediana(df, metrics, figure_offset, title=title)
+print(f"Listo {title}")
+
+figure_offset += len(metrics)
+title = "promedio_sujetos_y_bandas_std"
 plot_sujetos(df, metrics, figure_offset, title=title, color_choice = 'grey', alpha=0.25)
 plot_bandas_std(df, metrics, figure_offset, title=title)
+plot_promedio(df, metrics, figure_offset, title=title)
 print(f"Listo {title}")
 
-figure_offset = len(metrics) * 4
+figure_offset += len(metrics)
 title = "promedio_sujetos_y_bandas_sem"
-plot_promedio(df, metrics, figure_offset, title=title)
 plot_sujetos(df, metrics, figure_offset, title=title, color_choice = 'grey', alpha=0.25)
 plot_bandas_sem(df, metrics, figure_offset, title=title)
+plot_promedio(df, metrics, figure_offset, title=title)
 print(f"Listo {title}")
-
-figure_offset = len(metrics) * 5
-title = "mediana_sujetos_y_bandas_sem"
-plot_mediana(df, metrics, figure_offset, title=title)
+'''
+figure_offset += len(metrics)
+title = "mediana_sujetos_y_bandas_mad"
 plot_sujetos(df, metrics, figure_offset, title=title, color_choice = 'grey', alpha=0.25)
 plot_bandas_mad(df, metrics, figure_offset, title=title)
+plot_mediana(df, metrics, figure_offset, title=title)
 print(f"Listo {title}")
 
 
