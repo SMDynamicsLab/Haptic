@@ -339,3 +339,38 @@ velocidad
 - arreglar lo del index que mean arranca en cero 
 - separar las trazas en el promedio o cambiar el color (label)
 - pensar en el codigo para reordenar cuando tengamos los sujetos contrabalanceados
+
+
+---- reunion 12/7 ----
+Images para armar:
+- medida para descartar sujetos: 
+* dif entre promedio de ultimos vs primeros diez y ver los outliers (dif final - inicial / inicial)
+* para cada sujeto y bloque ver la distribuion de la diferencia y algunos van a quedar aislados hacia el lado final mayor q inicial o dif muy chica y ahi aplicar criterio de outlier convencional (1.5) boxplot pyploy tukey's fences con 1.5 
+armar boxplot ocn las metricas
+
+- ver impacto del contrabalanceo:
+graficar las medianas y bandas de los dos "sets" de sujetos (vmr-force y force-vmr) superpuestas
+
+- cambiar graficos summary, el titulo en el eje y en vez 
+
+- comparar las medianas entre vmr y fuerza (con sus bandas) tres paneles:
+* dist
+* err t
+* vel media 
+cada uno con las dos perturbaiones superpuestas y los respectivos aftereffects 
+
+- error de area, erro abs y err temp (summary)
+
+- para vmr y fuerza (el mejor sujeto que tenga, gran adaptacion y gran after effect) (el de vmr que haya hecho vmr primero) graficar una figura de 4 paneles con todos sus trials  (trayectorias) si queda muy enmarañado probar 1 cada 2, vmr y aftereffects del mismo sujeto
+
+- de un sujeto para vmr y uno para fuerza mostrar el error signado, abs y temporal de lo mismo que mostre en la figura anterior (dos imagenes)
+
+
+------ reunion 14/7
+criterio de outlier: no alcanza con tomar solo el cociente o el valor inicial/final 
+se toma sobre el error absoluto (temporal y de area) de los bloques de perturbacion
+el error final queda alto => outlier de final 
+
+si el error no baja pero el final es bajo => no se tira 
+
+al final tenemos que anonimizar todos los datos
