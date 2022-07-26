@@ -374,3 +374,31 @@ el error final queda alto => outlier de final
 si el error no baja pero el final es bajo => no se tira 
 
 al final tenemos que anonimizar todos los datos
+
+----------------- analisis de outliers 
+
+
+              sujeto blockName              metric      slope  mean_last_half    outlier_type
+6   vft_gabrielgoren     Force      area_error_abs   0.279091        3.696987           slope => el error aumenta
+31        vft_lucasg       VMR      area_error_abs  -0.246975       10.357550  mean_last_half => se adapta a una curva
+77       vft_mariano       VMR  temporal_error_abs  11.179279       48.760600           slope => tiene dos puntos altos en lo temporal
+44  vft_ayelensantos     Force  temporal_error_abs -27.664768      217.376333  mean_last_half => ultimos trials se dispersan
+62        vft_yamila     Force  temporal_error_abs -12.893364      430.809533  mean_last_half => ultimos trials se dispersan
+69  vft_gabrielgoren       VMR  temporal_error_abs -21.190593      341.885800  mean_last_half => tiene dos puntos altos en lo temporal
+83        vft_yamila       VMR  temporal_error_abs -31.218546      275.796400  mean_last_half => tiene un punto altos en lo temporal
+
+=> el calculo de la pendiente y de la segunda mitad hay que cambiarlos a una metrica mas robusta para que 1 o 2 trials malos no descarten al sujeto 
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.siegelslopes.html
+=> hacerlo iterativo 
+=> descartar unicamente los que queden sobre la media y no los de debajo
+
+-----
+armar listado de figuras mas detallado y con los nombres 
+1, 2- sujeto vmr/force
+2.b slope y mediana de los dos sujetos, las 2 metircas de outlier
+3- outliers y criterios 
+4- summary mediana + mad  - errores (sin outliers)
+4b - contrabalanceo comparacion mismas metricas q 4 distinguido por orden 
+5- summary d, err temp y vel  (sin outliers)
+6- comparacion entre vmr y fuerza  (sin outliers)
+7-

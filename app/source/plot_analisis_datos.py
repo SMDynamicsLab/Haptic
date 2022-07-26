@@ -18,7 +18,7 @@ metrics = [
     'velocidad_media'
 ]
 df['velocidad_media'] = df['d'] / df['reproduced_period']
-
+df['temporal_error_abs'] = df['temporal_error'].abs()
 
 # Agregar offset segun el tipo de trial (vmr, vmr aftereffects, etc) para generar el eje x
 blockNamesOffset = {
@@ -271,31 +271,64 @@ def axs_plot_bandas_mad(fig, axs, df, metrics, title ="bandas_mad", color=None):
             subplot_i += 1  
     plt.savefig(os.path.join(path, f"{title}.png") , dpi = 500)
 
-
+from scipy import stats
+from matplotlib.cbook import boxplot_stats
+import seaborn as sns
 def axs_boxplot_diferencias(fig, axs, df, metrics, title="boxplot_diferencias"):
-    fig.suptitle(title)
+    # fig.suptitle(f"{title}-mean_last_half")
+    fig.suptitle(f"{title}-slope")
     subplot_row = 0
+    new_df = pd.DataFrame(columns = ['sujeto', 'blockName', 'metric', 'slope', 'slope_robust', 'mean_last_half', 'median_last_half'])
+    outliers_df = new_df.copy()
     for metric in metrics:
-        data = []
-        labels = []
         grouped_blockName = df.groupby("blockName")
         for blockName, group_blockName in grouped_blockName:
-            first_ten_trials = group_blockName[group_blockName['blockTrialSuccessN'] <= 10]
-            last_ten_trials = group_blockName[group_blockName['blockTrialSuccessN'] > 20]
-            mean_first_ten_trials = first_ten_trials.groupby("sujeto")[metric].mean() 
-            mean_last_ten_trials = last_ten_trials.groupby("sujeto")[metric].mean() 
-            # data += [(mean_last_ten_trials - mean_first_ten_trials) / mean_first_ten_trials]
-            data += [mean_first_ten_trials]
-            if metric == "temporal_error" and blockName == "Force-AfterEffects":
-                print("mean_first_ten_trials", mean_first_ten_trials)
-                print("mean_last_ten_trials", mean_last_ten_trials)
-                print(blockName, data[-1])
-            labels += [blockName]
-        axs[subplot_row].boxplot(data)
-        axs[subplot_row].set_ylabel(metric, fontsize=5)
+            if blockName in ["Force", "VMR"]:
+                block_data = []
+                grouped_sujeto = group_blockName.groupby("sujeto")
+                for sujeto, group_sujeto  in grouped_sujeto:
+                    first_half = group_sujeto[group_sujeto['blockTrialSuccessN'] <= 15]
+                    last_half = group_sujeto[group_sujeto['blockTrialSuccessN'] > 15]
+                    slope, intercept, r_value, p_value, std_err = stats.linregress(first_half['blockTrialSuccessN'], first_half[metric])
+                    slope_robust, intercept = stats.siegelslopes(first_half['blockTrialSuccessN'], first_half[metric])
+                    mean_last_half = last_half[metric].mean() 
+                    median_last_half = last_half[metric].median() 
+                    new_df.loc[len(new_df.index)] = [sujeto, blockName, metric, slope, slope_robust, mean_last_half, median_last_half]
+
+        
+        ax = axs[subplot_row]
         subplot_row += 1
-    axs[0].set_xticklabels(labels*len(metrics), rotation=45, fontsize=5) #for sharex='all
-    plt.savefig(os.path.join(path, f"{title}-mean_first_ten_trials.png") , dpi = 500)
+        data = new_df[new_df.metric == metric].copy()
+        sns.boxplot(ax=ax, x="blockName",y="slope_robust",data=data)
+        # sns.boxplot(ax=ax, x="blockName",y="mean_last_half",data=data)
+        ax.set_ylabel(metric, fontsize=5)
+        ax.set_xlabel("", fontsize=5)
+        
+        
+        # slope_robust outliers
+        for blockName in data['blockName'].unique():
+            outliers = boxplot_stats(data[data['blockName'] == blockName]['slope_robust'])[0]['fliers']
+            median = boxplot_stats(data[data['blockName'] == blockName]['slope_robust'])[0]['med']
+            print("slope", blockName, metric, len(outliers), "median: ", median)
+            for outlier in outliers:
+                if outlier > median:
+                    data.loc[(data['blockName'] == blockName) & (data['slope_robust'] == outlier), 'slope_robust_outlier'] = True
+                    outliers_df = outliers_df.append(data[(data['blockName'] == blockName) & (data['slope_robust'] == outlier)])
+        
+        # median_last_half outliers
+        for blockName in data['blockName'].unique():
+            outliers = boxplot_stats(data[data['blockName'] == blockName]['median_last_half'])[0]['fliers']
+            median = boxplot_stats(data[data['blockName'] == blockName]['slope_robust'])[0]['med']
+            print("slope", blockName, metric, len(outliers), "median: ", median)
+            for outlier in outliers:
+                if outlier > median:
+                    data.loc[(data['blockName'] == blockName) & (data['median_last_half'] == outlier), 'median_last_half_outlier'] = True
+                    outliers_df = outliers_df.append(data[(data['blockName'] == blockName) & (data['median_last_half'] == outlier)])
+
+    print(outliers_df)
+    new_df.to_csv(os.path.join(path, "Outlier_error_analisis.csv"), index=False)
+    # plt.savefig(os.path.join(path, f"{title}-mean_last_half.png") , dpi = 500)
+    plt.savefig(os.path.join(path, f"{title}-slope2.png") , dpi = 500)
     # TODO: anotate outliers https://stackoverflow.com/questions/40470175/boxplot-outliers-labels-python
 
  
@@ -422,12 +455,17 @@ fig, axs = create_axs(row_size=len(metrics), sharex='all')
 axs_plot_mediana(fig, axs, df, metrics, title=title)
 print(f"Listo {title}")
 # plt.show()
-'''
+
 title = "Boxplot_diferencias"
-fig, axs = create_axs(row_size=len(metrics), sharey='row', sharex='all')
-axs_boxplot_diferencias(fig, axs, df, metrics, title=title)
+metrics_outliers = [
+    'area_error_abs',
+    'temporal_error_abs',
+]
+fig, axs = create_axs(row_size=len(metrics_outliers), sharey='row', sharex='all')
+
+axs_boxplot_diferencias(fig, axs, df, metrics=metrics_outliers, title=title)
 print(f"Listo {title}")
-'''
+
 title = "comparacion_vmr_fuerza"
 metrics_comparacion = [
         'd',
@@ -453,7 +491,6 @@ axs_plot_bandas_mad(fig, axs, df, metrics=metrics_errores, title=title)
 axs_plot_mediana(fig, axs, df, metrics=metrics_errores, title=title)
 print(f"Listo {title}")
 
-
-# df_sujeto_vmr =  df[df.sujeto == "vft_sebastian"]
-# df_sujeto_force = df[df.sujeto == "vft_hilariob"]
 '''
+df_sujeto_vmr =  df[df.sujeto == "vft_sebastian"]
+df_sujeto_force = df[df.sujeto == "vft_hilariob"]
