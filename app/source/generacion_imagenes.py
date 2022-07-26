@@ -282,7 +282,7 @@ def plot_banda_sem_median(df_summary, title, fig, axs, metrics, color=None):
     grouped_block = df_summary.groupby(["blockName"])
     for (blockName), block_group in grouped_block:
         median_df = block_group.groupby("x_axis").median()
-        sem_df = block_group.groupby("x_axis").sem() * 1.5
+        sem_df = block_group.groupby("x_axis").sem() * 1.25
         subplot_i = 0
         for metric in metrics:
             ax = axs[subplot_i]
@@ -364,7 +364,7 @@ def plot_comparacion_vmr_fuerza(df_summary, title, metrics):
     df.x_axis = df.x_axis.astype(int)
     fig, axs = create_axs(row_size=len(metrics), sharex='all')
     plot_mediana(df, title, fig, axs, metrics, text_offset_vmr=0.25, text_offset=0.3)
-    plot_banda_mad(df, title, fig, axs, metrics)
+    plot_banda_sem_median(df, title, fig, axs, metrics)
 
 
 

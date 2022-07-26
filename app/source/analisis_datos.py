@@ -3,7 +3,7 @@ import pandas as pd
 from plot.plot_error import calculate_error_area
 from plot.distance import distance
 
-path = "/home/Carolina/Documents/Personal/Tesis/Haptic/app/data/Datos vft"
+path = "/home/Carolina/Documents/Personal/Tesis/Haptic/app/data/7. Datos vft"
 files_dict = {
     # DATOS 23/6/22
     "vft_agusbarreto": {
@@ -14,10 +14,10 @@ files_dict = {
         "path": "vft_ayelensantos_",
         "file": "vft_ayelensantos_e_2022_06_23_10_34_04_out.csv"
         },
-    "vft_caro": {
-        "path": "vft_caro_",
-        "file": "vft_caro_e_2022_06_17_17_03_21_out.csv"
-        },
+    # "vft_caro": {
+    #     "path": "vft_caro_",
+    #     "file": "vft_caro_e_2022_06_17_17_03_21_out.csv"
+    #     },
     "vft_constanza": {
         "path": "vft_constanza_",
         "file": "vft_constanza_e_2022_06_23_11_39_07_out.csv"
