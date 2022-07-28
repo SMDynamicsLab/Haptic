@@ -34,8 +34,8 @@ for blockName in df.blockName.unique():
 
 df.x_axis = df.x_axis.astype(int)
 
-def create_axs(row_size=1, col_size=1, sharex=False, sharey=False):
-    fig, axs = plt.subplots(row_size, col_size, sharex=sharex, sharey=sharey, constrained_layout=True)
+def create_axs(row_size=1, col_size=1, sharex=False, sharey=False, figsize=None):
+    fig, axs = plt.subplots(row_size, col_size, sharex=sharex, sharey=sharey, constrained_layout=True, figsize=figsize)
     for ax in axs.flat:
             plt.setp(ax.get_xticklabels(), fontsize=10)
             plt.setp(ax.get_yticklabels(), fontsize=10)
@@ -166,7 +166,7 @@ def plot_boxplot_pendiente_y_mediana(df, title):
     for metric in metrics:
         ax1 = axs[0][subplot_row]
         ax2 = axs[1][subplot_row]
-        
+
         subplot_row += 1
         data = new_df[new_df.metric == metric].copy()
         sns.boxplot(ax=ax1, x="blockName",y="slope",data=data, whis=1.5)
@@ -222,12 +222,12 @@ def sacar_outliers(df, outliers_dict):
     len_outliers = len(outliers_vmr) + len(outliers_force)
     return df_sin_outliers, len_outliers
 
-def plot_mediana(df_summary, title, fig, axs, metrics, color=None, text_offset_vmr=0, text_offset=0):
+def plot_mediana(df_summary, title, fig, axs, metrics, color=None, show_text=True, text_offset=0, global_text_color=None, blockName_key="blockName"):
     fig.suptitle(title)
     params = {}
-    # if color:
-    #     params["color"] = color    
-    grouped_block = df_summary.groupby(["blockName"])
+    if color:
+        params["color"] = color    
+    grouped_block = df_summary.groupby([blockName_key])
     for (blockName), block_group in grouped_block:
         median_df = block_group.groupby("x_axis").median()
         subplot_i = 0
@@ -236,17 +236,21 @@ def plot_mediana(df_summary, title, fig, axs, metrics, color=None, text_offset_v
             median_series = median_df[metric]
             line, = ax.plot(median_df.index, median_series, **params)
             # Nombres de los bloques en el grafico
-            x_text = np.mean(median_df.index)
-            max_y = df_summary.groupby("x_axis").median()[metric].max()
-            min_y = df_summary.groupby("x_axis").median()[metric].min()
-            if "VMR" in blockName:
-                y_text = max_y + (max_y - min_y) * (text_offset + text_offset_vmr)
-            else:
+            if show_text:
+                x_text = np.mean(median_df.index)
+                max_y = df_summary.groupby("x_axis").median()[metric].max()
+                min_y = df_summary.groupby("x_axis").median()[metric].min()
                 y_text = max_y + (max_y - min_y) * text_offset
-            ax.text(x_text, y_text, blockName, horizontalalignment='center', verticalalignment='top', fontsize=10, color=line.get_color())
+                if global_text_color:
+                    text_color = global_text_color
+                else:
+                    text_color = line.get_color()
+                ax.text(x_text, y_text, blockName, horizontalalignment='center', verticalalignment='top', fontsize=10, color=text_color)
             ax.set_xlabel('numero de trial', fontsize=10)
             ax.set_ylabel(metric.replace("_", " "), fontsize=10)            
             subplot_i += 1
+    
+
 
     plt.savefig(os.path.join(path, f"{title.replace(' ', '_')}.png") , dpi = 500)
 
@@ -277,8 +281,8 @@ def plot_banda_mad(df_summary, title, fig, axs, metrics, color=None):
 def plot_banda_sem_median(df_summary, title, fig, axs, metrics, color=None):
     fig.suptitle(title)
     params = {}
-    # if color:
-    #     params["color"] = color    
+    if color:
+        params["color"] = color    
     grouped_block = df_summary.groupby(["blockName"])
     for (blockName), block_group in grouped_block:
         median_df = block_group.groupby("x_axis").median()
@@ -297,7 +301,7 @@ def plot_banda_sem_median(df_summary, title, fig, axs, metrics, color=None):
             subplot_i += 1
     plt.savefig(os.path.join(path, f"{title.replace(' ', '_')}.png") , dpi = 500) 
 
-def plot_promedio(df_summary, title, fig, axs, metrics, color=None, text_offset_vmr=0, text_offset=0):
+def plot_promedio(df_summary, title, fig, axs, metrics, color=None, text_offset=0):
     fig.suptitle(title)
     params = {}
     # if color:
@@ -314,10 +318,7 @@ def plot_promedio(df_summary, title, fig, axs, metrics, color=None, text_offset_
             x_text = np.mean(mean_df.index)
             max_y = df_summary.groupby("x_axis").mean()[metric].max()
             min_y = df_summary.groupby("x_axis").mean()[metric].min()
-            if "VMR" in blockName:
-                y_text = max_y + (max_y - min_y) * (text_offset + text_offset_vmr)
-            else:
-                y_text = max_y + (max_y - min_y) * text_offset
+            y_text = max_y + (max_y - min_y) * text_offset
             ax.text(x_text, y_text, blockName, horizontalalignment='center', verticalalignment='top', fontsize=10, color=line.get_color())
             ax.set_xlabel('numero de trial', fontsize=10)
             ax.set_ylabel(metric.replace("_", " "), fontsize=10)            
@@ -348,24 +349,69 @@ def plot_banda_sem(df_summary, title, fig, axs, metrics, color=None):
             subplot_i += 1
     plt.savefig(os.path.join(path, f"{title.replace(' ', '_')}.png") , dpi = 500) 
 
+import matplotlib.patches as mpatches
+def plot_comparacion_condiciones(df_summary, title, metrics):
+    sujetos_vmr_primero = df_summary[(df_summary['trialSuccessN']==df_summary['x_axis']) & (df_summary['vmr']==1)].sujeto.unique()
+    df_sujetos_vmr_primero = df_summary[df_summary.sujeto.isin(sujetos_vmr_primero)]
+    len_sujetos_vmr_primero = len(df_sujetos_vmr_primero.sujeto.unique())
+    sujetos_force_primero = df_summary[(df_summary['trialSuccessN']!=df_summary['x_axis']) & (df_summary['vmr']==1)].sujeto.unique()
+    df_sujetos_force_primero = df_summary[df_summary.sujeto.isin(sujetos_force_primero)]
+    len_sujetos_force_primero = len(df_sujetos_force_primero.sujeto.unique())
+    fig, axs = create_axs(row_size=len(metrics), sharex='all', figsize=[6.4, 6.4*1.5])
 
-def plot_comparacion_vmr_fuerza(df_summary, title, metrics):
+    # Labels globales
+    red_patch = mpatches.Patch(color='red', label=f"sujetos fuerza primero ({len_sujetos_force_primero})")
+    blue_patch = mpatches.Patch(color='blue', label=f"sujetos vmr primero ({len_sujetos_vmr_primero})")
+    for ax in axs:
+        ax.legend(handles=[red_patch, blue_patch], loc='best', fontsize=5)    
+
+    # Datos
+    plot_mediana(df_sujetos_force_primero, title, fig, axs, metrics, show_text=False, color="red")
+    plot_banda_sem_median(df_sujetos_force_primero, title, fig, axs, metrics, color="red")
+    plot_mediana(df_sujetos_vmr_primero, title, fig, axs, metrics, show_text=True, global_text_color='black', color="blue")
+    plot_banda_sem_median(df_sujetos_vmr_primero, title, fig, axs, metrics, color="blue")
+
+def get_df_perturbacion(df_summary, outliers_dict, perturbacion, trials_adaptacion=10):
+    # Drop outliers y otros bloques
+    outliers = outliers_dict[perturbacion]
     df = df_summary.copy()
-    blockNamesOffset = {
-        "Adaptacion": 0,
-        "VMR": 30,
-        "VMR-AfterEffects": 60,
-        "Force": 30,
-        "Force-AfterEffects": 60,
-    }
-    for blockName in df.blockName.unique():
-        offset = blockNamesOffset[blockName]
-        df.loc[df.blockName == blockName, "x_axis"] = df.loc[df.blockName == blockName, "blockTrialSuccessN"] + offset 
-    df.x_axis = df.x_axis.astype(int)
-    fig, axs = create_axs(row_size=len(metrics), sharex='all')
-    plot_mediana(df, title, fig, axs, metrics, text_offset_vmr=0.25, text_offset=0.3)
-    plot_banda_sem_median(df, title, fig, axs, metrics)
+    sujetos = [sujeto for sujeto in df.sujeto.unique() if sujeto not in outliers]
 
+    indices_to_drop = []
+    indices_to_drop += list(df[df.sujeto.isin(outliers)].index)
+
+    for sujeto in sujetos:
+        df_sujeto = df_summary[df_summary.sujeto == sujeto]
+        blockN_perturbacion, = df_sujeto[df_sujeto.blockName == perturbacion].blockN.unique()
+        adaptacion, = df_sujeto[df_sujeto.blockN == blockN_perturbacion-1].blockName.unique()
+        aftereffects, = df_sujeto[df_sujeto.blockN == blockN_perturbacion+1].blockName.unique()
+        
+        df_sujeto_bloques_to_drop = df_sujeto[~(df_sujeto.blockName.isin([adaptacion, perturbacion, aftereffects]))]
+        indices_to_drop += list(df_sujeto_bloques_to_drop.index)
+
+        df_sujeto_adaptacion_to_drop = df_sujeto[(df_sujeto.blockName == adaptacion) & (df_sujeto.blockTrialSuccessN < (30-trials_adaptacion))]
+        indices_to_drop += list(df_sujeto_adaptacion_to_drop.index)
+
+        df.loc[(df.sujeto==sujeto) & (df.blockName == adaptacion), 'bloque_efectivo'] = 'adaptacion'
+        df.loc[(df.sujeto==sujeto) & (df.blockName == perturbacion), 'bloque_efectivo'] = 'perturbacion'
+        df.loc[(df.sujeto==sujeto) & (df.blockName == aftereffects), 'bloque_efectivo'] = 'aftereffects'
+
+
+    df = df.drop(indices_to_drop)
+
+    # Redefine x_axis
+    bloque_efectivo_offset = {
+        'adaptacion': -(30-trials_adaptacion),
+        'perturbacion': trials_adaptacion,
+        'aftereffects': trials_adaptacion+30,
+    }
+    for bloque_efectivo in df.bloque_efectivo.unique():
+        offset = bloque_efectivo_offset[bloque_efectivo]
+        df.loc[df.bloque_efectivo == bloque_efectivo, "x_axis"] = df.loc[df.bloque_efectivo == bloque_efectivo, "blockTrialSuccessN"] + offset 
+    df.x_axis = df.x_axis.astype(int)
+
+    return df
+        
 
 
 '''
@@ -423,7 +469,6 @@ plot_pendiente_y_mediana_sujeto(df_sujeto_vmr, title)
 
 title = "3b. Boxplot de pendiente y mediana"
 outliers_dict = plot_boxplot_pendiente_y_mediana(df, title)
-print(outliers_dict)
 df_sin_outliers, len_outliers = sacar_outliers(df, outliers_dict)
 
 
@@ -437,24 +482,35 @@ metrics = [
     'area_error_abs',
     'temporal_error',
 ]
-title = "4a. Errores - mediana y banda mad - sin outliers"
-fig, axs = create_axs(row_size=len(metrics), sharex='all')
-plot_mediana(df_sin_outliers, title, fig, axs, metrics)
-plot_banda_mad(df_sin_outliers, title, fig, axs, metrics)
+# title = "4a. Errores - mediana y banda mad - sin outliers"
+# fig, axs = create_axs(row_size=len(metrics), sharex='all')
+# plot_mediana(df_sin_outliers, title, fig, axs, metrics)
+# plot_banda_mad(df_sin_outliers, title, fig, axs, metrics)
 
 title = "4b. Errores - mediana y banda standard error median - sin outliers"
 fig, axs = create_axs(row_size=len(metrics), sharex='all')
 plot_mediana(df_sin_outliers, title, fig, axs, metrics)
 plot_banda_sem_median(df_sin_outliers, title, fig, axs, metrics)
 
-title = "4c. Errores - promedio y banda standard error mean - sin outliers"
-fig, axs = create_axs(row_size=len(metrics), sharex='all')
-plot_promedio(df_sin_outliers, title, fig, axs, metrics)
-plot_banda_sem(df_sin_outliers, title, fig, axs, metrics)
+# title = "4c. Errores - promedio y banda standard error mean - sin outliers"
+# fig, axs = create_axs(row_size=len(metrics), sharex='all')
+# plot_promedio(df_sin_outliers, title, fig, axs, metrics)
+# plot_banda_sem(df_sin_outliers, title, fig, axs, metrics)
+
 
 '''
-5. Comparacion de sujetos con condiciones contrabalanceadas (TODO)
+5. Comparacion de sujetos con condiciones contrabalanceadas - Errores
 '''
+title = "5. Comparacion de sujetos con condiciones contrabalanceadas"
+metrics = [
+    'area_error',
+    'area_error_abs',
+    'temporal_error',
+    'd',
+    'velocidad_media'
+]
+plot_comparacion_condiciones(df_sin_outliers, title, metrics)
+
 
 '''
 6a. Distancia, error temporal y velocidad - mediana y banda mad - sin outliers
@@ -466,27 +522,71 @@ metrics = [
     'temporal_error',
     'velocidad_media'
 ]
-title = "6a. Distancia, error temporal y velocidad - mediana y banda mad - sin outliers"
-fig, axs = create_axs(row_size=len(metrics), sharex='all')
-plot_mediana(df_sin_outliers, title, fig, axs, metrics)
-plot_banda_mad(df_sin_outliers, title, fig, axs, metrics)
+# title = "6a. Distancia, error temporal y velocidad - mediana y banda mad - sin outliers"
+# fig, axs = create_axs(row_size=len(metrics), sharex='all')
+# plot_mediana(df_sin_outliers, title, fig, axs, metrics)
+# plot_banda_mad(df_sin_outliers, title, fig, axs, metrics)
 
 title = "6b. Distancia, error temporal y velocidad - mediana y banda standard error median - sin outliers"
 fig, axs = create_axs(row_size=len(metrics), sharex='all')
 plot_mediana(df_sin_outliers, title, fig, axs, metrics)
 plot_banda_sem_median(df_sin_outliers, title, fig, axs, metrics)
 
-title = "6c. Distancia, error temporal y velocidad - promedio y banda standard error mean - sin outliers"
-fig, axs = create_axs(row_size=len(metrics), sharex='all')
-plot_promedio(df_sin_outliers, title, fig, axs, metrics)
-plot_banda_sem(df_sin_outliers, title, fig, axs, metrics)
+# title = "6c. Distancia, error temporal y velocidad - promedio y banda standard error mean - sin outliers"
+# fig, axs = create_axs(row_size=len(metrics), sharex='all')
+# plot_promedio(df_sin_outliers, title, fig, axs, metrics)
+# plot_banda_sem(df_sin_outliers, title, fig, axs, metrics)
 
 '''
-7a. Comparacion entre fuerza y vmr
-# TODO de adaptacion mostrar solo los ultimos 10 trials y agregar colores fijos
-# TODO vel media en lugar de periodo reproducido
-# TODO por cada perturbacion poner baseline (ult 10 trials), perturbacion y after effects todo con el mismo color
-# TODO num de trial dentor del bloque
+7a. Comparacion entre fuerza y vmr (10 trials)
+7b. Comparacion entre fuerza y vmr (15 trials)
+# TODO num de trial dentro del bloque
 '''
-title = "7a. Comparacion entre fuerza y vmr"
-plot_comparacion_vmr_fuerza(df_sin_outliers, title, metrics)
+title = "7a. Comparacion entre fuerza y vmr (10 trials)"
+df_vmr = get_df_perturbacion(df, outliers_dict, 'VMR', trials_adaptacion=10)
+df_force = get_df_perturbacion(df, outliers_dict, 'Force', trials_adaptacion=10)
+
+metrics = [
+    'area_error',
+    'area_error_abs',
+    'temporal_error',
+    'd',
+    'velocidad_media'
+]
+fig, axs = create_axs(row_size=len(metrics), sharex='all', figsize=[6.4, 6.4*1.5])
+# Labels globales
+red_patch = mpatches.Patch(color='purple', label=f"Fuerza")
+blue_patch = mpatches.Patch(color='green', label=f"VMR")
+for ax in axs:
+    ax.legend(handles=[red_patch, blue_patch], loc='best', fontsize=5)    
+
+plot_mediana(df_vmr, title, fig, axs, metrics, show_text=True, global_text_color='black', color="purple", blockName_key='bloque_efectivo')
+plot_banda_sem_median(df_vmr, title, fig, axs, metrics, color="purple")
+plot_mediana(df_force, title, fig, axs, metrics, show_text=False, color="green", blockName_key='bloque_efectivo')
+plot_banda_sem_median(df_force, title, fig, axs, metrics, color="green")
+
+
+title = "7b. Comparacion entre fuerza y vmr (15 trials)"
+df_vmr = get_df_perturbacion(df, outliers_dict, 'VMR', trials_adaptacion=15)
+df_force = get_df_perturbacion(df, outliers_dict, 'Force', trials_adaptacion=15)
+
+metrics = [
+    'area_error',
+    'area_error_abs',
+    'temporal_error',
+    'd',
+    'velocidad_media'
+]
+fig, axs = create_axs(row_size=len(metrics), sharex='all', figsize=[6.4, 6.4*1.5])
+# Labels globales
+red_patch = mpatches.Patch(color='purple', label=f"Fuerza")
+blue_patch = mpatches.Patch(color='green', label=f"VMR")
+for ax in axs:
+    ax.legend(handles=[red_patch, blue_patch], loc='best', fontsize=5)    
+
+plot_mediana(df_vmr, title, fig, axs, metrics, show_text=True, global_text_color='black', color="purple", blockName_key='bloque_efectivo')
+plot_banda_sem_median(df_vmr, title, fig, axs, metrics, color="purple")
+plot_mediana(df_force, title, fig, axs, metrics, show_text=False, color="green", blockName_key='bloque_efectivo')
+plot_banda_sem_median(df_force, title, fig, axs, metrics, color="green")
+
+
