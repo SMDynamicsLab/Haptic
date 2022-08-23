@@ -500,6 +500,7 @@ plot_banda_sem_median(df_sin_outliers, title, fig, axs, metrics)
 
 '''
 5. Comparacion de sujetos con condiciones contrabalanceadas - Errores
+TODO: separar vmr y fuerza (usar los dfs de 7.)
 '''
 title = "5. Comparacion de sujetos con condiciones contrabalanceadas"
 metrics = [
@@ -555,15 +556,15 @@ metrics = [
 ]
 fig, axs = create_axs(row_size=len(metrics), sharex='all', figsize=[6.4, 6.4*1.5])
 # Labels globales
-red_patch = mpatches.Patch(color='purple', label=f"Fuerza")
-blue_patch = mpatches.Patch(color='green', label=f"VMR")
+green_patch = mpatches.Patch(color='green', label=f"VMR")
+purple_patch = mpatches.Patch(color='purple', label=f"Fuerza")
 for ax in axs:
-    ax.legend(handles=[red_patch, blue_patch], loc='best', fontsize=5)    
+    ax.legend(handles=[green_patch, purple_patch], loc='best', fontsize=5)    
 
-plot_mediana(df_vmr, title, fig, axs, metrics, show_text=True, global_text_color='black', color="purple", blockName_key='bloque_efectivo')
-plot_banda_sem_median(df_vmr, title, fig, axs, metrics, color="purple")
-plot_mediana(df_force, title, fig, axs, metrics, show_text=False, color="green", blockName_key='bloque_efectivo')
-plot_banda_sem_median(df_force, title, fig, axs, metrics, color="green")
+plot_mediana(df_vmr, title, fig, axs, metrics, show_text=True, global_text_color='black', color="green", blockName_key='bloque_efectivo')
+plot_banda_sem_median(df_vmr, title, fig, axs, metrics, color="green")
+plot_mediana(df_force, title, fig, axs, metrics, show_text=False, color="purple", blockName_key='bloque_efectivo')
+plot_banda_sem_median(df_force, title, fig, axs, metrics, color="purple")
 
 
 title = "7b. Comparacion entre fuerza y vmr (15 trials)"
@@ -579,14 +580,102 @@ metrics = [
 ]
 fig, axs = create_axs(row_size=len(metrics), sharex='all', figsize=[6.4, 6.4*1.5])
 # Labels globales
-red_patch = mpatches.Patch(color='purple', label=f"Fuerza")
-blue_patch = mpatches.Patch(color='green', label=f"VMR")
+green_patch = mpatches.Patch(color='green', label=f"VMR")
+purple_patch = mpatches.Patch(color='purple', label=f"Fuerza")
 for ax in axs:
-    ax.legend(handles=[red_patch, blue_patch], loc='best', fontsize=5)    
+    ax.legend(handles=[green_patch, purple_patch], loc='best', fontsize=5)    
 
-plot_mediana(df_vmr, title, fig, axs, metrics, show_text=True, global_text_color='black', color="purple", blockName_key='bloque_efectivo')
-plot_banda_sem_median(df_vmr, title, fig, axs, metrics, color="purple")
-plot_mediana(df_force, title, fig, axs, metrics, show_text=False, color="green", blockName_key='bloque_efectivo')
-plot_banda_sem_median(df_force, title, fig, axs, metrics, color="green")
+plot_mediana(df_vmr, title, fig, axs, metrics, show_text=True, global_text_color='black', color="green", blockName_key='bloque_efectivo')
+plot_banda_sem_median(df_vmr, title, fig, axs, metrics, color="green")
+plot_mediana(df_force, title, fig, axs, metrics, show_text=False, color="purple", blockName_key='bloque_efectivo')
+plot_banda_sem_median(df_force, title, fig, axs, metrics, color="purple")
+
+# title = "8. Analisis de diferencias entre las perturbaciones"
+# plot_diferencias(df_vmr, df_force)
 
 
+'''
+from more_itertools import distinct_permutations
+
+# list(distinct_permutations(iterable)) da todas las combinaciones posibles
+# donde iterable es un array que contiene N veces "vmr" y M veces "force"
+
+for permutation in distinct_permutations(iterable):
+    # codigo
+
+df_force.bloque_efectivo.unique()
+df_vmr.bloque_efectivo.unique()
+df_force.columns
+
+len(df_force.sujeto.unique())
+len(df_vmr.sujeto.unique())
+
+
+import numpy as np
+n = 19 + 16
+k = 19
+
+np.math.factorial(n) / (np.math.factorial(k) * np.math.factorial(n-k))
+'''
+# @profile
+# run with 
+# kernprof -l generacion_imagenes.py; python3 -m line_profiler generacion_imagenes.py.lprof
+def slow_function(df_vmr, df_force):
+    import random
+    df_vmr['perturbacion'] = 'vmr'
+    df_force['perturbacion'] = 'force'
+    df_series_merged = pd.concat([df_vmr.copy(),df_force.copy()])
+    df_series_merged['serie'] = df_series_merged.sujeto + '-' + df_series_merged.perturbacion
+    lista_series = list(df_series_merged['serie'].unique()) 
+    len_vmr = len(df_vmr.sujeto.unique())
+    n = 10000
+
+    diferencias_dict = {}
+
+
+    median_vmr_original = df_vmr.sort_values('x_axis').groupby(['x_axis'])
+    median_force_original = df_force.sort_values('x_axis').groupby(['x_axis'])
+    for metric in metrics:
+        metric_median_vmr_original = median_vmr_original[metric].median()
+        metric_median_force_original = median_force_original[metric].median()
+        diferencias_originales_list = list(metric_median_vmr_original - metric_median_force_original)     
+        diferencias_dict[metric] = {}  
+        diferencias_dict[metric]['val'] = diferencias_originales_list
+        len_trials = len(diferencias_originales_list)
+        diferencias_dict[metric]['mayores'] = [0] * len_trials
+        diferencias_dict[metric]['menores'] = [0] * len_trials
+        diferencias_dict[metric]['iguales'] = [0] * len_trials
+        diferencias_dict[metric]['percentil'] = [0] * len_trials
+
+    for i in range(n):
+        if i%1000 == 0: print(f'{i}/{n}')
+        random.shuffle(lista_series)
+        vmr_ficticio = lista_series[0:len_vmr]
+        force_ficticio = lista_series[len_vmr:]
+        df_vmr_ficticio = df_series_merged[df_series_merged.serie.isin(vmr_ficticio)].sort_values('x_axis').groupby(['x_axis'])
+        df_force_ficticio = df_series_merged[df_series_merged.serie.isin(force_ficticio)].sort_values('x_axis').groupby(['x_axis'])
+        for metric in metrics:
+            metric_diferencia = list(df_vmr_ficticio[metric].median() - df_force_ficticio[metric].median())
+            for i in range(len(metric_diferencia)):
+                shuffle_val = metric_diferencia[i]
+                original_val = diferencias_dict[metric]['val'][i]
+                if original_val < shuffle_val:
+                    diferencias_dict[metric]['mayores'][i] += 1
+                elif original_val > shuffle_val:
+                    diferencias_dict[metric]['menores'][i] += 1
+                elif original_val == shuffle_val:
+                    diferencias_dict[metric]['iguales'][i] += 1
+    
+    df_diferencias = pd.DataFrame()
+    for metric in metrics:
+        mayores = diferencias_dict[metric]['mayores']
+        menores = diferencias_dict[metric]['menores']
+        iguales = diferencias_dict[metric]['iguales']
+        val = diferencias_dict[metric]['val']
+        for i in range(len_trials):
+            diferencias_dict[metric]['percentil'][i] = menores[i] / (mayores[i] + menores[i] + iguales[i]) * 100
+        df_diferencias[f'{metric}_val'] = val
+        df_diferencias[f'{metric}_percentile'] = diferencias_dict[metric]['percentil']
+    df_diferencias.to_csv(os.path.join(path, f"distribuciones_diferencias_new_{n}.csv"),index=True)
+
+slow_function(df_vmr, df_force)
