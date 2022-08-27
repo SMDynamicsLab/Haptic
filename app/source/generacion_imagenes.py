@@ -590,55 +590,34 @@ plot_banda_sem_median(df_vmr, title, fig, axs, metrics, color="green")
 plot_mediana(df_force, title, fig, axs, metrics, show_text=False, color="purple", blockName_key='bloque_efectivo')
 plot_banda_sem_median(df_force, title, fig, axs, metrics, color="purple")
 
-# title = "8. Analisis de diferencias entre las perturbaciones"
-# plot_diferencias(df_vmr, df_force)
 
-
-'''
-from more_itertools import distinct_permutations
-
-# list(distinct_permutations(iterable)) da todas las combinaciones posibles
-# donde iterable es un array que contiene N veces "vmr" y M veces "force"
-
-for permutation in distinct_permutations(iterable):
-    # codigo
-
-df_force.bloque_efectivo.unique()
-df_vmr.bloque_efectivo.unique()
-df_force.columns
-
-len(df_force.sujeto.unique())
-len(df_vmr.sujeto.unique())
-
-
-import numpy as np
-n = 19 + 16
-k = 19
-
-np.math.factorial(n) / (np.math.factorial(k) * np.math.factorial(n-k))
-'''
+import random
+from statsmodels.stats.multitest import fdrcorrection
 # @profile
-# run with 
-# kernprof -l generacion_imagenes.py; python3 -m line_profiler generacion_imagenes.py.lprof
-def slow_function(df_vmr, df_force):
-    import random
+# run with kernprof -l generacion_imagenes.py; python3 -m line_profiler generacion_imagenes.py.lprof
+def calculate_p_values_diferencias(df_vmr, df_force, csv_name='distribuciones_diferencias', n=100000):
+    filename = os.path.join(path, f"{csv_name}_{n}.csv")
+    if os.path.exists(filename):
+        df_diferencias = pd.read_csv(filename, index_col=True)
+        return df_diferencias
+
     df_vmr['perturbacion'] = 'vmr'
     df_force['perturbacion'] = 'force'
     df_series_merged = pd.concat([df_vmr.copy(),df_force.copy()])
     df_series_merged['serie'] = df_series_merged.sujeto + '-' + df_series_merged.perturbacion
     lista_series = list(df_series_merged['serie'].unique()) 
     len_vmr = len(df_vmr.sujeto.unique())
-    n = 10000
+    
 
     diferencias_dict = {}
-
 
     median_vmr_original = df_vmr.sort_values('x_axis').groupby(['x_axis'])
     median_force_original = df_force.sort_values('x_axis').groupby(['x_axis'])
     for metric in metrics:
         metric_median_vmr_original = median_vmr_original[metric].median()
         metric_median_force_original = median_force_original[metric].median()
-        diferencias_originales_list = list(metric_median_vmr_original - metric_median_force_original)     
+        diferencias_originales_list = list(metric_median_vmr_original - metric_median_force_original)  
+
         diferencias_dict[metric] = {}  
         diferencias_dict[metric]['val'] = diferencias_originales_list
         len_trials = len(diferencias_originales_list)
@@ -675,7 +654,59 @@ def slow_function(df_vmr, df_force):
         for i in range(len_trials):
             diferencias_dict[metric]['percentil'][i] = menores[i] / (mayores[i] + menores[i] + iguales[i]) * 100
         df_diferencias[f'{metric}_val'] = val
-        df_diferencias[f'{metric}_percentile'] = diferencias_dict[metric]['percentil']
-    df_diferencias.to_csv(os.path.join(path, f"distribuciones_diferencias_new_{n}.csv"),index=True)
+        percentil = diferencias_dict[metric]['percentil']
+        p_val = [perc/100 for perc in percentil]
+        p_val_corrected = fdrcorrection(p_val, method='poscorr')
+        df_diferencias[f'{metric}_percentil'] = percentil
+        df_diferencias[f'{metric}_p_val'] = p_val
+        df_diferencias[f'{metric}_p_val_corrected_bool'] = p_val_corrected[0]
+        df_diferencias[f'{metric}_p_val_corrected_val'] = p_val_corrected[1]        
 
-slow_function(df_vmr, df_force)
+    df_diferencias.to_csv(filename,index=True)
+    return df_diferencias
+
+
+
+title = "8. Analisis de diferencias entre las perturbaciones"
+def plot_diferencias_significativas_mediana(df_vmr, df_force, title, metrics, show_text=True, text_offset=0, blockName_key="bloque_efectivo"):
+    fig, axs = create_axs(row_size=len(metrics), sharex='all', figsize=[6.4, 6.4*1.5])
+    fig.suptitle(title)
+    blockNames = list(df_vmr[blockName_key].unique())
+
+    df_diferencias = calculate_p_values_diferencias(df_vmr, df_force, csv_name='distribuciones_diferencias')
+    df_diferencias_al_reves = calculate_p_values_diferencias(df_force, df_vmr, csv_name='distribuciones_diferencias_invertidas')
+
+    for blockName in blockNames:
+        block_vmr = df_vmr[df_vmr[blockName_key]==blockName].groupby("x_axis").median()
+        block_force = df_force[df_force[blockName_key]==blockName].groupby("x_axis").median()
+        block_median_diferencias = block_vmr - block_force
+        subplot_i = 0
+        for metric in metrics:
+            ax = axs[subplot_i]
+            median_series = block_median_diferencias[metric]
+            line, = ax.plot(block_median_diferencias.index, median_series)
+            # Nombres de los bloques en el grafico
+            if show_text:
+                x_text = np.mean(median_series.index)
+                max_y = df_diferencias[f'{metric}_val'].max()
+                min_y = df_diferencias[f'{metric}_val'].min()
+                y_text = max_y + (max_y - min_y) * text_offset
+                text_color = line.get_color()
+                ax.text(x_text, y_text, blockName, horizontalalignment='center', verticalalignment='top', fontsize=10, color=text_color)
+            ax.set_xlabel('numero de trial', fontsize=10)
+            ax.set_ylabel(metric.replace("_", " "), fontsize=10)
+            subplot_i += 1
+
+
+    subplot_i = 0
+    for metric in metrics:
+        ax = axs[subplot_i]
+        diferencias_significativas_metric = df_diferencias[df_diferencias[f'{metric}_p_val_corrected_bool']==True][f'{metric}_val']
+        diferencias_significativas_al_reves_metric = - df_diferencias_al_reves[df_diferencias_al_reves[f'{metric}_p_val_corrected_bool']==True][f'{metric}_val']
+        ax.scatter(diferencias_significativas_metric.index, diferencias_significativas_metric, color='green')
+        ax.scatter(diferencias_significativas_al_reves_metric.index, diferencias_significativas_al_reves_metric, color='red')
+        subplot_i += 1
+
+    plt.savefig(os.path.join(path, f"{title.replace(' ', '_')}.png") , dpi = 500)
+
+plot_diferencias_significativas_mediana(df_vmr, df_force, title, metrics)
