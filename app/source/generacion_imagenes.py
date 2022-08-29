@@ -621,10 +621,9 @@ def calculate_p_values_diferencias(df_vmr, df_force, csv_name='distribuciones_di
         diferencias_dict[metric] = {}  
         diferencias_dict[metric]['val'] = diferencias_originales_list
         len_trials = len(diferencias_originales_list)
-        diferencias_dict[metric]['mayores'] = [0] * len_trials
-        diferencias_dict[metric]['menores'] = [0] * len_trials
-        diferencias_dict[metric]['iguales'] = [0] * len_trials
-        diferencias_dict[metric]['percentil'] = [0] * len_trials
+        diferencias_dict[metric]['colas'] = [0] * len_trials
+        diferencias_dict[metric]['total'] = [0] * len_trials
+        diferencias_dict[metric]['p_val'] = [0] * len_trials
 
     for i in range(n):
         if i%1000 == 0: print(f'{i}/{n}')
@@ -638,26 +637,25 @@ def calculate_p_values_diferencias(df_vmr, df_force, csv_name='distribuciones_di
             for i in range(len(metric_diferencia)):
                 shuffle_val = metric_diferencia[i]
                 original_val = diferencias_dict[metric]['val'][i]
-                if original_val < shuffle_val:
-                    diferencias_dict[metric]['mayores'][i] += 1
-                elif original_val > shuffle_val:
-                    diferencias_dict[metric]['menores'][i] += 1
-                elif original_val == shuffle_val:
-                    diferencias_dict[metric]['iguales'][i] += 1
+
+                if np.abs(original_val) < shuffle_val:
+                    diferencias_dict[metric]['colas'][i] += 1
+
+                if -np.abs(original_val) > shuffle_val:
+                    diferencias_dict[metric]['colas'][i] += 1
+                
+                diferencias_dict[metric]['total'][i] += 1
     
     df_diferencias = pd.DataFrame()
     for metric in metrics:
-        mayores = diferencias_dict[metric]['mayores']
-        menores = diferencias_dict[metric]['menores']
-        iguales = diferencias_dict[metric]['iguales']
+        colas = diferencias_dict[metric]['colas']
+        total = diferencias_dict[metric]['total']
         val = diferencias_dict[metric]['val']
         for i in range(len_trials):
-            diferencias_dict[metric]['percentil'][i] = menores[i] / (mayores[i] + menores[i] + iguales[i]) * 100
+            diferencias_dict[metric]['p_val'][i] = colas[i] / total[i] 
         df_diferencias[f'{metric}_val'] = val
-        percentil = diferencias_dict[metric]['percentil']
-        p_val = [perc/100 for perc in percentil]
+        p_val = diferencias_dict[metric]['p_val']
         p_val_corrected = fdrcorrection(p_val, method='poscorr')
-        df_diferencias[f'{metric}_percentil'] = percentil
         df_diferencias[f'{metric}_p_val'] = p_val
         df_diferencias[f'{metric}_p_val_corrected_bool'] = p_val_corrected[0]
         df_diferencias[f'{metric}_p_val_corrected_val'] = p_val_corrected[1]        
@@ -674,7 +672,6 @@ def plot_diferencias_significativas_mediana(df_vmr, df_force, title, metrics, sh
     blockNames = list(df_vmr[blockName_key].unique())
 
     df_diferencias = calculate_p_values_diferencias(df_vmr, df_force, csv_name='distribuciones_diferencias')
-    df_diferencias_al_reves = calculate_p_values_diferencias(df_force, df_vmr, csv_name='distribuciones_diferencias_invertidas')
 
     for blockName in blockNames:
         block_vmr = df_vmr[df_vmr[blockName_key]==blockName].groupby("x_axis").median()
@@ -702,9 +699,7 @@ def plot_diferencias_significativas_mediana(df_vmr, df_force, title, metrics, sh
     for metric in metrics:
         ax = axs[subplot_i]
         diferencias_significativas_metric = df_diferencias[df_diferencias[f'{metric}_p_val_corrected_bool']==True][f'{metric}_val']
-        diferencias_significativas_al_reves_metric = - df_diferencias_al_reves[df_diferencias_al_reves[f'{metric}_p_val_corrected_bool']==True][f'{metric}_val']
         ax.scatter(diferencias_significativas_metric.index, diferencias_significativas_metric, color='green')
-        ax.scatter(diferencias_significativas_al_reves_metric.index, diferencias_significativas_al_reves_metric, color='red')
         subplot_i += 1
 
     plt.savefig(os.path.join(path, f"{title.replace(' ', '_')}.png") , dpi = 500)
