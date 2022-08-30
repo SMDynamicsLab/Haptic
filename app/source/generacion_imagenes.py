@@ -598,7 +598,7 @@ from statsmodels.stats.multitest import fdrcorrection
 def calculate_p_values_diferencias(df_vmr, df_force, csv_name='distribuciones_diferencias', n=100000):
     filename = os.path.join(path, f"{csv_name}_{n}.csv")
     if os.path.exists(filename):
-        df_diferencias = pd.read_csv(filename, index_col=True)
+        df_diferencias = pd.read_csv(filename, index_col=0)
         return df_diferencias
 
     df_vmr['perturbacion'] = 'vmr'
@@ -682,6 +682,7 @@ def plot_diferencias_significativas_mediana(df_vmr, df_force, title, metrics, sh
             ax = axs[subplot_i]
             median_series = block_median_diferencias[metric]
             line, = ax.plot(block_median_diferencias.index, median_series)
+            
             # Nombres de los bloques en el grafico
             if show_text:
                 x_text = np.mean(median_series.index)
@@ -698,6 +699,7 @@ def plot_diferencias_significativas_mediana(df_vmr, df_force, title, metrics, sh
     subplot_i = 0
     for metric in metrics:
         ax = axs[subplot_i]
+        ax.axhline(y=0, color='k', ls='dashed')
         diferencias_significativas_metric = df_diferencias[df_diferencias[f'{metric}_p_val_corrected_bool']==True][f'{metric}_val']
         ax.scatter(diferencias_significativas_metric.index, diferencias_significativas_metric, color='green')
         subplot_i += 1

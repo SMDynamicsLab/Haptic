@@ -1,3 +1,5 @@
 *.~lock*
 */*/*out.csv
 */*/*out-times-summary.csv
+*/*out.csv
+*/*out.csvtimes-summary
