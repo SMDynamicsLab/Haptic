@@ -1,4 +1,5 @@
-import os 
+import os
+# from turtle import color 
 import pandas as pd
 import matplotlib.pyplot as plt
 from analisis_datos import * 
@@ -8,6 +9,8 @@ from matplotlib.pyplot import cm
 file= os.path.join(path, "Merge_analisis.csv")
 df = pd.read_csv(file, index_col=False)
 df = df[df.trialSuccess == 1]
+
+df.drop(df[df.sujeto=='vft_caro'].index, inplace = True)
 
 block_vars = ['blockName']
 metrics = [
@@ -36,6 +39,9 @@ df.x_axis = df.x_axis.astype(int)
 
 def create_axs(row_size=1, col_size=1, sharex=False, sharey=False, figsize=None):
     fig, axs = plt.subplots(row_size, col_size, sharex=sharex, sharey=sharey, constrained_layout=True, figsize=figsize)
+    if row_size*col_size == 1:
+        return fig, axs
+
     for ax in axs.flat:
             plt.setp(ax.get_xticklabels(), fontsize=10)
             plt.setp(ax.get_yticklabels(), fontsize=10)
@@ -47,6 +53,10 @@ def read_file_for_sujeto(sujeto, columns):
     file_path = os.path.join(path, files_dict[sujeto]["path"])
     file = os.path.join(file_path, file)
     df_sujeto = pd.read_csv(file, names=columns, index_col=False)
+    # Fix coordinates (x to -x & *100)
+    df_sujeto['x'] = -df_sujeto['x']*100  # [cm]
+    df_sujeto['y'] = df_sujeto['y']*100   # [cm]
+
     return df_sujeto
 
 def plot_trayectoria_sujeto(df, df_summary, title):
@@ -70,9 +80,7 @@ def plot_trayectoria_sujeto(df, df_summary, title):
             second_beep = float(df_summary.loc[df_summary.trial == trial, "second_beep"])
             group.drop(group[group['timeMs'] < first_beep].index, inplace = True)
             group.drop(group[group['timeMs'] > second_beep].index, inplace = True)
-            # Fix coordinates (x to -x & *100)
-            group['x'] = -group['x']*100  # [cm]
-            group['y'] = group['y']*100   # [cm]
+
             # Plot
             group.plot(x='y', y='x', ax=ax, legend=False)
         # Line colors for trayectory
@@ -414,6 +422,8 @@ def get_df_perturbacion(df_summary, outliers_dict, perturbacion, trials_adaptaci
         
 
 
+
+
 '''
 1. Imagenes sujeto vmr primero
 a. Grafico de las trayectorias del sujeto (adaptacion, perturbacion y after effects)
@@ -707,3 +717,141 @@ def plot_diferencias_significativas_mediana(df_vmr, df_force, title, metrics, sh
     plt.savefig(os.path.join(path, f"{title.replace(' ', '_')}.png") , dpi = 500)
 
 plot_diferencias_significativas_mediana(df_vmr, df_force, title, metrics)
+
+from plot.plot import plot_rapidez, distance, 
+title = '9. Rapidez'
+def plot_rapidez(df_perturbacion, bloque_efectivo, plot_trials, title='Plot rapidez', bucket_size_ms = 5):
+    fig, axs = create_axs(row_size=len(plot_trials), sharey='all', sharex='all')
+    fig.suptitle(title)
+    #
+    for sujeto in df_perturbacion.sujeto.unique():
+        df_sujeto = df_perturbacion[(df_perturbacion.sujeto == sujeto)].copy()
+        df_sujeto = df_sujeto[df_sujeto.bloque_efectivo == bloque_efectivo]
+        df_sujeto = df_sujeto[df_sujeto.blockTrialSuccessN.isin(plot_trials)]
+        #
+        df_sujeto_full = read_file_for_sujeto(sujeto, columns)
+        df_sujeto_full = df_sujeto_full[df_sujeto_full.trial.isin(df_sujeto.trial.unique())]
+        #
+        for i in range(len(plot_trials)):
+            blockTrialSuccessN = plot_trials[i]
+            df_trial = df_sujeto[df_sujeto.blockTrialSuccessN == blockTrialSuccessN]
+            trial, = df_trial.trial.unique()
+            #
+            # Keep only time between beeps
+            first_beep, = df_trial.first_beep.unique()
+            second_beep, = df_trial.second_beep.unique()
+            df_trial_full = df_sujeto_full[df_sujeto_full.trial == trial].copy()
+            df_trial_full.drop(df_trial_full[df_trial_full['timeMs'] < first_beep].index, inplace = True)
+            df_trial_full.drop(df_trial_full[df_trial_full['timeMs'] > second_beep].index, inplace = True)
+            #
+            df_trial_full["timeMsAbs"] = df_trial_full.timeMs - df_trial_full.timeMs.min()
+            df_trial_full["timeMsAbsBucket"] = (df_trial_full.timeMsAbs // bucket_size_ms).astype(int)
+            grouped_ms = df_trial_full.groupby("timeMsAbsBucket")
+            time = []
+            v = []
+            for (timeMsAbsBucket), group_ms in grouped_ms:
+                d = distance(group_ms)
+                dt = (group_ms.timeMsAbs.max() - group_ms.timeMsAbs.min())/1000
+                if dt != 0:
+                    time += [timeMsAbsBucket * bucket_size_ms]
+                    v += [d/dt]
+            #
+            ax = axs[i]
+            ax.plot(time, v)
+            ax.set_ylabel('Rapidez [cm/s]')
+            ax.set_xlabel('Tiempo [ms]')
+    plt.savefig(os.path.join(path, f"{title.replace(' ', '_')}.png") , dpi = 500) 
+
+plot_rapidez(df_vmr, 'perturbacion', plot_trials=[1, 2, 20], title=title+' perturbacion VMR')
+plot_rapidez(df_vmr, 'aftereffects', plot_trials=[1, 2, 20], title=title+' aftereffects VMR')
+plot_rapidez(df_force, 'perturbacion', plot_trials=[1, 2, 20], title=title+' perturbacion fuerza')
+plot_rapidez(df_force, 'aftereffects', plot_trials=[1, 2, 20], title=title+' aftereffects fuerza')
+
+
+def plot_error_espacial_temporal(df_perturbacion, bloque_efectivo, ax, metrics, color, label=None, title='Error espacial y temporal'):
+    # ax.axis('equal')
+    # ax.set_box_aspect(1)
+    df_bloque = df_perturbacion[df_perturbacion.bloque_efectivo == bloque_efectivo].copy()
+    median_df = df_bloque.groupby("x_axis").median()
+    ax.plot(median_df[metrics[0][0]], median_df[metrics[1][0]], label=label, color=color)
+    ax.scatter(median_df[metrics[0][0]], median_df[metrics[1][0]], s=1, color=color)
+    ax.set_xlabel(metrics[0][1])
+    ax.set_ylabel(metrics[1][1])
+    plt.legend(loc="upper right")
+    plt.savefig(os.path.join(path, f"{title.replace(' ', '_')}.png") , dpi = 500)
+
+
+title = '10. Error de area absoluto y temporal'
+fig, axs = create_axs(col_size=1)
+fig.suptitle(title)
+metrics = [('area_error_abs', 'Error de area absoluto'), ('temporal_error', 'Error temporal')]
+plot_error_espacial_temporal(df_vmr, 'perturbacion', axs, metrics, color='limegreen', label="perturbacion VMR", title=title)
+plot_error_espacial_temporal(df_vmr, 'aftereffects', axs, metrics, color='darkgreen', label="aftereffects VMR", title=title)
+plot_error_espacial_temporal(df_force, 'perturbacion', axs, metrics, color='orchid', label="perturbacion fuerza", title=title)
+plot_error_espacial_temporal(df_force, 'aftereffects', axs, metrics, color='purple', label="aftereffects fuerza", title=title)
+
+title = '10. Error de area signado y temporal'
+fig, axs = create_axs()
+fig.suptitle(title)
+metrics = [('area_error', 'Error de area signado'), ('temporal_error', 'Error temporal')]
+plot_error_espacial_temporal(df_vmr, 'perturbacion', axs, metrics, color='limegreen', label="perturbacion VMR", title=title)
+plot_error_espacial_temporal(df_vmr, 'aftereffects', axs, metrics, color='darkgreen', label="aftereffects VMR", title=title)
+plot_error_espacial_temporal(df_force, 'perturbacion', axs, metrics, color='orchid', label="perturbacion fuerza", title=title)
+plot_error_espacial_temporal(df_force, 'aftereffects', axs, metrics, color='purple', label="aftereffects fuerza", title=title)
+
+title = '11. Posicion y velocidad para un sujeto'
+sujetos_vmr = list(df_vmr.sujeto.unique())
+sujetos_force = list(df_force.sujeto.unique())
+sujetos_ambos = [i for i in sujetos_vmr if i is in sujetos_force]
+sujeto = sujetos_ambos[0]
+fig, axs = create_axs()
+
+
+from plot.plot_error import rotate_trial_data
+def posicion_y_velocidad_trials(df_perturbacion, sujeto, bloque_efectivo, plot_trials, label, colors, ax, bucket_size_ms=5, title='Posicion y velocidad para un sujeto'):
+    df_sujeto = df_perturbacion[(df_perturbacion.sujeto == sujeto)].copy()
+    df_sujeto = df_sujeto[df_sujeto.bloque_efectivo == bloque_efectivo]
+    df_sujeto = df_sujeto[df_sujeto.blockTrialSuccessN.isin(plot_trials)]
+    df_sujeto_full = read_file_for_sujeto(sujeto, columns)
+    df_sujeto_full = df_sujeto_full[df_sujeto_full.trial.isin(df_sujeto.trial.unique())]
+    for i in range(len(plot_trials)):
+        blockTrialSuccessN = plot_trials[i]
+        df_trial = df_sujeto[df_sujeto.blockTrialSuccessN == blockTrialSuccessN]
+        trial, = df_trial.trial.unique()
+        #
+        # Keep only time between beeps
+        first_beep, = df_trial.first_beep.unique()
+        second_beep, = df_trial.second_beep.unique()
+        df_trial_full = df_sujeto_full[df_sujeto_full.trial == trial].copy()
+        df_trial_full.drop(df_trial_full[df_trial_full['timeMs'] < first_beep].index, inplace = True)
+        df_trial_full.drop(df_trial_full[df_trial_full['timeMs'] > second_beep].index, inplace = True)
+        #
+        df_trial_full["timeMsAbs"] = df_trial_full.timeMs - df_trial_full.timeMs.min()
+        df_trial_full["timeMsAbsBucket"] = (df_trial_full.timeMsAbs // bucket_size_ms).astype(int)
+        # Rotate
+        angle, = df_trial_full.angle.unique()
+        df_trial_full = rotate_trial_data(df_trial_full, angle)
+        grouped_ms = df_trial_full.groupby("timeMsAbsBucket")
+        distance_transversal = []
+        v = []
+        for (timeMsAbsBucket), group_ms in grouped_ms:
+            d = distance(group_ms)
+            dt = (group_ms.timeMsAbs.max() - group_ms.timeMsAbs.min())/1000
+            if dt != 0:
+                v += [d/dt]
+                distance_transversal += [group_ms.y.mean()]
+        #
+        ax.plot(distance_transversal, v, color=colors[i], label=f"{label} trial {blockTrialSuccessN}")
+        ax.set_ylabel('Rapidez [cm/s]')
+        ax.set_xlabel('Distancia trasnversal [cm]')
+    plt.legend(loc="upper right")
+    plt.savefig(os.path.join(path, f"{title.replace(' ', '_')}.png") , dpi = 500) 
+
+colors = ['orchid', 'darkorchid', 'purple']
+posicion_y_velocidad_trials(df_vmr, sujeto, 'perturbacion', ax=axs, plot_trials=[1, 2, 20], label='VMR', colors=colors, title=title)
+
+colors = ['lime', 'limegreen', 'darkgreen']
+posicion_y_velocidad_trials(df_force, sujeto, 'perturbacion', ax=axs, plot_trials=[1, 2, 20], label='fuerza', colors=colors, title=title)
+
+# plt.show()
+
