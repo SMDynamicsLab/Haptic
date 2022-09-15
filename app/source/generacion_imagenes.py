@@ -1099,7 +1099,7 @@ def resample_by_interpolation(signal, n):
     )
     return resampled_signal
 
-def posicion_y_velocidad_transversal_promedios(df_perturbacion, bloque_efectivo, plot_trials, bucket_size_ms=10, normalize=False, baseline="start", title='Posicion y velocidad promedio'):
+def posicion_y_velocidad_transversal_promedios(df_perturbacion, bloque_efectivo, plot_trials, bucket_size_ms=10, normalize=False, resample=True, baseline="start", title='Posicion y velocidad promedio'):
     figsize=[6.4, 6.4*2]
     len_metrics = 3
     fig1 = plt.figure(figsize=figsize, constrained_layout=True)
@@ -1206,12 +1206,18 @@ def posicion_y_velocidad_transversal_promedios(df_perturbacion, bloque_efectivo,
                 vy = [i/vy_max_val for i in vy]
                 distance_transversal = [i/distance_transversal_max_val for i in distance_transversal]   
 
-            # Signal resample 
-            N_points = 100
-            # resampled_vy = signal.resample(vy, N_points)
-            # resampled_distance_transversal = signal.resample(distance_transversal, N_points)
-            resampled_vy = resample_by_interpolation(vy, N_points)
-            resampled_distance_transversal = resample_by_interpolation(distance_transversal, N_points)
+
+            if resample:
+                # Signal resample 
+                N_points = 100
+                resampled_vy = resample_by_interpolation(vy, N_points)
+                resampled_distance_transversal = resample_by_interpolation(distance_transversal, N_points)
+                points = [i+1 for i in range(N_points)]
+            
+            else:
+                resampled_vy = vy
+                resampled_distance_transversal = distance_transversal
+                points = [i*bucket_size_ms for i in range(len(vy))]
 
             sujeto_dataset = pd.DataFrame({
                     'sujeto': sujeto,
@@ -1219,7 +1225,7 @@ def posicion_y_velocidad_transversal_promedios(df_perturbacion, bloque_efectivo,
                     'trial': blockTrialSuccessN,
                     'resampled_vy': resampled_vy, 
                     'resampled_distance_transversal': resampled_distance_transversal, 
-                    'point':[i+1 for i in range(N_points)]
+                    'point': points
                     })
             sujeto_dataset['angle'] = sujeto_dataset.apply(lambda x: get_angle(x['resampled_distance_transversal'],x['resampled_vy']), axis=1)
             trials_dataset = trials_dataset.append(sujeto_dataset, ignore_index=True)
@@ -1269,52 +1275,24 @@ def posicion_y_velocidad_transversal_promedios(df_perturbacion, bloque_efectivo,
             )
 
     plt.figure(fig1.number)
-    plt.savefig(os.path.join(path, "imagen_15", f"{title.replace(' ', '_')}_{bucket_size_ms}ms_normalize_{normalize}.png") , dpi = 500) 
+    plt.savefig(os.path.join(path, "imagen_15", f"{title.replace(' ', '_')}_{bucket_size_ms}ms_normalize_{normalize}_resample_{resample}.png") , dpi = 500) 
     plt.figure(fig2.number)
-    plt.savefig(os.path.join(path, "imagen_15", f"{title.replace(' ', '_')}_summary_{bucket_size_ms}ms_normalize_{normalize}.png") , dpi = 500) 
+    plt.savefig(os.path.join(path, "imagen_15", f"{title.replace(' ', '_')}_summary_{bucket_size_ms}ms_normalize_{normalize}_resample_{resample}.png") , dpi = 500) 
 
-title = '15.a Posicion y velocidad promedio perturbacion VMR'
-posicion_y_velocidad_transversal_promedios(df_vmr, 'perturbacion', plot_trials=[1, 5, 10, 15, 20], title=title)
-plt.close()
-plt.close()
-last_time = plot_stats(title, last_time)
+plot_trials=[1, 5, 10, 15, 20]
+for normalize in [True, False]:
+    for resample in [True, False]:
+        for bloque in ['perturbacion', 'aftereffects']:
+            title = f'15.a Posicion y velocidad promedio {bloque} VMR'
+            posicion_y_velocidad_transversal_promedios(df_vmr, bloque, plot_trials=plot_trials, title=title, normalize=normalize, resample=resample)
+            plt.close()
+            last_time = plot_stats(title, last_time)
 
-title = '15.b Posicion y velocidad promedio aftereffects VMR'
-posicion_y_velocidad_transversal_promedios(df_vmr, 'aftereffects', plot_trials=[1, 5, 10, 15, 20], title=title)
-plt.close()
-last_time = plot_stats(title, last_time)
+            title = '15.b Posicion y velocidad promedio perturbacion Force'
+            posicion_y_velocidad_transversal_promedios(df_force, bloque, plot_trials=plot_trials, title=title, normalize=normalize, resample=resample)
+            plt.close()
+            last_time = plot_stats(title, last_time)          
 
-title = '15.c Posicion y velocidad promedio perturbacion Force'
-posicion_y_velocidad_transversal_promedios(df_force, 'perturbacion', plot_trials=[1, 5, 10, 15, 20], title=title)
-plt.close()
-last_time = plot_stats(title, last_time)
-
-title = '15.d Posicion y velocidad promedio aftereffects Force'
-posicion_y_velocidad_transversal_promedios(df_force, 'aftereffects', plot_trials=[1, 5, 10, 15, 20], title=title)
-plt.close()
-last_time = plot_stats(title, last_time)
-
-###############
-title = '15.a Posicion y velocidad promedio perturbacion VMR'
-posicion_y_velocidad_transversal_promedios(df_vmr, 'perturbacion', plot_trials=[1, 5, 10, 15, 20], title=title, normalize=True)
-plt.close()
-plt.close()
-last_time = plot_stats(title, last_time)
-
-title = '15.b Posicion y velocidad promedio aftereffects VMR'
-posicion_y_velocidad_transversal_promedios(df_vmr, 'aftereffects', plot_trials=[1, 5, 10, 15, 20], title=title, normalize=True)
-plt.close()
-last_time = plot_stats(title, last_time)
-
-title = '15.c Posicion y velocidad promedio perturbacion Force'
-posicion_y_velocidad_transversal_promedios(df_force, 'perturbacion', plot_trials=[1, 5, 10, 15, 20], title=title, normalize=True)
-plt.close()
-last_time = plot_stats(title, last_time)
-
-title = '15.d Posicion y velocidad promedio aftereffects Force'
-posicion_y_velocidad_transversal_promedios(df_force, 'aftereffects', plot_trials=[1, 5, 10, 15, 20], title=title, normalize=True)
-plt.close()
-last_time = plot_stats(title, last_time)
 
 end_time = time.time()
 elapsed_time = end_time - start_time
