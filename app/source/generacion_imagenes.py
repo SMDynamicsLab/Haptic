@@ -1136,9 +1136,9 @@ def posicion_y_velocidad_transversal_promedios(df_perturbacion, bloque_efectivo,
         linea_vy_ax = fig1.add_subplot(gs[len_metrics*i+1, 1])
         linea_angle_ax = fig1.add_subplot(gs[len_metrics*i+2, 1])
         
-        linea_dt_ax.get_xaxis().set_visible(False)
-        linea_vy_ax.get_xaxis().set_visible(False)
-        linea_angle_ax.get_xaxis().set_visible(False)
+        # linea_dt_ax.get_xaxis().set_visible(False)
+        # linea_vy_ax.get_xaxis().set_visible(False)
+        # linea_angle_ax.get_xaxis().set_visible(False)
 
         linea_dt_ax.axhline(0, color='k', ls='dashed', linewidth=1)   
         linea_vy_ax.axhline(0, color='k', ls='dashed', linewidth=1)
@@ -1275,9 +1275,9 @@ def posicion_y_velocidad_transversal_promedios(df_perturbacion, bloque_efectivo,
             )
 
     plt.figure(fig1.number)
-    plt.savefig(os.path.join(path, "imagen_15", f"{title.replace(' ', '_')}_{bucket_size_ms}ms_normalize_{normalize}_resample_{resample}.png") , dpi = 500) 
+    plt.savefig(os.path.join(path, "imagen_15", f"normalize_{normalize}", f"resample_{resample}", f"{title.replace(' ', '_')}_{bucket_size_ms}ms_normalize_{normalize}_resample_{resample}.png") , dpi = 500) 
     plt.figure(fig2.number)
-    plt.savefig(os.path.join(path, "imagen_15", f"{title.replace(' ', '_')}_summary_{bucket_size_ms}ms_normalize_{normalize}_resample_{resample}.png") , dpi = 500) 
+    plt.savefig(os.path.join(path, "imagen_15", f"normalize_{normalize}", f"resample_{resample}", f"{title.replace(' ', '_')}_summary_{bucket_size_ms}ms_normalize_{normalize}_resample_{resample}.png") , dpi = 500) 
 
 plot_trials=[1, 5, 10, 15, 20]
 for normalize in [True, False]:
@@ -1286,12 +1286,12 @@ for normalize in [True, False]:
             title = f'15.a Posicion y velocidad promedio {bloque} VMR'
             posicion_y_velocidad_transversal_promedios(df_vmr, bloque, plot_trials=plot_trials, title=title, normalize=normalize, resample=resample)
             plt.close()
-            last_time = plot_stats(title, last_time)
+            last_time = plot_stats(title+f" normalize={normalize}, resample={resample}", last_time)
 
-            title = '15.b Posicion y velocidad promedio perturbacion Force'
+            title = f'15.b Posicion y velocidad promedio {bloque} Force'
             posicion_y_velocidad_transversal_promedios(df_force, bloque, plot_trials=plot_trials, title=title, normalize=normalize, resample=resample)
             plt.close()
-            last_time = plot_stats(title, last_time)          
+            last_time = plot_stats(title+f" normalize={normalize}, resample={resample}", last_time)          
 
 
 end_time = time.time()
