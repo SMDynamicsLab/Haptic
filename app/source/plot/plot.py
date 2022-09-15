@@ -18,6 +18,7 @@ def plot_trajectory(df, vmr, blockN, trial_vars, ax, colors, df_summary, fontsiz
             group = filter_outside_beeps(group, df_summary, trial)
         else: 
             group = filter_hold_time(group)
+        group.sort_values(by=['timeMs'], inplace=True)
         group.plot(x='y', y='x', ax=ax, legend=False)
 
     trial_count = len(df.trial.unique())

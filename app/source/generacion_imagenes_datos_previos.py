@@ -185,3 +185,12 @@ datos_file = 'vt_nicodg_e_2022_05_26_00_45_10_out.csv'
 datos_file_summary = 'vt_nicodg_e_2022_05_26_00_45_10_out-times-summary.csv'
 imagenes_datos_previos_4(datos_path, datos_file, datos_file_summary)
 periodo_reproducido_vmr(datos_path, datos_file_summary, name='Datos_previos_4c')
+
+
+
+
+
+'''
+1. sacar eje veritcal de todos menos el ultimo y el primero 
+
+'''
