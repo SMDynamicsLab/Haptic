@@ -4,14 +4,29 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.pyplot import cm
 from plot.plot import plot
+import time
+
+from matplotlib import rcParams
+rcParams.update({'figure.autolayout': True})
+plt.style.use('tableau-colorblind10')
+
 
 plot_dir = '/home/Carolina/Documents/Personal/Tesis/Haptic/app/data/Imagenes'
 
 ###################
+start_time = time.time()
+last_time = start_time
+print("Comienzo generacion imagenes datos previos")
 
+def plot_stats(title, last_time):
+    t1 = last_time
+    t2 = time.time()
+    dt = t2-t1
+    print(f"Finalizado grafico: {title} ({round(dt//60)}m{round(dt%60)}s)")
+    return t2
 
 def imagenes_datos_previos_1(datos_path, datos_file):
-    plot_file = os.path.join(plot_dir,"Datos_previos_1_"+datos_file.replace(".csv", ".png"))
+    plot_file = os.path.join(plot_dir,"Datos_previos_1_"+datos_file.replace(".csv", ".pdf"))
     metrics_count = 5
     subplot_params = {
         'figsize': [2*3,7],
@@ -20,9 +35,9 @@ def imagenes_datos_previos_1(datos_path, datos_file):
     plot(
         output_file=os.path.join(datos_path, datos_file),
         plot_file=plot_file,
-        fontsize=5,
+        fontsize=8,
         subplot_params=subplot_params,
-        blockNames = ["Adaptación", "Perturbación", "AfterEffects"],
+        blockNames = ["Bloque 1: Linea de base", "Bloque 2: Perturbación", "Bloque 3: AfterEffects"],
         )
     plt.close()
 
@@ -36,7 +51,8 @@ def imagenes_datos_previos_2(datos_path, datos_file, datos_file_summary, force_c
     plot_d_and_vel, plot_temp_err = False, False
     for i in range(force_count):
         block_filter = [2*i+1, 2*i+2]
-        plot_file = os.path.join(plot_dir,f"{name}_fuerza{i+1}_"+datos_file.replace(".csv", ".png"))
+        plot_file = os.path.join(plot_dir,f"{name}_fuerza{i+1}_"+datos_file.replace(".csv", ".pdf"))
+        blockNames_i = [f'Bloque {block_filter[i]+1}:\n'+blockNames[i] for i in range(len(blockNames))]
         plot(
             output_file=os.path.join(datos_path, datos_file),
             plot_file=plot_file,
@@ -44,7 +60,7 @@ def imagenes_datos_previos_2(datos_path, datos_file, datos_file_summary, force_c
             fontsize=5,
             subplot_params=subplot_params,
             block_filter=block_filter,
-            blockNames=blockNames,
+            blockNames=blockNames_i,
             plot_d_and_vel=plot_d_and_vel,
             plot_temp_err=plot_temp_err,
             )
@@ -80,11 +96,11 @@ def error_temporal(datos_path, datos_file_summary, name='Datos_previos_2'):
             ax.plot(block_group.trial, block_group.temporal_error, color='k')
             ax.scatter(block_group.trial, block_group.temporal_error, color='k', s=5)
         ax.axhline(0, color='k', ls='dashed')
-        ax.set_ylabel("error temporal [ms]")
-        ax.set_xlabel("número de trial")
-    plt.legend(loc="upper right")
-    plot_file = os.path.join(plot_dir,f"{name}_temporal_error_"+datos_file.replace(".csv", ".png"))
-    plt.savefig(plot_file , dpi = 500)
+        ax.set_ylabel("Error temporal [ms]")
+        ax.set_xlabel("Número de trial")
+    plt.legend(loc="best")
+    plot_file = os.path.join(plot_dir,f"{name}_temporal_error_"+datos_file.replace(".csv", ".pdf"))
+    plt.savefig(plot_file)
     plt.close()
 
 def periodo_reproducido_vmr(datos_path, datos_file_summary, name='Datos_previos_4'):
@@ -108,23 +124,22 @@ def periodo_reproducido_vmr(datos_path, datos_file_summary, name='Datos_previos_
     for (blockN, period, vmr), block_group in grouped_block:
         ax.plot(block_group.trial, [period]*len(block_group.trial), color='r', linestyle='dashed')
         if vmr and blockN==1:
-            print(vmr and blockN==1)
             ax.plot(block_group.trial, block_group.periodo_reproducido, color='b', label=f"Perturbación VMR")
         if vmr:
             ax.plot(block_group.trial, block_group.periodo_reproducido, color='b')
             ax.scatter(block_group.trial, block_group.periodo_reproducido, color='b', s=5)            
         elif blockN==0:
-            ax.plot(block_group.trial, [period]*len(block_group.trial), color='r', linestyle='dashed', label='Periodo escuchado')
+            ax.plot(block_group.trial, [period]*len(block_group.trial), color='r', linestyle='dashed', label='Intervalo escuchado')
             ax.plot(block_group.trial, block_group.periodo_reproducido, color='k', label="Sin perturbación")
             ax.scatter(block_group.trial, block_group.periodo_reproducido, color='k', s=5)
         else:
             ax.plot(block_group.trial, block_group.periodo_reproducido, color='k')
             ax.scatter(block_group.trial, block_group.periodo_reproducido, color='k', s=5)
-        ax.set_ylabel("Periodo reproducido [ms]")
-        ax.set_xlabel("número de trial")
+        ax.set_ylabel("Intervalo reproducido [ms]")
+        ax.set_xlabel("Número de trial")
     plt.legend(loc="best")
-    plot_file = os.path.join(plot_dir,f"{name}_periodo_reproducido_"+datos_file.replace(".csv", ".png"))
-    plt.savefig(plot_file , dpi = 500)
+    plot_file = os.path.join(plot_dir,f"{name}_periodo_reproducido_"+datos_file.replace(".csv", ".pdf"))
+    plt.savefig(plot_file)
     plt.close()
 
 
@@ -139,7 +154,9 @@ def imagenes_datos_previos_4(datos_path, datos_file, datos_file_summary, name='D
 
     blockNames = ["Perturbación VMR 1", "Perturbación VMR 2", "Perturbación VMR 3"]
     block_filter = [1, 4, 7]
-    plot_file = os.path.join(plot_dir,f"{name}a_vmr_perturbacion_"+datos_file.replace(".csv", ".png"))
+    blockNames_i = [f'Bloque {block_filter[i]+1}:\n'+blockNames[i] for i in range(len(blockNames))]
+    plot_file = os.path.join(plot_dir,f"{name}a_vmr_perturbacion_"+datos_file.replace(".csv", ".pdf"))
+
     plot(
         output_file=os.path.join(datos_path, datos_file),
         plot_file=plot_file,
@@ -147,7 +164,7 @@ def imagenes_datos_previos_4(datos_path, datos_file, datos_file_summary, name='D
         fontsize=5,
         subplot_params=subplot_params,
         block_filter=block_filter,
-        blockNames=blockNames,
+        blockNames=blockNames_i,
         plot_d_and_vel=plot_d_and_vel,
         plot_temp_err=plot_temp_err,
         )
@@ -156,7 +173,8 @@ def imagenes_datos_previos_4(datos_path, datos_file, datos_file_summary, name='D
 
     blockNames = ["AfterEffects VMR 1", "AfterEffects VMR 2", "AfterEffects VMR 3"]
     block_filter = [2, 5, 8]
-    plot_file = os.path.join(plot_dir,f"{name}b_vmr_aftereffects_"+datos_file.replace(".csv", ".png"))
+    blockNames_i = [f'Bloque {block_filter[i]+1}:\n'+blockNames[i] for i in range(len(blockNames))]
+    plot_file = os.path.join(plot_dir,f"{name}b_vmr_aftereffects_"+datos_file.replace(".csv", ".pdf"))
     plot(
         output_file=os.path.join(datos_path, datos_file),
         plot_file=plot_file,
@@ -164,7 +182,7 @@ def imagenes_datos_previos_4(datos_path, datos_file, datos_file_summary, name='D
         fontsize=5,
         subplot_params=subplot_params,
         block_filter=block_filter,
-        blockNames=blockNames,
+        blockNames=blockNames_i,
         plot_d_and_vel=plot_d_and_vel,
         plot_temp_err=plot_temp_err,
         )
@@ -197,17 +215,17 @@ def periodo_reproducido_fuerza(datos_path, datos_file_summary, name='Datos_previ
             ax.plot(block_group.trial, block_group.periodo_reproducido, color='b')
             ax.scatter(block_group.trial, block_group.periodo_reproducido, color='b', s=5)            
         elif blockN==0:
-            ax.plot(block_group.trial, [period]*len(block_group.trial), color='r', linestyle='dashed', label='Periodo escuchado')
+            ax.plot(block_group.trial, [period]*len(block_group.trial), color='r', linestyle='dashed', label='Intervalo escuchado')
             ax.plot(block_group.trial, block_group.periodo_reproducido, color='k', label="Sin perturbación")
             ax.scatter(block_group.trial, block_group.periodo_reproducido, color='k', s=5)
         else:
             ax.plot(block_group.trial, block_group.periodo_reproducido, color='k')
             ax.scatter(block_group.trial, block_group.periodo_reproducido, color='k', s=5)
-        ax.set_ylabel("Periodo reproducido [ms]")
-        ax.set_xlabel("número de trial")
+        ax.set_ylabel("Intervalo reproducido [ms]")
+        ax.set_xlabel("Número de trial")
     plt.legend(loc="best")
-    plot_file = os.path.join(plot_dir,f"{name}_periodo_reproducido_"+datos_file.replace(".csv", ".png"))
-    plt.savefig(plot_file , dpi = 500)
+    plot_file = os.path.join(plot_dir,f"{name}_periodo_reproducido_"+datos_file.replace(".csv", ".pdf"))
+    plt.savefig(plot_file)
     plt.close()
 
 def imagenes_datos_previos_5(datos_path, datos_file, datos_file_summary, name='Datos_previos_5'):
@@ -220,7 +238,8 @@ def imagenes_datos_previos_5(datos_path, datos_file, datos_file_summary, name='D
 
     blockNames = ["Perturbación", "AfterEffects", "Perturbación", "AfterEffects"]
     block_filter = [1, 2, 4, 5]
-    plot_file = os.path.join(plot_dir,f"{name}a_fuerza_"+datos_file.replace(".csv", ".png"))
+    blockNames_i = [f'Bloque {block_filter[i]+1}:\n'+blockNames[i] for i in range(len(blockNames))]
+    plot_file = os.path.join(plot_dir,f"{name}a_fuerza_"+datos_file.replace(".csv", ".pdf"))
     plot(
         output_file=os.path.join(datos_path, datos_file),
         plot_file=plot_file,
@@ -228,9 +247,9 @@ def imagenes_datos_previos_5(datos_path, datos_file, datos_file_summary, name='D
         fontsize=5,
         subplot_params=subplot_params,
         block_filter=block_filter,
-        blockNames=blockNames,
+        blockNames=blockNames_i,
         plot_d_and_vel=plot_d_and_vel,
-        plot_temp_err=plot_temp_err,
+        plot_temp_err=plot_temp_err
         )
     plt.close()
 
@@ -238,36 +257,42 @@ def imagenes_datos_previos_5(datos_path, datos_file, datos_file_summary, name='D
 datos_path = '/home/Carolina/Documents/Personal/Tesis/Haptic/app/data/2. Datos vmr sabrina/'
 datos_file = 'v_sabrinalopez_e_2021_12_04_21_10_26_out.csv'
 imagenes_datos_previos_1(datos_path, datos_file)
+last_time = plot_stats('datos 1', last_time)
 
 datos_path = '/home/Carolina/Documents/Personal/Tesis/Haptic/app/data/3. Datos ft con y sin feedback Nicodg'
 datos_file = 'ft_nicodg_e_2022_05_12_21_53_06_out.csv'
 datos_file_summary = 'ft_nicodg_e_2022_05_12_21_53_06_out.csvtimes-summary'
-imagenes_datos_previos_2(datos_path, datos_file, datos_file_summary, name='Datos_previos_2')
+imagenes_datos_previos_2(datos_path, datos_file, datos_file_summary, force_count=6, name='Datos_previos_2')
 error_temporal(datos_path, datos_file_summary, name='Datos_previos_2')
+last_time = plot_stats('datos 2', last_time)
 
 datos_path = '/home/Carolina/Documents/Personal/Tesis/Haptic/app/data/3. Datos ft con y sin feedback Nicodg'
 datos_file = 'ft_nicodg_sinfeedback_e_2022_05_17_22_03_53_out.csv'
 datos_file_summary = 'ft_nicodg_sinfeedback_e_2022_05_17_22_03_53_out.csvtimes-summary'
 imagenes_datos_previos_2(datos_path, datos_file, datos_file_summary, force_count=4, name='Datos_previos_3')
 error_temporal(datos_path, datos_file_summary, name='Datos_previos_3')
+last_time = plot_stats('datos 3', last_time)
 
 datos_path = '/home/Carolina/Documents/Personal/Tesis/Haptic/app/data/4. Datos vt sin feedback Nicodg'
 datos_file = 'vt_nicodg_e_2022_05_26_00_45_10_out.csv'
 datos_file_summary = 'vt_nicodg_e_2022_05_26_00_45_10_out-times-summary.csv'
 imagenes_datos_previos_4(datos_path, datos_file, datos_file_summary, name='Datos_previos_4')
 periodo_reproducido_vmr(datos_path, datos_file_summary, name='Datos_previos_4c')
+last_time = plot_stats('datos 4', last_time)
 
 datos_path = '/home/Carolina/Documents/Personal/Tesis/Haptic/app/data/5. Datos ft 2 periodos sin feedback Nicodg'
 datos_file = 'ft_nicodg_e_2022_06_01_23_29_03_out.csv'
 datos_file_summary = 'ft_nicodg_e_2022_06_01_23_29_03_out-times-summary.csv'
 periodo_reproducido_fuerza(datos_path, datos_file_summary, name='Datos_previos_5')
 imagenes_datos_previos_5(datos_path, datos_file, datos_file_summary, name='Datos_previos_5')
+last_time = plot_stats('datos 5', last_time)
 
 datos_path = '/home/Carolina/Documents/Personal/Tesis/Haptic/app/data/6. Datos rodri ft 2 periodos'
 datos_file = 'ft_rodrilaje_e_2022_06_02_14_39_46_out.csv'
 datos_file_summary = 'ft_rodrilaje_e_2022_06_02_14_39_46_out-times-summary.csv'
 periodo_reproducido_fuerza(datos_path, datos_file_summary, name='Datos_previos_6')
 imagenes_datos_previos_5(datos_path, datos_file, datos_file_summary, name='Datos_previos_6')
+last_time = plot_stats('datos 6', last_time)
 
 
 
@@ -275,3 +300,8 @@ imagenes_datos_previos_5(datos_path, datos_file, datos_file_summary, name='Datos
 1. sacar eje veritcal de todos menos el ultimo y el primero 
 
 '''
+
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(f"Finalizado en {elapsed_time // 60} minutos y {elapsed_time % 60} segundos")

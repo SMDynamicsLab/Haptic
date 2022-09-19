@@ -5,6 +5,9 @@ import numpy as np
 from .plot_error import calculate_error_area
 from .distance import distance
 
+from matplotlib import rcParams
+rcParams.update({'figure.autolayout': True})
+plt.style.use('tableau-colorblind10')
 
 # Trajectory
 def plot_trajectory(df, vmr, blockN, trial_vars, ax, colors, df_summary, fontsize=5, blockName=None, force_type=None):
@@ -28,8 +31,8 @@ def plot_trajectory(df, vmr, blockN, trial_vars, ax, colors, df_summary, fontsiz
         ax.set_title(blockName, fontsize=fontsize)
     else:
         ax.set_title(f'vmr: {vmr} trials: {trial_count}', fontsize=fontsize)
-    ax.set_xlabel('y', fontsize=fontsize)
-    ax.set_ylabel('x', fontsize=fontsize)
+    ax.set_xlabel('y [cm]', fontsize=fontsize)
+    ax.set_ylabel('x [cm]', fontsize=fontsize)
 
     # Line colors for trayectory
     for i, j in enumerate(ax.lines):
@@ -49,14 +52,14 @@ def plot_area_errors(df, blockN, trial_vars, ax_err, ax_err_abs, colors, df_summ
         else: 
             group = filter_hold_time(group)
         area_error, area_error_abs = calculate_error_area(group, angle)
-        ax_err.scatter(trial, area_error, s=2, color=colors[trial - min_trial])
-        ax_err_abs.scatter(trial, area_error_abs, s=2, color=colors[trial - min_trial])
+        ax_err.scatter(trial-min_trial+1, area_error, s=2, color=colors[trial - min_trial])
+        ax_err_abs.scatter(trial-min_trial+1, area_error_abs, s=2, color=colors[trial - min_trial])
             
   
-    ax_err.set_ylabel('Error de area signado', fontsize=fontsize)
-    ax_err.set_xlabel('numero de trial', fontsize=fontsize)
-    ax_err_abs.set_ylabel('Error de area absoluto', fontsize=fontsize)
-    ax_err_abs.set_xlabel('numero de trial', fontsize=fontsize)
+    ax_err.set_ylabel('Error de área\nsignado [ua]', fontsize=fontsize)
+    ax_err.set_xlabel('Número de trial', fontsize=fontsize)
+    ax_err_abs.set_ylabel('Error de área\nabsoluto [ua]', fontsize=fontsize)
+    ax_err_abs.set_xlabel('Número de trial', fontsize=fontsize)
 
 
 # Distancia recorrida
@@ -73,12 +76,12 @@ def plot_curve_distance_and_velocity(df, blockN, trial_vars, ax_d, ax_v, colors,
             group = filter_hold_time(group)
         d = distance(group)
         dt = (group.timeMs.max() - group.timeMs.min())/1000
-        ax_d.scatter(trial, d, s=2, color=colors[trial - min_trial])
-        ax_v.scatter(trial, d/dt, s=2, color=colors[trial - min_trial])
-    ax_d.set_ylabel('Distancia recorrida [cm]', fontsize=fontsize)
-    ax_d.set_xlabel('numero de trial', fontsize=fontsize)
-    ax_v.set_ylabel('Velocidad media [cm/s]', fontsize=fontsize)
-    ax_v.set_xlabel('numero de trial', fontsize=fontsize)
+        ax_d.scatter(trial-min_trial+1, d, s=2, color=colors[trial - min_trial])
+        ax_v.scatter(trial-min_trial+1, d/dt, s=2, color=colors[trial - min_trial])
+    ax_d.set_ylabel('Distancia\nrecorrida [ua]', fontsize=fontsize)
+    ax_d.set_xlabel('Número de trial', fontsize=fontsize)
+    ax_v.set_ylabel('Velocidad\nmedia [ua]', fontsize=fontsize)
+    ax_v.set_xlabel('Número de trial', fontsize=fontsize)
 
 def plot_temporal_error(df_summary, df, blockN, trial_vars, ax, colors, fontsize=5):
     # Line colors
@@ -93,7 +96,7 @@ def plot_temporal_error(df_summary, df, blockN, trial_vars, ax, colors, fontsize
         temp_error = (second_beep - first_beep) - period
         ax.scatter(trial, temp_error, s=2, color=colors[trial - min_trial])
     ax.set_ylabel('Error temporal [ms]', fontsize=fontsize)
-    ax.set_xlabel('numero de trial', fontsize=fontsize)
+    ax.set_xlabel('Número de trial', fontsize=fontsize)
 
 def plot_rapidez(df_summary, df, blockN, trial_vars, ax, fig, colors, fontsize=5):
     fig.suptitle('Rapidez (por ms) [cm/s]')
@@ -134,7 +137,7 @@ def filter_outside_beeps(df, df_summary, trial):
     df.drop(df[df['timeMs'] > second_beep].index, inplace = True)
     return df
 
-def plot(output_file, plot_file=None, names=None, file_summary=None, fontsize=5, figsize=None, subplot_params={}, plot_rapidez=False, block_filter=None, blockNames=None, plot_trayect=True, plot_area_err=True, plot_d_and_vel=True, plot_temp_err=True):
+def plot(output_file, plot_file=None, names=None, file_summary=None, fontsize=5, figsize=None, subplot_params={}, plot_rapidez=False, block_filter=None, blockNames=None, plot_trayect=True, plot_area_err=True, plot_d_and_vel=True, plot_temp_err=True, return_plot=False):
     if not names:
         if len(pd.read_csv(output_file).columns) == 9:
             names = [
@@ -232,7 +235,7 @@ def plot(output_file, plot_file=None, names=None, file_summary=None, fontsize=5,
     block_vars = ['blockN', 'vmr']
     grouped_block = df.sort_values('blockN').groupby(block_vars)
 
-    colormap = plt.cm.winter
+    colormap = plt.cm.viridis
     blockN_list = list(df.blockN.unique())
     blockN_list.sort()
 
@@ -252,7 +255,12 @@ def plot(output_file, plot_file=None, names=None, file_summary=None, fontsize=5,
             blockName=None
 
         block_group = block_group[block_group.trialSuccess == 1]
-
+        
+        # X axis visibility
+        if block_count==1:
+            last_ax = axs[-1]
+        else:
+            last_ax = axs[-1][subplot_i]
 
         axs_offset = 0
         if plot_trayect:
@@ -269,7 +277,16 @@ def plot(output_file, plot_file=None, names=None, file_summary=None, fontsize=5,
                 ax_err, ax_err_abs = axs[1-axs_offset], axs[2-axs_offset]
             else:
                 ax_err, ax_err_abs = axs[1-axs_offset][subplot_i], axs[2-axs_offset][subplot_i]
+
             plot_area_errors(block_group, blockN, trial_vars, ax_err, ax_err_abs , colors, df_summary, fontsize=fontsize)
+
+            # X axis visibility
+            ax_err.set_xlabel(None)
+            ax_err.tick_params(labelbottom=False)
+            if ax_err_abs is not last_ax:
+                ax_err_abs.set_xlabel(None)
+                ax_err_abs.tick_params(labelbottom=False)
+            
         else:
             axs_offset +=2
 
@@ -279,6 +296,15 @@ def plot(output_file, plot_file=None, names=None, file_summary=None, fontsize=5,
             else:
                 ax_d, ax_v = axs[3-axs_offset][subplot_i], axs[4-axs_offset][subplot_i]
             plot_curve_distance_and_velocity(block_group, blockN, trial_vars, ax_d, ax_v, colors, df_summary, fontsize=fontsize)
+            # X axis visibility
+            ax_d.set_xlabel(None)
+            ax_d.tick_params(labelbottom=False)
+            if ax_v is not last_ax:
+                ax_v.set_xlabel(None)
+                ax_v.tick_params(labelbottom=False)
+
+
+            # last_ax.get_xaxis().set_visible(True)
         else:
             axs_offset +=2
         
@@ -305,6 +331,8 @@ def plot(output_file, plot_file=None, names=None, file_summary=None, fontsize=5,
         fig.savefig(f'{plot_file}', dpi=500)
         if file_summary and plot_rapidez:
             fig2.savefig(plot_file.replace(".png", "-rapidez.png"), dpi=500)
+        if return_plot:
+            return fig, axs
     else:
         print("Showing plot")
         fig.show()
