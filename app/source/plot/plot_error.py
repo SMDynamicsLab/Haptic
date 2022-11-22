@@ -34,14 +34,18 @@ def rotate_trial_data(trial_data, angle):
     trial_data.drop('pos_rot', axis=1, inplace=True)
     return trial_data
 
-
+import matplotlib.pyplot as plt
 def calculate_error_area(trial_data, angle):
-    trial_data = rotate_trial_data(trial_data, angle)
-    x = [trial_data.iloc[0].x, trial_data.iloc[-1].x]
-    y = [trial_data.iloc[0].y, trial_data.iloc[-1].y]
+    data = trial_data.copy()
+    data.sort_values(by=['timeMs'], inplace=True)
+    data = rotate_trial_data(data, angle)
+    x = [data.iloc[0].x, data.iloc[-1].x]
+    y = [data.iloc[0].y, data.iloc[-1].y]
     coefficients = np.polyfit(x, y, 1)
     polynomial = np.poly1d(coefficients)
-    error_curve = trial_data.y - polynomial(trial_data.x)
-    area_error = trapz(error_curve, x=trial_data.x)
-    area_error_abs = trapz(np.abs(error_curve), x=trial_data.x)
+    error_curve = data.y - polynomial(data.x)
+    area_error = trapz(error_curve, x=data.x)
+    area_error_abs = trapz(np.abs(error_curve), x=data.x)
+    if area_error_abs<0:
+        raise Exception("area_error_abs<0")
     return area_error, area_error_abs
